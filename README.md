@@ -1,4 +1,14 @@
-﻿# TURI Safe Chem DB (`turi-safe-chem-db`)
+# TURI Safe Chem DB (`turi-safe-chem-db`)
+
+## Just want to run it?
+**Coworkers:** use the **Teams pack** (`TURI-SafeChemDB-TeamsPack`) — sync the folder and double-click `1_Open_Safe_Chem_DB.bat`. No GitHub required.
+See that pack's `README_START_HERE.md`.
+
+## Updating the code?
+Clone this private repo: https://github.com/glsalierno/turi-safe-chem-db  
+This git tree is the **source of truth for developers**. Coworkers should stay on the Teams pack.
+
+---
 
 **TURI Safe Chem DB** is an open monorepo for safer-solvent screening and hazard enrichment:
 
@@ -106,7 +116,7 @@ See [docs/HSPiP_CLI.md](docs/HSPiP_CLI.md).
 
 ## Teams pack
 
-Coworker-friendly sibling folder: **`TURI-SafeChemDB-TeamsPack`** (see [docs/TEAMS_DEPLOY.md](docs/TEAMS_DEPLOY.md)).
+**Primary product for TURI coworkers** — sibling folder: **`TURI-SafeChemDB-TeamsPack`** (see [docs/TEAMS_DEPLOY.md](docs/TEAMS_DEPLOY.md)).
 
 - `app\` mirrors this monorepo (sync with robocopy; excludes `.venv`, `__pycache__`, `.git`)
 - Placeholder `HSPiP\` / `HSPiP_Data\` for licensed assets
