@@ -135,10 +135,9 @@ def _fmt_num(val: float, digits: int = 1) -> str:
 def render_hspip_setup_sidebar() -> dict:
     """Sidebar: due-diligence + persistable HSPiP.exe / sofx data paths."""
     st.sidebar.markdown("## HSPiP setup")
-    st.sidebar.markdown(
-        "Install **HSPiP yourself** from [hansen-solubility.com](https://www.hansen-solubility.com). "
-        "A **CLI license** is required to compute new CAS that are not already in local `.sofx` tables. "
-        "This app **never ships** the HSPiP binary. **Close the HSPiP GUI** before using the CLI."
+    st.sidebar.caption(
+        "Optional. Install HSPiP yourself from [hansen-solubility.com](https://www.hansen-solubility.com). "
+        "This app never ships the binary. Close the HSPiP desktop app before using the CLI."
     )
 
     if "hspip_exe_raw" not in st.session_state:
@@ -147,14 +146,14 @@ def render_hspip_setup_sidebar() -> dict:
         st.session_state["hspip_data_raw"] = default_hspip_data_raw()
 
     exe_raw = st.sidebar.text_input(
-        "Path to HSPiP.exe (or install folder)",
+        "Where is HSPiP installed on this PC?",
         key="hspip_exe_raw",
-        help="Honors HSPIP_PATH / HSPIP_EXE if set. Saved to config/hspip_path.txt and ~/.turi-safe-chem-db/.",
+        help="Folder with HSPiP.exe, or the full path to HSPiP.exe. Honors HSPIP_PATH / HSPIP_EXE. Saved locally.",
     )
     data_raw = st.sidebar.text_input(
-        "HSPIP_DATA folder for .sofx",
+        "Where are the HSPiP data files (.sofx)?",
         key="hspip_data_raw",
-        help="Default: HSPIP_DATA / HSPIP_DATA_DIR env, or Teams pack HSPiP_Data.",
+        help="Folder of licensed .sofx libraries. Default: HSPIP_DATA env or Teams pack HSPiP_Data.",
     )
 
     save_hspip_paths(exe_raw or "", data_raw or "")
@@ -178,8 +177,9 @@ def render_hspip_setup_sidebar() -> dict:
             f"({len(hsp_status['roots'])} data root(s))"
         )
     else:
-        st.sidebar.warning("HSPiP Data folder not found — D/P/H stay needs_HSPiP")
+        st.sidebar.warning("HSPiP data folder not found — D/P/H stay needs_HSPiP (that is OK for basic lookups)")
 
+    # CLI auto-run stays available but is less prominent (advanced users)
     auto_cli = st.sidebar.checkbox(
         "Auto-run CLI when CAS misses sofx",
         value=False,
@@ -686,10 +686,10 @@ def render_coverage_sidebar(row: Dict[str, Any]):
 
 
 def main():
-    st.title("🧪 TURI Safe Chem DB - DoSS on-demand")
+    st.title("🧪 TURI Safe Chem DB")
     st.markdown(
-        "**Database of Safer Solvents row generator** — "
-        "Generate DoSS-shaped rows matching TURI's DoSS export format."
+        "Enter a CAS number (example: acetone `67-64-1`). "
+        "We'll build a safer-solvent (DoSS) row."
     )
 
     expert_df = load_expert_csv()
@@ -727,18 +727,21 @@ def main():
     else:
         st.sidebar.caption("GHaz7 score lookup DB not found (auto fallback unavailable)")
 
-    enable_tci = st.sidebar.checkbox(
-        "On-demand TCI SDS enrich",
-        value=True,
-        help="Fetch TCI SDS for NFPA / physchem / pricing when catalog has a product code. Not a mass scrape.",
-    )
+    # Vendor toggles under expander — keep defaults ON for enrichment
     _fisher_env = (os.environ.get("DOSS_ENABLE_FISHER") or "1").strip().lower()
     _fisher_default = _fisher_env not in ("0", "false", "no", "off")
-    enable_fisher = st.sidebar.checkbox(
-        "Fisher SDS enrich",
-        value=_fisher_default,
-        help="Fetch Fisher Scientific SDS / product page for NFPA, lab $/kg, SDS link, and §9 physchem when catalog has a part number. Prefer Fisher over PubChem/TCI when filled. Not a mass scrape. Default from DOSS_ENABLE_FISHER (1/0).",
-    )
+    with st.sidebar.expander("Advanced / data sources", expanded=False):
+        st.caption("Optional vendor SDS lookups (need network). Leave on for fuller rows.")
+        enable_tci = st.checkbox(
+            "On-demand TCI SDS enrich",
+            value=True,
+            help="Fetch TCI SDS for NFPA / physchem / pricing when catalog has a product code. Not a mass scrape.",
+        )
+        enable_fisher = st.checkbox(
+            "Fisher SDS enrich",
+            value=_fisher_default,
+            help="Fetch Fisher Scientific SDS / product page for NFPA, lab $/kg, SDS link, and §9 physchem when catalog has a part number. Prefer Fisher over PubChem/TCI when filled. Not a mass scrape. Default from DOSS_ENABLE_FISHER (1/0).",
+        )
 
     hsp_setup = render_hspip_setup_sidebar()
 
@@ -752,8 +755,8 @@ def main():
         with col1:
             cas_input = st.text_input(
                 "CAS Number",
-                placeholder="e.g., 67-64-1",
-                help="Primary identifier for compound lookup",
+                placeholder="e.g., 67-64-1 (acetone)",
+                help="Chemical ID — try acetone 67-64-1",
             )
             name_input = st.text_input(
                 "Solvent Name (optional)",
