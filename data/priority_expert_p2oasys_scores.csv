@@ -1,0 +1,64 @@
+cas,name,queue_name,page_file,sds_source,sds_year,memo_sds_n,memo_other_n,found,n_candidates,auto6_n,auto6_full,n_categories_filled,total_n_sub,n_score_cells,missing_auto6,Acute_Human_Effects_max,Acute_Human_Effects_mean,Acute_Human_Effects_n_sub,Chronic_Human_Effects_max,Chronic_Human_Effects_mean,Chronic_Human_Effects_n_sub,Ecological_Hazards_max,Ecological_Hazards_mean,Ecological_Hazards_n_sub,Environmental_Fate_and_Transport_max,Environmental_Fate_and_Transport_mean,Environmental_Fate_and_Transport_n_sub,Atmospheric_Hazard_max,Atmospheric_Hazard_mean,Atmospheric_Hazard_n_sub,Physical_Properties_max,Physical_Properties_mean,Physical_Properties_n_sub,Process_Factors_max,Process_Factors_mean,Process_Factors_n_sub,Life_Cycle_Factors_max,Life_Cycle_Factors_mean,Life_Cycle_Factors_n_sub
+67-64-1,Acetone,Acetone,P2OASys_export_page100.csv,Fischer Scientific,2025,0,1,yes,2,5,no,7,23,29,Ecological Hazards,6,5.1429,7,8,5,2,,,0,4,4,1,2,2,4,8,3.5,4,6,5,2,6,4.6667,3
+108-24-7,Acetic Anhydride,Acetic Anhydride (Ac2O),P2OASys_export_page02.csv,Fischer Scientific,2014,21,7,yes,1,6,yes,8,27,44,,10,7.1429,7,6,4,3,2,2,1,6,4,2,2,2,4,8,5,4,6,6,3,6,6,3
+142-82-5,n-Heptane,Heptanes,P2OASys_export_page97.csv,Sigma Aldrich,2024,15,2,yes,1,6,yes,8,31,50,,10,6.75,8,8,4.5,4,10,10,2,6,4.6667,3,2,2,4,10,5.5,4,8,6.6667,3,10,8.6667,3
+1634-04-4,tert-Butyl methyl ether,"Tert-Butyl Methyl Ether (MTBE, Methyl Tert-Butyl Ether)",P2OASys_export_page02.csv,Fisher Scientific,2025,15,8,yes,1,6,yes,8,31,45,,8,4.75,8,8,6,4,2,2,2,6,4,3,2,2,4,8,4.5,4,6,6,3,8,6.6667,3
+110-54-3,Hexane,Hexanes,P2OASys_export_page09.csv,Sigma Aldrich,2024,17,16,yes,2,6,yes,8,32,55,,10,8.5,8,10,6.4,5,8,8,2,8,5.3333,3,10,4,4,8,5,4,6,6,3,10,8.6667,3
+75-09-2,Methylene Chloride,Dichloromethane (DCM),P2OASys_export_page09.csv,Sigma Aldrich,2021,9,20,yes,1,6,yes,8,32,61,,8,7,8,10,8.4,5,6,6,2,8,6.6667,3,10,4,4,8,4,4,8,7.3333,3,10,10,3
+71-43-2,Benzene,"Benzene (Benzol, phenyl hydride)",P2OASys_export_page75.csv,Sigma Aldrich,2008,0,0,yes,1,6,yes,8,31,42,,10,7.75,8,10,9,4,6,5,2,8,6.6667,3,10,4,4,8,5,4,8,7.3333,3,8,6.6667,3
+680-31-9,Hexamethylphosphoramide,HMPA (Hexamethylphosphoramide),P2OASys_export_page02.csv,Sigma Aldrich,2026,12,8,yes,1,6,yes,8,25,43,,10,6.3333,6,10,10,2,2,2,2,6,6,2,8,3.5,4,2,2,3,8,7.3333,3,8,7.3333,3
+56-23-5,Carbon Tetrachloride,Carbon Tetrachloride,P2OASys_export_page57.csv,Sigma Aldrich,2021,36,8,yes,1,6,yes,8,29,52,,8,7.4286,7,10,8,3,6,6,2,10,7.3333,3,10,8,4,4,3.5,4,10,8,3,10,10,3
+123-91-1,"1,4-Dioxane","1,4-Dioxane (Dietheyelene diozide, diethylene ether)",P2OASys_export_page55.csv,Sigma Aldrich,2021,0,1,yes,1,6,yes,8,34,57,,10,6.6667,9,8,6.4,5,4,3,2,10,6,3,10,4,4,8,4.8,5,8,7.3333,3,10,8.6667,3
+109-86-4,2-Methoxyethanol,2-Methoxy-ethanol (Ethylene Glycol Monomethyl Ether),P2OASys_export_page49.csv,Sigma Aldrich,2021,24,14,yes,1,6,yes,8,33,52,,10,5.5556,9,10,6,5,2,2,2,4,2.6667,3,2,2,4,8,5,4,8,6.6667,3,8,7.3333,3
+872-50-4,N-methyl-2-pyrrolidone,"1-Methyl-2-pyrrolidinone (NMP, N Mehtylpyrrolidinone, N-methyl-2-pyrrolidone)",P2OASys_export_page09.csv,Sigma Adlrich,2022,17,20,yes,1,6,yes,8,33,54,,8,5.7778,9,10,6.3333,6,6,6,2,8,4,3,8,3.5,4,8,6,3,6,6,3,10,7.3333,3
+64-19-7,Acetic Acid,"Acetic Acid (Glacial Acetic Acic, ethanoic acid)",P2OASys_export_page85.csv,Sigma Aldrich,2014,0,1,yes,7,6,yes,8,30,40,,10,7.4286,7,8,4.5,4,2,2,2,2,2,2,2,2,4,10,5.6,5,6,4.6667,3,6,5.3333,3
+75-05-8,Acetonitrile,Acetonitrile,P2OASys_export_page76.csv,Sigma Aldrich,2017,0,0,yes,1,6,yes,8,32,51,,8,5.5556,9,8,4.5,4,2,2,2,8,4,3,10,5.5,4,8,5,4,8,6.6667,3,8,6.6667,3
+7664-41-7,Ammonia,Ammonia (ammonium hydroxide),P2OASys_export_page80.csv,Sigma Aldrich,2014,0,1,yes,3,6,yes,8,23,33,,10,8,5,6,6,1,10,10,1,6,4,2,8,3.5,4,8,4,4,6,6,3,8,7.3333,3
+71-36-3,n-butanol,"1 Butanol (Butanol, n-butanol, Butan-1-ol)",P2OASys_export_page100.csv,Perstorp,2015,0,1,yes,1,5,no,7,23,29,Ecological Hazards,10,6.6667,6,6,3,4,,,0,2,2,1,2,2,4,6,3.5,4,6,6,1,8,6.6667,3
+628-63-7,n-Amyl acetate,Amyl Acetate (1-Pentyl Acetate),P2OASys_export_page54.csv,Fisher Scientfic,2021,16,9,yes,1,6,yes,8,31,42,,8,4.75,8,6,4,4,4,3,2,4,4,2,2,2,4,8,3.6,5,6,4.6667,3,6,5.3333,3
+100-66-3,Anisole,Anisole (methoxybenzene),P2OASys_export_page59.csv,Sigma Aldrich,2021,20,1,yes,1,6,yes,8,30,49,,6,4.8,5,8,4,5,6,6,2,4,4,3,2,2,4,6,3.2,5,6,5.3333,3,8,6.6667,3
+100-51-6,Benzyl Alcohol,"Benzyl Alcohol (phenylmethanol, phenyl carbinol)",P2OASys_export_page101.csv,Sigma Adlrich,2021,16,5,yes,4,5,no,7,29,44,Ecological Hazards,8,6,7,8,5,4,,,0,4,2.6667,3,2,2,4,4,2.4,5,6,4.6667,3,6,5.3333,3
+123-86-4,n-Butyl Acetate,Butyl Acetate (n-BuOAc),P2OASys_export_page58.csv,Sigma Aldrich,2020,0,1,yes,2,6,yes,8,33,43,,6,3.5556,9,8,4.8,5,6,6,2,4,3.3333,3,2,2,4,6,4,5,4,3,2,8,6.6667,3
+75-15-0,Carbon disulfide,Carbon Disulfide,P2OASys_export_page02.csv,Fisher Scientific,2025,16,10,yes,1,6,yes,8,25,45,,8,7.2,5,10,9,2,6,6,2,8,5.3333,3,8,3.5,4,10,5.5,4,8,7,2,8,8,3
+108-90-7,Chlorobenzene,Chlorobenzene,P2OASys_export_page02.csv,Fisher Scientific,2025,21,8,yes,1,6,yes,8,31,49,,8,6,7,8,5.2,5,6,6,2,6,6,3,2,2,4,8,4.5,4,6,6,3,8,8,3
+67-66-3,Chloroform,Chloroform,P2OASys_export_page58.csv,Sigma Aldrich,2021,32,8,yes,1,6,yes,8,29,54,,8,7.1429,7,10,6.8,5,6,6,2,10,6.6667,3,10,4,4,8,6,2,10,8,3,10,8.6667,3
+124-38-9,Carbon Dioxide,CO2 Sc (Supercritical CO2),P2OASys_export_page89.csv,Praxair,2016,0,1,yes,1,6,yes,8,25,31,,8,5.3333,6,2,2,1,2,2,2,4,3,2,2,2,3,6,3.2,5,6,6,3,4,4,3
+110-82-7,Cyclohexane,Cyclohexane (Hexahydrobenzene),P2OASys_export_page97.csv,Fischer Scientific,2016,0,0,yes,1,6,yes,8,26,39,,10,7.7143,7,6,4,2,10,10,2,4,4,1,2,2,4,8,4.5,4,6,6,3,6,6,3
+108-94-1,Cyclohexanone,Cyclohexanone,P2OASys_export_page14.csv,Sigma Aldrich,2022,32,14,yes,1,6,yes,8,35,66,,10,7.5,8,10,7,6,6,6,2,4,3.3333,3,2,2,4,10,5.3333,6,8,6.6667,3,8,6.6667,3
+5989-27-5,D-Limonene,"D Limonone (d-p-Mentha-1,8-diene 4-Isopropenyl-1-methylcyclohex
+ene)",P2OASys_export_page47.csv,Fisher Scientific,2018,0,0,yes,13,6,yes,8,32,46,,8,6.8571,7,4,4,4,8,8,2,4,4,3,2,2,4,6,3.6,5,6,5.3333,3,6,5,4
+107-06-2,"1,2-Dichloroethane",DCE (Ethylene dichloride),P2OASys_export_page50.csv,Sigma Aldrich,2021,31,6,yes,1,6,yes,8,33,52,,8,6.6667,9,8,6,4,2,2,2,8,4,3,10,4,4,8,4.8,5,8,6.6667,3,8,6.6667,3
+123-42-2,Diacetone alcohol,Diacetone Alcohol (DAA),P2OASys_export_page02.csv,Fisher Scientific,2025,16,9,yes,1,6,yes,8,30,43,,8,4.75,8,8,5,4,2,2,2,8,5.3333,3,2,2,4,6,3.5,4,8,7,2,8,7.3333,3
+60-29-7,Diethyl ether,Diethyl Ether,P2OASys_export_page58.csv,Sigma Aldrich,2021,20,10,yes,1,6,yes,8,30,42,,6,4.25,8,8,4.5,4,2,2,2,4,3.3333,3,2,2,4,10,5.3333,3,6,6,3,6,5.3333,3
+108-20-3,Isopropyl ether,Diisopropyl Ether (Isoppropyl ether),P2OASys_export_page02.csv,Fisher Scientific,2025,10,8,yes,1,6,yes,8,29,44,,8,4.8571,7,4,3.3333,3,6,4,2,6,4.6667,3,2,2,4,10,5.5,4,6,5.3333,3,6,6,3
+115-10-6,Dimethyl ether,Dimethyl Ether,P2OASys_export_page02.csv,Sigma Aldrich,2024,8,10,yes,2,6,yes,8,27,36,,4,2.5,4,8,4,4,2,2,2,8,5.3333,3,2,2,4,10,6.5,4,6,6,3,8,7.3333,3
+127-19-5,"N,N-dimethylacetamide","DMAc (N,N Dimethyl Acetamide)",P2OASys_export_page46.csv,Sigma Aldrich,2021,26,12,yes,1,6,yes,8,28,45,,8,6.6667,6,8,6,4,6,6,1,4,3.3333,3,8,3.5,4,6,4.5,4,10,8.6667,3,8,6.6667,3
+110-71-4,Ethylene glycol dimethyl ether,"DME (1,2 Dimethoxyethane, Ethylene Glycol Dimethyl Ether)",P2OASys_export_page02.csv,Fisher Scientific,2025,17,10,yes,1,6,yes,8,28,41,,8,7.3333,6,10,5,4,2,2,2,6,4,3,2,2,4,8,4.5,4,8,7,2,8,7.3333,3
+7226-23-5,"1,3-Dimethyl-3,4,5,6-tetrahydro-2(1H)-pyrimidinone","DMPU (1,3-Dimethyl-3,4,5,6-tetrahydro-2(1H)-pyrimidinone, N,N'-dimethylpropyleneurea)",P2OASys_export_page02.csv,Fisher Scientific,2025,8,11,yes,1,6,yes,8,26,42,,10,6.5,4,8,4.5,4,8,8,2,6,4,3,8,3.5,4,6,3.5,4,8,7,2,8,8,3
+67-68-5,Dimethyl sulfoxide,DMSO (Dimethyl sulfoxide),P2OASys_export_page78.csv,Sigma Aldrich,2018,0,0,yes,1,6,yes,8,30,39,,6,4.8571,7,4,2.6667,3,4,3,2,8,4.6667,3,2,2,4,8,4.8,5,10,6.6667,3,8,6,3
+64-17-5,Ethanol,Ethanol (Ethyl Alcohol),P2OASys_export_page101.csv,Sigma Aldrich,2022,16,5,yes,6,6,yes,8,31,41,,8,3.75,8,8,5.6,5,2,2,1,4,2.6667,3,2,2,4,8,4.5,4,6,4.6667,3,6,5.3333,3
+141-78-6,Ethyl Acetate,Ethyl Acetate,P2OASys_export_page43.csv,Sigma Aldrich,2023,18,3,yes,3,6,yes,8,30,41,,8,4.2857,7,4,2.6667,3,2,2,2,4,2.6667,3,2,2,4,8,4,5,6,6,3,6,5.3333,3
+107-21-1,Ethylene Glycol,Ethylene Glycol,P2OASys_export_page78.csv,Sigma Aldrich,2019,0,0,yes,1,6,yes,8,30,42,,6,4,6,8,5.2,5,2,2,2,4,2.6667,3,10,4,4,4,2.5,4,4,4,3,6,5.3333,3
+64-18-6,Formic Acid,Formic Acid (Methanoic acid),P2OASys_export_page51.csv,Fisher Scientfic,2021,21,4,yes,2,6,yes,8,32,57,,10,7.7143,7,6,4.4,5,6,6,2,4,3.3333,3,2,2,4,8,7.2,5,6,6,3,8,6.6667,3
+108-21-4,Isopropyl Acetate,Isopropyl Acetate (iPrOAc),P2OASys_export_page08.csv,Thermo Fisher Scientific,2025,6,12,yes,1,6,yes,8,26,40,,8,6.4,5,4,3,4,6,6,1,4,2.6667,3,2,2,4,8,5,4,6,6,2,6,6,3
+67-63-0,Isopropanol,"Isopropyl Alcohol (Isopropanol, 2 propanol)",P2OASys_export_page02.csv,Sigma Aldrich,2021,12,19,yes,6,6,yes,8,31,45,,10,6,8,10,5,4,2,2,2,4,2.6667,3,2,2,4,8,4.5,4,4,4,3,6,4.6667,3
+96-47-9,2-Methyltetrahydrofuran,Me THF (2-Methyltetrahydrofuran),P2OASys_export_page47.csv,Sigma,2022,10,7,yes,1,5,no,7,31,56,Ecological Hazards,10,6.5714,7,6,3.2,5,,,0,8,4.6667,3,2,2,4,10,5.3333,6,6,6,3,6,6,3
+67-56-1,Methanol,Methanol (Methyl Alcohol),P2OASys_export_page101.csv,Sigma Aldrich,2021,26,4,yes,1,6,yes,8,32,47,,10,6.75,8,8,6.4,5,2,2,2,8,4,3,10,4,4,8,5,4,6,6,3,6,5.3333,3
+79-20-9,Methyl acetate,Methyl Acetate,P2OASys_export_page100.csv,Sigma Aldrich,2024,9,2,yes,3,6,yes,8,28,34,,8,4.6667,6,4,2.6667,3,4,3,2,4,2.6667,3,2,2,4,8,3.6,5,6,5,2,6,4.6667,3
+78-93-3,Methyl Ethyl Ketone,"Methyl Ethyl Ketone (MEK, 2-Butanone)",P2OASys_export_page57.csv,ThermoFisher Scientific,2020,20,9,yes,1,6,yes,8,31,47,,8,5.4286,7,8,4,6,6,5,2,2,2,1,2,2,4,8,4,5,6,5.3333,3,6,6,3
+108-10-1,Methyl isobutyl ketone,"Methyl isobutyl ketone (MIBK, 4-Methyl-2-pentanone)",P2OASys_export_page49.csv,Sigma Aldrich,2021,24,10,yes,1,6,yes,8,30,49,,8,4.75,8,6,5,4,2,2,2,4,3,2,10,4,4,8,5,4,6,5.3333,3,8,6.6667,3
+108-87-2,Methylcyclohexane,Methylcyclohexane (Me-Cyclohexane),P2OASys_export_page54.csv,Fisher Scientific,2021,27,10,yes,1,6,yes,8,31,50,,8,6,8,6,4,4,8,8,2,4,4,3,2,2,4,8,5,4,6,6,3,6,6,3
+75-52-5,Nitromethane,NitroMethane (Nitrocarbol),P2OASys_export_page49.csv,Sigma Aldrich,2021,31,10,yes,1,6,yes,8,32,47,,6,4,7,8,5.2,5,2,2,2,10,7.3333,3,8,3.5,4,6,4.4,5,8,6.6667,3,10,7.3333,3
+109-66-0,Pentane,Pentane,P2OASys_export_page78.csv,Fisher Scientific,2018,0,0,yes,1,6,yes,8,28,42,,10,6.3333,6,8,4.5,4,8,7,2,4,4,2,2,2,4,10,5,4,6,6,3,6,6,3
+110-86-1,Pyridine,Pyridine,P2OASys_export_page49.csv,Sigma Aldrich,021,32,10,yes,1,6,yes,8,29,49,,8,6.6667,6,8,5,4,6,5,2,8,4,3,8,3.5,4,10,7,4,6,6,3,10,8,3
+64742-95-6,Comsol 100,Shellsol A 100,P2OASys_export_page76.csv,Comet Chemical,2016,0,0,yes,1,6,yes,8,35,54,,10,6.6667,9,8,5,6,8,7,2,8,5.3333,3,2,2,4,6,3.2,5,6,5.3333,3,8,7.3333,3
+64742-94-5,Solvesso 150,Shellsol A 150,P2OASys_export_page54.csv,Now Chem,2021,15,10,yes,1,6,yes,8,31,37,,8,5.25,8,6,4,4,6,6,2,8,6.6667,3,8,3.5,4,4,3.5,4,6,6,3,6,6,3
+126-33-0,Sulfolane,Sulfolane (Tetramethylene sulfone),P2OASys_export_page42.csv,Sigma Aldrich,2023,9,12,yes,1,6,yes,8,26,39,,6,4.6667,6,8,5.3333,3,2,2,2,8,5,2,8,3.5,4,4,2.6667,3,6,6,3,8,6.6667,3
+75-65-0,tert-Butanol,"Tert-butanol (Tert-butyl alcohol, 2 methyl-2-propanol)",P2OASys_export_page76.csv,Sigma Aldrich,2018,0,1,yes,1,6,yes,8,33,53,,8,5.75,8,8,4.8,5,2,2,2,8,4,3,2,2,4,8,4,5,6,4.6667,3,6,6,3
+109-99-9,Tetrahydrofuran,"Tetrahydrofuran (THF, Oxolane)",P2OASys_export_page58.csv,Sigma Aldrich,2026,32,11,yes,1,6,yes,8,33,54,,10,6.2222,9,8,5.6,5,2,2,2,10,5.3333,3,2,2,4,8,6,4,8,6.6667,3,8,7.3333,3
+102-71-6,Triethanolamine,"Triethanolamine (TEA, Trolamine)",P2OASys_export_page101.csv,Sigma Aldrich,2021,6,9,yes,3,6,yes,8,32,51,,8,5.7143,7,10,6.3333,6,4,4,1,4,2.6667,3,8,3.5,4,8,4.4,5,6,4.6667,3,6,6,3
+8052-41-3,Stoddard solvent,Turpenoid,P2OASys_export_page49.csv,Sigma Aldrich,2022,8,10,yes,1,6,yes,8,26,37,,10,8,3,10,7.5,4,10,9,2,6,4.6667,3,2,2,4,6,3,4,6,5.3333,3,8,6.6667,3
+7732-18-5,Water,Water,P2OASys_export_page97.csv,,2009,0,1,yes,98,5,no,7,28,33,Ecological Hazards,4,2.3333,6,2,2,4,,,0,2,2,3,2,2,4,4,2.4,5,2,2,3,2,2,3
+1330-20-7,Xylenes,"Xylene (1,2 Dimethylbenzene)",P2OASys_export_page80.csv,Sigma Aldrich,2024,26,2,yes,1,6,yes,8,32,57,,8,6.6667,9,8,6,5,8,7,2,4,3,2,10,4,4,8,5,4,10,7.3333,3,10,9.3333,3
+77-93-0,Triethyl Citrate,Triethyl Acetate,P2OASys_export_page64.csv,Sigma Aldrich,2020,1,19,yes,2,6,yes,7,22,33,,6,4,6,4,3.3333,3,4,3,2,4,3.3333,3,2,2,4,2,2,3,6,6,1,,,0
+8006-64-2,Turpentine,Turpentine,P2OASys_export_page47.csv,Recochem,2015,27,3,yes,1,6,yes,8,32,55,,8,6.5,8,6,5,4,8,8,2,4,4,3,2,2,4,6,4.5,4,6,6,3,8,5.5,4

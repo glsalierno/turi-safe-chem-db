@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Env / secrets
+.env
+.env.*
+
+# Streamlit
+streamlit_*.log
+streamlit_*.err
+*.pid
+
+# HSPiP proprietary
+*.sofx
+HSPiP/
+HSPiP_Data/
+**/Hansen-Solubility*/
+
+# Caches / DBs
+cache/*.db
+*.sqlite
+*.sqlite3
+
+# OneDrive / machine-specific
+OneDrive/
+**/OneDrive*/
+
+# Large / local outputs (keep data/ seeds)
+**/priority62_*.csv
+**/priority62_*.json
+**/fill_hspip_summary.json
+**/batch_*.log
+**/GHhaz*/
+**/*harvest*
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Local HSPiP path / coworker env (never commit)
+config/hspip_path.txt
+config/env.bat
+**/hspip_path.txt
+.turi-safe-chem-db/
