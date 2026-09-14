@@ -12,6 +12,7 @@ def test_key_modules_parse():
         REPO / "apps/doss_ondemand/app.py",
         REPO / "packages/doss_core/tci.py",
         REPO / "packages/doss_core/fisher.py",
+        REPO / "packages/doss_core/cameo.py",
         REPO / "packages/doss_core/hspip.py",
         REPO / "packages/p2oasys_core/lookup.py",
     ]
@@ -20,10 +21,16 @@ def test_key_modules_parse():
 
 
 def test_import_packages():
+    import packages.doss_core.cameo as cameo
     import packages.doss_core.tci as tci
     import packages.doss_core.fisher as fisher
     import packages.p2oasys_core.lookup as lookup
 
+    assert hasattr(cameo, "lookup_cameo")
+    hit = cameo.lookup_cameo("67-66-3")
+    assert hit is not None
+    assert hit["nfpa_health"] == 2
+    assert hit["nfpa_flame"] == 0
     assert hasattr(tci, "enrich_from_tci")
     assert hasattr(fisher, "enrich_from_fisher")
     assert hasattr(lookup, "resolve_p2oasys")

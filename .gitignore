@@ -28,6 +28,7 @@ HSPiP_Data/
 cache/*.db
 *.sqlite
 *.sqlite3
+!data/cameo_nfpa.sqlite
 
 # OneDrive / machine-specific
 OneDrive/
