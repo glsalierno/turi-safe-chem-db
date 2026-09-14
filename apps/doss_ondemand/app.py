@@ -49,6 +49,7 @@ from packages.doss_core.hspip import (
     save_hspip_paths,
 )
 from packages.doss_core.glove_hsp import format_glove_hsp_flag
+from packages.doss_core.cameo import cameo_status, lookup_cameo
 
 st.set_page_config(
     page_title="TURI Safe Chem DB - DoSS",
@@ -251,6 +252,7 @@ def build_doss_row(
     *,
     enable_tci: bool = True,
     enable_fisher: bool = True,
+    enable_cameo: bool = True,
 ) -> Dict[str, Any]:
     """Convert PubChem (+ optional Fisher/TCI) data to a DoSS row."""
     row = empty_row()
@@ -368,6 +370,24 @@ def build_doss_row(
         nfpa_health_cands.append((nfpa_health, "PubChem"))
     if nfpa_flame:
         nfpa_flame_cands.append((nfpa_flame, "PubChem"))
+
+    if enable_cameo:
+        try:
+            cameo = lookup_cameo(cas)
+            if cameo:
+                if cameo.get("nfpa_health") is not None:
+                    nfpa_health_cands.append((cameo["nfpa_health"], "CAMEO"))
+                if cameo.get("nfpa_flame") is not None:
+                    nfpa_flame_cands.append((cameo["nfpa_flame"], "CAMEO"))
+                src = cameo.get("nfpa_source") or "CAMEO Chemicals 3.1.0"
+                bits = [f"CAMEO {cameo.get('name')} ({src})"]
+                if cameo.get("nfpa_instability") is not None:
+                    bits.append(f"instability={cameo['nfpa_instability']}")
+                if cameo.get("nfpa_special"):
+                    bits.append(f"special={cameo['nfpa_special']}")
+                notes.append("; ".join(bits))
+        except Exception as exc:
+            notes.append(f"CAMEO lookup skipped: {exc}")
 
     ghs = pubchem_data.get("ghs_hazards", [])
     row["GHS Hazards"] = ", ".join(ghs) if ghs else EMPTY_VALUE
@@ -742,6 +762,19 @@ def main():
             value=_fisher_default,
             help="Fetch Fisher Scientific SDS / product page for NFPA, lab $/kg, SDS link, and §9 physchem when catalog has a part number. Prefer Fisher over PubChem/TCI when filled. Not a mass scrape. Default from DOSS_ENABLE_FISHER (1/0).",
         )
+        enable_cameo = st.checkbox(
+            "CAMEO Chemicals NFPA (local)",
+            value=True,
+            help="Read NFPA 704 from CAMEO Chemicals 3.1.0 sqlite or bundled data/cameo_nfpa.sqlite. Not a website scrape.",
+        )
+    cameo_st = cameo_status()
+    if cameo_st.get("available"):
+        st.sidebar.caption(
+            f"CAMEO {cameo_st.get('version')}: {cameo_st['n_nfpa']} NFPA "
+            f"({cameo_st.get('schema')})"
+        )
+    else:
+        st.sidebar.caption("CAMEO sqlite not found — NFPA stays PubChem/SDS only")
 
     hsp_setup = render_hspip_setup_sidebar()
 
@@ -777,6 +810,7 @@ def main():
                         expert_df,
                         enable_tci=enable_tci,
                         enable_fisher=enable_fisher,
+                        enable_cameo=enable_cameo,
                     )
                     smiles = pubchem_data.get("smiles") or ""
                     if smiles:
@@ -862,6 +896,7 @@ def main():
                             expert_df,
                             enable_tci=enable_tci,
                             enable_fisher=enable_fisher,
+                            enable_cameo=enable_cameo,
                         )
                         rows.append(row)
                     except Exception as e:
@@ -905,7 +940,8 @@ def main():
         <b>Data Sources:</b> PubChem PUG REST; expert P2OASys CSV
         (<code>{os.path.basename(paths['default_expert_csv'])}</code> /
         <code>EXPERT_P2OASYS_CSV</code>); optional GHaz7 score lookup via
-        <code>P2OASYS_SCORE_LOOKUP_DB</code>; on-demand <b>Fisher</b> and <b>TCI</b> SDS/catalog
+        <code>P2OASYS_SCORE_LOOKUP_DB</code>; local <b>CAMEO Chemicals</b> NFPA 704 sqlite;
+        on-demand <b>Fisher</b> and <b>TCI</b> SDS/catalog
         (best-effort; TCI may hit Akamai/403 — local cache used when present).
         Sigma/Millipore stubbed (access pending).<br>
         <b>P2OASys:</b> overall = max of Auto6 category maxima; source column =

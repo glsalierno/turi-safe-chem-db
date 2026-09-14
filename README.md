@@ -16,6 +16,7 @@ This git tree is the **source of truth for developers**. Coworkers should stay o
 - **P2OASys** — expert CSV + optional auto/expert SQLite score lookup (Auto6 category max convention)
 - **Fisher + TCI SDS** — on-demand SDS/product enrichment (NFPA, physchem, gloves, lab $/kg when available)
 - **HSPiP glue** — local `.sofx` D/P/H/RER lookup + optional licensed CLI for new CAS (never invents values)
+- **CAMEO Chemicals NFPA 704** — local desktop sqlite or bundled `data/cameo_nfpa.sqlite`
 
 Built for TURI / UMass Lowell research workflows. Shareable code is MIT; HSPiP binaries and `.sofx` libraries are **not** included.
 
@@ -28,6 +29,7 @@ Built for TURI / UMass Lowell research workflows. Shareable code is MIT; HSPiP b
 | Expert P2OASys CSV (`data/priority_expert_p2oasys_scores.csv`) | Yes |
 | Optional GHaz7 `p2oasys_score_lookup.sqlite` auto/expert fallback | Env `P2OASYS_SCORE_LOOKUP_DB` |
 | PubChem identity / physchem / GHS / NFPA | Yes |
+| **CAMEO Chemicals NFPA 704** (bundled sqlite + optional desktop DB) | Yes |
 | **Fisher SDS enrich** (sidebar toggle; default from `DOSS_ENABLE_FISHER`) | Yes |
 | **TCI SDS enrich** (sidebar toggle; default **ON**) | Yes — best-effort |
 | HSPiP `.sofx` D/P/H/RER fill | Env / sidebar `HSPIP_DATA` |
@@ -78,6 +80,7 @@ docs/                   # INSTALL, HSPiP_CLI, TEAMS_DEPLOY
 | `HSPIP_PATH` / `HSPIP_EXE` | HSPiP install dir or `HSPiP.exe` (sidebar prompt + CLI scripts). Placeholder: `<YOUR_HSPIP_INSTALL>` |
 | `HSPIP_DATA` / `HSPIP_DATA_DIR` | Directory of licensed HSPiP `.sofx` libraries. Placeholder: `%HSPIP_DATA%` / `<YOUR_HSPIP_DATA>` |
 | `DOSS_ENABLE_FISHER` | Default for Fisher SDS sidebar toggle (`1`/`0`; default on) |
+| `CAMEO_SQLITE` | Optional path to full CAMEO Chemicals `cameo.sqlite` or bundled `data/cameo_nfpa.sqlite` |
 | `PYTHONPATH` | Set to repo root if not using editable install |
 
 The DoSS sidebar **HSPiP setup** section also persists exe / data paths to `config/hspip_path.txt` (gitignored) and `~/.turi-safe-chem-db/hspip_path.txt`.
@@ -90,6 +93,14 @@ Both vendors are **intentional, shareable** on-demand enrichers (not mass scrape
 - **TCI** (`packages/doss_core/tci.py`) — SDS / product enrichment for NFPA, physchem, glove notes, and pricing when available. Sidebar **“On-demand TCI SDS enrich”** defaults to **ON** (`enable_tci=True`). Live HTTP may hit **Akamai / 403** blocks; when a local SDS cache is present under an optional sibling GHaz7 tree it is used as fallback. **Best-effort — never invents values.**
 
 Seed catalogs: `data/fisher_catalog_by_cas.csv` (and optional TCI catalog files if you add them under `data/`).
+
+## CAMEO Chemicals (NFPA 704)
+
+Local NOAA/EPA data — **not** a scrape of [cameochemicals.noaa.gov](https://cameochemicals.noaa.gov).
+
+- Bundled extract: `data/cameo_nfpa.sqlite` (~970 CAS with diamonds; preferred non-mixture row per CAS)
+- Optional full desktop DB: install [CAMEO Chemicals 3.1.0](https://www.epa.gov/cameo/cameo-chemicals-software) and/or set `CAMEO_SQLITE`
+- Sidebar toggle **CAMEO Chemicals NFPA (local)** (default ON); ratings merge with Fisher/TCI/PubChem via precautionary max
 
 ## HSPiP
 

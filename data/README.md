@@ -8,6 +8,7 @@ Small **seed** files safe to share / commit:
 | `priority_expert_p2oasys_scores.csv` | Expert P2OASys Auto6 maxes |
 | `fisher_catalog_by_cas.csv` | Fisher part numbers / product URLs |
 | `priority_solvents_queue.csv` | Queue metadata for batch runs |
+| `cameo_nfpa.sqlite` | Slim CAMEO Chemicals 3.1.0 NFPA 704 extract (one preferred row per CAS) |
 
 ## Do not commit here
 
