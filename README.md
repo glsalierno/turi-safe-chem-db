@@ -15,7 +15,7 @@ This git tree is the **source of truth for developers**. Coworkers should stay o
 - **DoSS on-demand** — Streamlit app that builds Database of Safer Solvents (DoSS) rows from CAS
 - **P2OASys** — expert CSV + optional auto/expert SQLite score lookup (Auto6 category max convention)
 - **Fisher + TCI SDS** — on-demand SDS/product enrichment (NFPA, physchem, gloves, lab $/kg when available)
-- **HSPiP glue** — local `.sofx` D/P/H/RER lookup + optional licensed CLI for new CAS (never invents values)
+- **HSPiP glue** — local `.sofx` D/P/H/RER lookup + optional licensed CLI for new CAS 
 
 Built for TURI / UMass Lowell research workflows. Shareable code is MIT; HSPiP binaries and `.sofx` libraries are **not** included.
 
@@ -87,7 +87,7 @@ The DoSS sidebar **HSPiP setup** section also persists exe / data paths to `conf
 Both vendors are **intentional, shareable** on-demand enrichers (not mass scrapers):
 
 - **Fisher** (`packages/doss_core/fisher.py`) — SDS / product page for NFPA, lab $/kg, SDS link, §9 physchem when the seed catalog has a part number. Sidebar toggle; default from `DOSS_ENABLE_FISHER`.
-- **TCI** (`packages/doss_core/tci.py`) — SDS / product enrichment for NFPA, physchem, glove notes, and pricing when available. Sidebar **“On-demand TCI SDS enrich”** defaults to **ON** (`enable_tci=True`). Live HTTP may hit **Akamai / 403** blocks; when a local SDS cache is present under an optional sibling GHaz7 tree it is used as fallback. **Best-effort — never invents values.**
+- **TCI** (`packages/doss_core/tci.py`) — SDS / product enrichment for NFPA, physchem, glove notes, and pricing when available. Sidebar **“On-demand TCI SDS enrich”** defaults to **ON** (`enable_tci=True`). Live HTTP may hit **Akamai / 403** blocks; when a local SDS cache is present under an optional sibling GHaz7 tree it is used as fallback. 
 
 Seed catalogs: `data/fisher_catalog_by_cas.csv` (and optional TCI catalog files if you add them under `data/`).
 
