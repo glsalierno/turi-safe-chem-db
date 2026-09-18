@@ -3,36 +3,41 @@
 Canonical trees (host **Fierro22**, `67c9cbaa-689b-41cf-9c17-11543d316c1e`):
 - Monorepo: `C:\Users\glsal\OneDrive - UMass Lowell\TURI\Research\QSAR\hazquery\turi-safe-chem-db`
 - Teams product: `...\hazquery\TURI-SafeChemDB-TeamsPack`
-- GitHub (private, developers): https://github.com/glsalierno/turi-safe-chem-db
+- GitHub (private): https://github.com/glsalierno/turi-safe-chem-db
 
 Product rule: **Teams pack is the coworker product**; GitHub is for code updates.
+Keep Cursor posted: update this file after meaningful steps (not chat alone).
 
 ## Now
-- PASS | Coworker how-to DOCX in Teams pack root + monorepo docs/
-- RUNNING | Commit/push DOCX + STATUS.md to GitHub main
-- PASS | Keep Cursor posted STATUS file created for this project
-- HELD | P2OASys harvest compile append routine: repeated `resource_exhausted` failures since ~2026-09-14 (paused routine historically; not blocking Safe Chem DB share)
-- PASS | Private GitHub `main` previously pushed (Teams-first onboarding `bbc1cd1` and earlier initial commit)
+- PASS | Coworker how-to DOCX on Teams pack + `docs/` + GitHub `main` (`36448c6`)
+- PASS | Keep Cursor posted STATUS.md in repo
+- RUNNING | Branch `feat/p2oasys-score-lookup-db` checked out with **uncommitted** WIP (sqlite sizes, lookup.py, app.py, expert CSV, README)
+- PASS | Cursor (while Grok Bot away): bundled P2OASys harvest sqlite on that feat branch (`acff086`); CAMEO NFPA local sqlite on `feat/cameo-nfpa-lookup` (`bb162a9`)
+- HELD | P2OASys harvest compile append routine: `resource_exhausted` since ~2026-09-14 (separate workstream)
+- NOTE | Fierro25 (`7b3409c3-…`) is connected for chat sends but hazquery tree not verified there; canonical = Fierro22
 
 ## Builds (code)
-- 2026-09-13 ET | code | Initial monorepo push `turi-safe-chem-db` @ Fierro22 | artifact: GitHub `main` | PASS
-- 2026-09-13 ET | code | Teams-first onboarding (START_HERE, `1_Open_Safe_Chem_DB.bat`, two-door README, softer DoSS UI) | commit `bbc1cd1` | PASS
-- 2026-09-18 ~05:25 ET | code | box: `python-docx` in `/workspace/.venv-docx` | coworker DOCX `/workspace/TURI_Safe_Chem_DB_Coworker_HowTo.docx` | PASS
-- 2026-09-18 ~05:27 ET | code | Copy DOCX + STATUS.md → Fierro22 Teams pack + monorepo docs/STATUS | PASS
+- 2026-09-13 ET | code | Initial push + Teams-first onboarding | `3920787`, `bbc1cd1` @ main | PASS
+- 2026-09-13 ET | code | CAMEO NFPA 704 local sqlite lookup | branch `feat/cameo-nfpa-lookup` `bb162a9` | PASS (not merged to main)
+- 2026-09-14 ET | code | Bundle P2OASys harvest lookup sqlite (~1250 CAS) for DoSS | branch `feat/p2oasys-score-lookup-db` `acff086` | PASS (not merged to main)
+- 2026-09-18 ~05:27 ET | code | Coworker DOCX + STATUS.md | `main` `36448c6` + feat `c9e5603` | PASS
+- 2026-09-18 ET | code | Uncommitted WIP on feat/p2oasys-score-lookup-db (larger sqlite, lookup.py, CSV) | local Fierro22 only | RUNNING / not pushed
 
 ## Builds (database)
-- n/a for Safe Chem DB share pack (no app DB migrations). Expert scores ship as CSV seed under `data/`.
-- P2OASys site harvest compile (separate workstream): compiled pages 1–101 historically at box `/workspace/p2oasys_site_exports/`; routine currently FAIL/resource_exhausted — do not treat as Safe Chem DB blocker.
+- 2026-09-14 ET | db | Ship `data/p2oasys_score_lookup.sqlite` + `data/p2oasys_harvest.sqlite` in feat branch | PASS (bundled extract, not a server migration)
+- 2026-09-13 ET | db | Ship `data/cameo_nfpa.sqlite` on cameo feat branch | PASS
+- Uncommitted local growth of p2oasys sqlite files on Fierro22 feat branch | not committed | do not treat as published
+- Harvest compile routine on box: FAIL resource_exhausted | not Safe Chem DB blocker
 
 ## Next
-1. Confirm DOCX present in `TURI-SafeChemDB-TeamsPack` and `turi-safe-chem-db/docs/`
-2. Commit + push DOCX + STATUS.md to GitHub `main`
-3. Upload/sync Teams pack (with DOCX) to the TURI shared channel; one coworker smoke-test `1_Open_Safe_Chem_DB.bat`
-4. Optional: investigate/pause harvest-compile routine resource_exhausted separately
+1. Review + commit or discard uncommitted feat/p2oasys WIP; open PR to main when ready
+2. Decide merge of `feat/cameo-nfpa-lookup` into main / Teams pack
+3. Refresh Teams pack `app\` from chosen branch; coworker smoke-test bat + DOCX
+4. Optional: pause or fix harvest-compile routine resource_exhausted
 
 ## Hard rules
 - No HSPiP.exe, licenses, or `.sofx` in git
 - Never invent HSP / NFPA / prices
 - No secrets in STATUS or git
-- Do not silently ship dependency or schema changes without STATUS lines
-- Teams pack = coworker product; localhost app is per-PC, not a shared hosted URL
+- Do not silently ship dependency or schema/sqlite changes without STATUS lines + user ping
+- Teams pack = coworker product; localhost is per-PC
