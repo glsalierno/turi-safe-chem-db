@@ -7,7 +7,7 @@ Prep for first GitHub push as **turi-safe-chem-db** / TURI Safe Chem DB (Fierro2
 - DoSS Streamlit app → `apps/doss_ondemand/app.py` (`packages.*` imports)
 - Core → `packages/doss_core/` (schema, pubchem, **fisher**, **tci**, sigma, hspip, glove_hsp)
 - P2OASys → `packages/p2oasys_core/lookup.py`
-- Seed data → `data/*.csv`, `data/priority_cas_list.txt`
+- Seed data → `data/*.csv`, `data/priority_cas_list.txt`, bundled `data/p2oasys_score_lookup.sqlite` + `data/p2oasys_harvest.sqlite`
 - Batch → `scripts/batch_priority_doss.py`, `scripts/fill_hspip_dph_rer.py`
 - Open HSPiP glue → `vendors/cas_to_hspip/` (py/m/README/LICENSE only)
 - Docs, MIT LICENSE, .gitignore, requirements.txt, requirements-dev.txt, pyproject.toml
@@ -27,7 +27,7 @@ Prep for first GitHub push as **turi-safe-chem-db** / TURI Safe Chem DB (Fierro2
 ## Anonymize (2026-09-13)
 
 - Removed hardcoded `<USER_HOME>\OneDrive\...` HSPiP Data fallbacks from `hspip.py` and `fill_hspip_dph_rer.py` → env + Teams sibling only (`%HSPIP_DATA%`, `<YOUR_HSPIP_DATA>`).
-- SQLite lookup prefers `P2OASYS_SCORE_LOOKUP_DB`; documented relative example without usernames.
+- SQLite lookup prefers `P2OASYS_SCORE_LOOKUP_DB`, then bundled `data/p2oasys_score_lookup.sqlite`, then a relative sibling GHaz7 example.
 - `GHAZ7_ROOT` remains a **relative** sibling path for optional TCI catalog/SDS cache only (no home-dir strings).
 - Removed personal hostname strings from fill-script help/messages.
 - App footer no longer prints absolute lookup DB paths.

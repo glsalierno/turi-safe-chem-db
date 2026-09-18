@@ -28,6 +28,8 @@ HSPiP_Data/
 cache/*.db
 *.sqlite
 *.sqlite3
+!data/p2oasys_score_lookup.sqlite
+!data/p2oasys_harvest.sqlite
 
 # OneDrive / machine-specific
 OneDrive/
@@ -40,6 +42,7 @@ OneDrive/
 **/batch_*.log
 **/GHhaz*/
 **/*harvest*
+!data/p2oasys_harvest.sqlite
 
 # OS
 Thumbs.db

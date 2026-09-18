@@ -23,8 +23,8 @@ from packages.doss_core.schema import (
 )
 from packages.p2oasys_core.lookup import (
     DEFAULT_EXPERT_CSV,
-    DEFAULT_LOOKUP_DB,
     documented_paths,
+    default_lookup_db_path,
     load_expert_csv,
     resolve_p2oasys,
 )
@@ -722,10 +722,11 @@ def main():
     else:
         st.sidebar.warning("No expert P2OASys CSV loaded")
 
-    if DEFAULT_LOOKUP_DB.is_file():
-        st.sidebar.caption(f"Auto/expert SQLite: `{DEFAULT_LOOKUP_DB.name}`")
+    _lookup_db = default_lookup_db_path()
+    if _lookup_db.is_file():
+        st.sidebar.caption(f"Auto/expert SQLite: `{_lookup_db.name}`")
     else:
-        st.sidebar.caption("GHaz7 score lookup DB not found (auto fallback unavailable)")
+        st.sidebar.caption("P2OASys score lookup DB not found (auto fallback unavailable)")
 
     # Vendor toggles under expander — keep defaults ON for enrichment
     _fisher_env = (os.environ.get("DOSS_ENABLE_FISHER") or "1").strip().lower()
@@ -904,8 +905,9 @@ def main():
         <small>
         <b>Data Sources:</b> PubChem PUG REST; expert P2OASys CSV
         (<code>{os.path.basename(paths['default_expert_csv'])}</code> /
-        <code>EXPERT_P2OASYS_CSV</code>); optional GHaz7 score lookup via
-        <code>P2OASYS_SCORE_LOOKUP_DB</code>; on-demand <b>Fisher</b> and <b>TCI</b> SDS/catalog
+        <code>EXPERT_P2OASYS_CSV</code>); bundled harvest/auto lookup
+        <code>data/p2oasys_score_lookup.sqlite</code> (override
+        <code>P2OASYS_SCORE_LOOKUP_DB</code>); on-demand <b>Fisher</b> and <b>TCI</b> SDS/catalog
         (best-effort; TCI may hit Akamai/403 — local cache used when present).
         Sigma/Millipore stubbed (access pending).<br>
         <b>P2OASys:</b> overall = max of Auto6 category maxima; source column =

@@ -9,6 +9,8 @@ Product rule: **Teams pack is the coworker product**; GitHub is for code updates
 Keep Cursor posted: update this file after meaningful steps (not chat alone).
 
 ## Now
+- PASS | 2026-09-18 ET Repo visibility set to PUBLIC; main includes P2OASys sqlite from feat merge
+- PASS | 2026-09-18 ~05:36 ET Teams pack sync @ Fierro22 from feat/p2oasys-score-lookup-db (WIP stashed; committed tree only; robocopy exit 3 = OK)
 - PASS | Coworker how-to DOCX on Teams pack + `docs/` + GitHub `main` (`36448c6`)
 - PASS | Keep Cursor posted STATUS.md in repo
 - RUNNING | Branch `feat/p2oasys-score-lookup-db` checked out with **uncommitted** WIP (sqlite sizes, lookup.py, app.py, expert CSV, README)
@@ -17,6 +19,7 @@ Keep Cursor posted: update this file after meaningful steps (not chat alone).
 - NOTE | Fierro25 (`7b3409c3-…`) is connected for chat sends but hazquery tree not verified there; canonical = Fierro22
 
 ## Builds (code)
+- 2026-09-18 ~05:36 ET | code | robocopy monorepo → TURI-SafeChemDB-TeamsPack\app (excl .git/.venv/__pycache__) | sqlite+docx+bat verified | PASS
 - 2026-09-13 ET | code | Initial push + Teams-first onboarding | `3920787`, `bbc1cd1` @ main | PASS
 - 2026-09-13 ET | code | CAMEO NFPA 704 local sqlite lookup | branch `feat/cameo-nfpa-lookup` `bb162a9` | PASS (not merged to main)
 - 2026-09-14 ET | code | Bundle P2OASys harvest lookup sqlite (~1250 CAS) for DoSS | branch `feat/p2oasys-score-lookup-db` `acff086` | PASS (not merged to main)
@@ -32,7 +35,7 @@ Keep Cursor posted: update this file after meaningful steps (not chat alone).
 ## Next
 1. Review + commit or discard uncommitted feat/p2oasys WIP; open PR to main when ready
 2. Decide merge of `feat/cameo-nfpa-lookup` into main / Teams pack
-3. Refresh Teams pack `app\` from chosen branch; coworker smoke-test bat + DOCX
+3. Coworker smoke-test `1_Open_Safe_Chem_DB.bat` + DOCX (Teams pack refreshed 2026-09-18)
 4. Optional: pause or fix harvest-compile routine resource_exhausted
 
 ## Hard rules
