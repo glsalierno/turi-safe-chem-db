@@ -26,7 +26,7 @@ Built for TURI / UMass Lowell research workflows. Shareable code is MIT; HSPiP b
 | Single-CAS DoSS lookup (Streamlit, port **8502**) | Yes |
 | Batch CAS mode + CSV download | Yes |
 | Expert P2OASys CSV (`data/priority_expert_p2oasys_scores.csv`) | Yes |
-| Optional GHaz7 `p2oasys_score_lookup.sqlite` auto/expert fallback | Env `P2OASYS_SCORE_LOOKUP_DB` |
+| Bundled `data/p2oasys_score_lookup.sqlite` expert + auto (harvest) | Yes (~1,250 CAS; override `P2OASYS_SCORE_LOOKUP_DB`) |
 | PubChem identity / physchem / GHS / NFPA | Yes |
 | **Fisher SDS enrich** (sidebar toggle; default from `DOSS_ENABLE_FISHER`) | Yes |
 | **TCI SDS enrich** (sidebar toggle; default **ON**) | Yes — best-effort |
@@ -63,7 +63,7 @@ With `PYTHONPATH` set to the repo root (or after `pip install -e .`), imports re
 apps/doss_ondemand/     # Streamlit UI (DoSS on-demand)
 packages/doss_core/     # PubChem, Fisher, TCI, HSPiP, schema, glove HSP
 packages/p2oasys_core/  # Expert/auto P2OASys lookup
-data/                   # Small seed CSVs / CAS lists (safe to commit)
+data/                   # Seed CSVs + bundled P2OASys sqlite lookup/harvest
 vendors/cas_to_hspip/   # Open HSPiP CLI / PubChem / MATLAB glue (no binary)
 scripts/                # Batch + Streamlit launcher
 docs/                   # INSTALL, HSPiP_CLI, TEAMS_DEPLOY
@@ -74,7 +74,7 @@ docs/                   # INSTALL, HSPiP_CLI, TEAMS_DEPLOY
 | Variable | Purpose |
 |----------|---------|
 | `EXPERT_P2OASYS_CSV` | Path to expert P2OASys scores CSV (else `data/priority_expert_p2oasys_scores.csv`) |
-| `P2OASYS_SCORE_LOOKUP_DB` | Path to GHaz7 `p2oasys_score_lookup.sqlite` (optional auto/expert fallback). Prefer this env; optional relative example without usernames: `../GHhaz6/GHaz7/quick-hazard-assessment-app/data/p2oasys_score_lookup.sqlite` |
+| `P2OASYS_SCORE_LOOKUP_DB` | Override path to P2OASys score lookup sqlite. Default is bundled `data/p2oasys_score_lookup.sqlite` (expert harvest + auto for missing CAS). |
 | `HSPIP_PATH` / `HSPIP_EXE` | HSPiP install dir or `HSPiP.exe` (sidebar prompt + CLI scripts). Placeholder: `<YOUR_HSPIP_INSTALL>` |
 | `HSPIP_DATA` / `HSPIP_DATA_DIR` | Directory of licensed HSPiP `.sofx` libraries. Placeholder: `%HSPIP_DATA%` / `<YOUR_HSPIP_DATA>` |
 | `DOSS_ENABLE_FISHER` | Default for Fisher SDS sidebar toggle (`1`/`0`; default on) |

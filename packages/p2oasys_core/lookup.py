@@ -3,9 +3,9 @@ P2OASys overall score lookup for DoSS on-demand (slim, no GHaz7 import).
 
 Sources (priority):
   1. Expert CSV — EXPERT_P2OASYS_CSV env, sidebar upload, or
-     ``priority_expert_p2oasys_scores.csv`` next to the app.
-  2. GHaz7 ``p2oasys_score_lookup.sqlite`` expert category scores.
-  3. Same SQLite auto category scores / auto_overall.
+     ``priority_expert_p2oasys_scores.csv`` next to the app (62-set overlay).
+  2. Bundled ``data/p2oasys_score_lookup.sqlite`` expert Auto6 (harvest single-CAS).
+  3. Same SQLite auto Auto6 / auto_overall for CAS with no expert row.
 
 Overall convention: max of Auto6 category maxima (Acute, Chronic, Ecological,
 Fate & Transport, Atmospheric, Physical). Process / Life Cycle are not included
@@ -38,11 +38,10 @@ GHAZ7_ROOT = (
     / "GHaz7"
     / "quick-hazard-assessment-app"
 )
-# SQLite score lookup: prefer env P2OASYS_SCORE_LOOKUP_DB (no user-home fallback).
-# Documented relative example when env unset:
-#   ../GHhaz6/GHaz7/quick-hazard-assessment-app/data/p2oasys_score_lookup.sqlite
+# SQLite score lookup: env P2OASYS_SCORE_LOOKUP_DB, then bundled data/, then sibling GHaz7.
+_BUNDLED_LOOKUP_DB = DATA_DIR / "p2oasys_score_lookup.sqlite"
 _EXAMPLE_RELATIVE_LOOKUP_DB = GHAZ7_ROOT / "data" / "p2oasys_score_lookup.sqlite"
-DEFAULT_LOOKUP_DB = _EXAMPLE_RELATIVE_LOOKUP_DB  # may not exist; prefer env
+DEFAULT_LOOKUP_DB = _BUNDLED_LOOKUP_DB
 
 # Auto6 category max columns in the priority expert export CSV.
 AUTO6_MAX_COLS = (
@@ -150,12 +149,15 @@ def overall_from_auto6_maxes(row: pd.Series | dict) -> Optional[float]:
 def default_lookup_db_path() -> Path:
     """Resolve score-lookup SQLite path.
 
-    Prefer ``P2OASYS_SCORE_LOOKUP_DB``. If unset, return the documented relative
-    example path (may not exist) — never a user home directory.
+    Prefer ``P2OASYS_SCORE_LOOKUP_DB``. Else the bundled
+    ``data/p2oasys_score_lookup.sqlite`` if present, else the sibling GHaz7
+    example path (may not exist). Never a user home directory.
     """
     env = (os.environ.get("P2OASYS_SCORE_LOOKUP_DB") or "").strip()
     if env:
         return Path(env)
+    if _BUNDLED_LOOKUP_DB.is_file():
+        return _BUNDLED_LOOKUP_DB
     return _EXAMPLE_RELATIVE_LOOKUP_DB
 
 

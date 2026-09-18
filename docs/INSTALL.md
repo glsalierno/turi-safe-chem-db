@@ -5,7 +5,7 @@
 - Python 3.10+ (3.11–3.13 tested)
 - Network access for PubChem / Fisher / TCI enrichment
 - Optional: licensed HSPiP + `.sofx` data for D/P/H/RER
-- Optional: GHaz7 `p2oasys_score_lookup.sqlite` for auto P2OASys fallback
+- Bundled `data/p2oasys_score_lookup.sqlite` for expert harvest + auto P2OASys (override with `P2OASYS_SCORE_LOOKUP_DB`)
 
 ## Steps
 
@@ -34,4 +34,4 @@ Browser: http://localhost:8502
 
 ## Data seeds
 
-Small files under `data/` ship with the repo. Point `EXPERT_P2OASYS_CSV` / `P2OASYS_SCORE_LOOKUP_DB` / `HSPIP_DATA` at larger private assets as needed.
+Seed CSVs and the P2OASys lookup/harvest sqlite files ship under `data/`. Point `EXPERT_P2OASYS_CSV` / `P2OASYS_SCORE_LOOKUP_DB` / `HSPIP_DATA` at overrides as needed.
