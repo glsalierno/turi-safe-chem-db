@@ -55,3 +55,7 @@ Code updates live in the private GitHub repo:
 https://github.com/glsalierno/turi-safe-chem-db  
 
 Coworkers: stay on this **Teams pack**. Developers: clone that repo.
+
+
+**Word guide:** docs/TURI_Safe_Chem_DB_Coworker_HowTo.docx (also in the Teams pack root).
+
