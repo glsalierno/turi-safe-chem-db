@@ -9,17 +9,13 @@ Product rule: **Teams pack is the coworker product**; GitHub is for code updates
 Keep Cursor posted: update this file after meaningful steps (not chat alone).
 
 ## Now
-- PASS | 2026-09-20 ET ECOSAR client (`packages/doss_core/ecosar.py`) + spike PASS (40/40) + DoSS sidebar toggle (notes only; **no** auto P2OASys Ecological fill)
-- PASS | 2026-09-18 ET Repo visibility set to PUBLIC; main includes P2OASys sqlite from feat merge
-- PASS | 2026-09-18 ~05:36 ET Teams pack sync @ Fierro22 from feat/p2oasys-score-lookup-db (WIP stashed; committed tree only; robocopy exit 3 = OK)
-- PASS | Coworker how-to DOCX on Teams pack + `docs/` + GitHub `main` (`36448c6`)
-- PASS | Keep Cursor posted STATUS.md in repo
-- RUNNING | Branch `feat/p2oasys-score-lookup-db` may still hold **uncommitted** WIP (sqlite sizes, lookup.py, app.py, expert CSV) — do not mix with ECOSAR commit
-- PASS | Cursor (while Grok Bot away): bundled P2OASys harvest sqlite on that feat branch (`acff086`); CAMEO NFPA local sqlite on `feat/cameo-nfpa-lookup` (`bb162a9`)
-- HELD | P2OASys harvest compile append routine: `resource_exhausted` since ~2026-09-14 (separate workstream)
-- NOTE | Fierro25 (`7b3409c3-…`) is connected for chat sends but hazquery tree not verified there; canonical = Fierro22
+- PASS | 2026-09-20 ET Teams pack sync from `feat/ecosar-pyepisuite` (`4673bb3` tree) → `TURI-SafeChemDB-TeamsPackpp` (robocopy exit 3 OK; WIP sqlite/lookup stashed during sync)
+- PASS | 2026-09-20 ET Teams pack `app\.venv` recreated on Python 3.13 + `requirements.txt` + `requirements-ecosar.txt` (pyepisuite); acetone ECOSAR smoke PASS
+- PASS | 2026-09-20 ET Local DoSS restarted on http://localhost:8502 from monorepo `apps/doss_ondemand/app.py` (ECOSAR sidebar available)
+- PASS | 2026-09-20 ET live-solvent-assess local tree wired with ecosar.py + app toggle (not pushed to GitHub yet)
 
 ## Builds (code)
+- 2026-09-20 ET | code | Teams pack robocopy + venv recreate (py3.13+pyepisuite) + DoSS :8502 restart; LSA local ecosar wire | Fierro22 | PASS
 - 2026-09-20 ET | code | ECOSAR pyepisuite remote client + DoSS wire (sidebar `enable_ecosar` / `DOSS_ENABLE_ECOSAR`; notes only) | `feat/ecosar-pyepisuite` `910c3d5` pushed | PASS
 - 2026-09-18 ~05:36 ET | code | robocopy monorepo → TURI-SafeChemDB-TeamsPack\app (excl .git/.venv/__pycache__) | sqlite+docx+bat verified | PASS
 - 2026-09-13 ET | code | Initial push + Teams-first onboarding | `3920787`, `bbc1cd1` @ main | PASS
@@ -40,7 +36,7 @@ Keep Cursor posted: update this file after meaningful steps (not chat alone).
 2. Decide merge of `feat/cameo-nfpa-lookup` into main / Teams pack
 3. Coworker smoke-test `1_Open_Safe_Chem_DB.bat` + DOCX (Teams pack refreshed 2026-09-18)
 4. Optional: pause or fix harvest-compile routine resource_exhausted
-5. After ECOSAR branch push: open PR `feat/ecosar-pyepisuite` → main; optional Teams pack sync
+5. Open PR `feat/ecosar-pyepisuite` → main; optional push LSA ecosar mirror; coworker smoke `1_Open_Safe_Chem_DB.bat`
 
 ## Hard rules
 - No HSPiP.exe, licenses, or `.sofx` in git
