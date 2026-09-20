@@ -3,21 +3,24 @@
 Canonical trees (host **Fierro22**, `67c9cbaa-689b-41cf-9c17-11543d316c1e`):
 - Monorepo: `C:\Users\glsal\OneDrive - UMass Lowell\TURI\Research\QSAR\hazquery\turi-safe-chem-db`
 - Teams product: `...\hazquery\TURI-SafeChemDB-TeamsPack`
-- GitHub (private): https://github.com/glsalierno/turi-safe-chem-db
+- GitHub (**public**): https://github.com/glsalierno/turi-safe-chem-db
 
 Product rule: **Teams pack is the coworker product**; GitHub is for code updates.
 Keep Cursor posted: update this file after meaningful steps (not chat alone).
 
 ## Now
+- PASS | 2026-09-20 ET ECOSAR client (`packages/doss_core/ecosar.py`) + spike PASS (40/40) + DoSS sidebar toggle (notes only; **no** auto P2OASys Ecological fill)
+- PASS | 2026-09-18 ET Repo visibility set to PUBLIC; main includes P2OASys sqlite from feat merge
 - PASS | 2026-09-18 ~05:36 ET Teams pack sync @ Fierro22 from feat/p2oasys-score-lookup-db (WIP stashed; committed tree only; robocopy exit 3 = OK)
 - PASS | Coworker how-to DOCX on Teams pack + `docs/` + GitHub `main` (`36448c6`)
 - PASS | Keep Cursor posted STATUS.md in repo
-- RUNNING | Branch `feat/p2oasys-score-lookup-db` checked out with **uncommitted** WIP (sqlite sizes, lookup.py, app.py, expert CSV, README)
+- RUNNING | Branch `feat/p2oasys-score-lookup-db` may still hold **uncommitted** WIP (sqlite sizes, lookup.py, app.py, expert CSV) — do not mix with ECOSAR commit
 - PASS | Cursor (while Grok Bot away): bundled P2OASys harvest sqlite on that feat branch (`acff086`); CAMEO NFPA local sqlite on `feat/cameo-nfpa-lookup` (`bb162a9`)
 - HELD | P2OASys harvest compile append routine: `resource_exhausted` since ~2026-09-14 (separate workstream)
 - NOTE | Fierro25 (`7b3409c3-…`) is connected for chat sends but hazquery tree not verified there; canonical = Fierro22
 
 ## Builds (code)
+- 2026-09-20 ET | code | ECOSAR pyepisuite remote client + DoSS wire (sidebar `enable_ecosar` / `DOSS_ENABLE_ECOSAR`; notes only) | branch `feat/ecosar-pyepisuite` | TARGET/PASS when committed
 - 2026-09-18 ~05:36 ET | code | robocopy monorepo → TURI-SafeChemDB-TeamsPack\app (excl .git/.venv/__pycache__) | sqlite+docx+bat verified | PASS
 - 2026-09-13 ET | code | Initial push + Teams-first onboarding | `3920787`, `bbc1cd1` @ main | PASS
 - 2026-09-13 ET | code | CAMEO NFPA 704 local sqlite lookup | branch `feat/cameo-nfpa-lookup` `bb162a9` | PASS (not merged to main)
@@ -26,6 +29,7 @@ Keep Cursor posted: update this file after meaningful steps (not chat alone).
 - 2026-09-18 ET | code | Uncommitted WIP on feat/p2oasys-score-lookup-db (larger sqlite, lookup.py, CSV) | local Fierro22 only | RUNNING / not pushed
 
 ## Builds (database)
+- 2026-09-20 ET | db | Spike CSV/JSON under `data/ecosar_spike/` (optional artifact; keep small `summary.json` + csv if <2MB; huge dumps stay gitignored) | PASS on Fierro22 spike
 - 2026-09-14 ET | db | Ship `data/p2oasys_score_lookup.sqlite` + `data/p2oasys_harvest.sqlite` in feat branch | PASS (bundled extract, not a server migration)
 - 2026-09-13 ET | db | Ship `data/cameo_nfpa.sqlite` on cameo feat branch | PASS
 - Uncommitted local growth of p2oasys sqlite files on Fierro22 feat branch | not committed | do not treat as published
@@ -36,10 +40,13 @@ Keep Cursor posted: update this file after meaningful steps (not chat alone).
 2. Decide merge of `feat/cameo-nfpa-lookup` into main / Teams pack
 3. Coworker smoke-test `1_Open_Safe_Chem_DB.bat` + DOCX (Teams pack refreshed 2026-09-18)
 4. Optional: pause or fix harvest-compile routine resource_exhausted
+5. After ECOSAR branch push: open PR `feat/ecosar-pyepisuite` → main; optional Teams pack sync
 
 ## Hard rules
 - No HSPiP.exe, licenses, or `.sofx` in git
-- Never invent HSP / NFPA / prices
+- **No EPA EPI Suite / ECOSAR binaries** in git — optional pyepisuite remote API only
+- Never invent HSP / NFPA / prices / ECOSAR values
+- Do **not** auto-map ECOSAR → P2OASys Ecological subcategory scores
 - No secrets in STATUS or git
 - Do not silently ship dependency or schema/sqlite changes without STATUS lines + user ping
 - Teams pack = coworker product; localhost is per-PC

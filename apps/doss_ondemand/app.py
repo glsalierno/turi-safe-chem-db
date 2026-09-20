@@ -49,6 +49,7 @@ from packages.doss_core.hspip import (
     save_hspip_paths,
 )
 from packages.doss_core.glove_hsp import format_glove_hsp_flag
+from packages.doss_core.ecosar import ecosar_available, summarize_ecosar_for_cas
 
 st.set_page_config(
     page_title="TURI Safe Chem DB - DoSS",
@@ -251,6 +252,7 @@ def build_doss_row(
     *,
     enable_tci: bool = True,
     enable_fisher: bool = True,
+    enable_ecosar: bool = False,
 ) -> Dict[str, Any]:
     """Convert PubChem (+ optional Fisher/TCI) data to a DoSS row."""
     row = empty_row()
@@ -567,6 +569,20 @@ def build_doss_row(
     if p2["source"] != EMPTY_VALUE:
         prop_sources["P2OASys"] = f"{p2['source']} ({p2.get('detail', '')})"
 
+
+    # --- Optional ECOSAR (PyEPISuite remote) — notes only; never auto-fill P2OASys Ecological ---
+    if enable_ecosar:
+        try:
+            eco = summarize_ecosar_for_cas(cas)
+            if eco.get("ok"):
+                note = eco.get("note") or "ok (no acute summary fields)"
+                notes.append(f"ECOSAR: {note}")
+            else:
+                err = eco.get("error") or "unknown_error"
+                notes.append(f"ECOSAR: {err}")
+        except Exception as exc:
+            notes.append(f"ECOSAR: {type(exc).__name__}: {exc}")
+
     row["_prop_sources"] = prop_sources
     row["_enrich_notes"] = notes
     return row
@@ -743,6 +759,20 @@ def main():
             value=_fisher_default,
             help="Fetch Fisher Scientific SDS / product page for NFPA, lab $/kg, SDS link, and §9 physchem when catalog has a part number. Prefer Fisher over PubChem/TCI when filled. Not a mass scrape. Default from DOSS_ENABLE_FISHER (1/0).",
         )
+        _ecosar_env = (os.environ.get("DOSS_ENABLE_ECOSAR") or "0").strip().lower()
+        _ecosar_default = _ecosar_env in ("1", "true", "yes", "on")
+        enable_ecosar = st.checkbox(
+            "ECOSAR (PyEPISuite remote API)",
+            value=_ecosar_default,
+            help=(
+                "Optional aquatic QSAR via unofficial pyepisuite remote API (not EPA; needs network). "
+                "Appends enrichment notes only — does NOT invent values and does NOT auto-fill "
+                "P2OASys Ecological subcategory scores. Default from DOSS_ENABLE_ECOSAR (0/1)."
+            ),
+            disabled=not ecosar_available(),
+        )
+        if not ecosar_available():
+            st.caption("ECOSAR unavailable — install optional `requirements-ecosar.txt` (pyepisuite).")
 
     hsp_setup = render_hspip_setup_sidebar()
 
@@ -767,7 +797,7 @@ def main():
             generate_btn = st.button("Generate Row", type="primary", use_container_width=True)
 
         if generate_btn and cas_input:
-            with st.spinner("Fetching PubChem / P2OASys / Fisher / TCI…"):
+            with st.spinner("Fetching PubChem / P2OASys / Fisher / TCI / optional ECOSAR…"):
                 try:
                     pubchem_data = fetch_compound_data(
                         cas_input.strip(),
@@ -778,6 +808,7 @@ def main():
                         expert_df,
                         enable_tci=enable_tci,
                         enable_fisher=enable_fisher,
+                        enable_ecosar=enable_ecosar,
                     )
                     smiles = pubchem_data.get("smiles") or ""
                     if smiles:
@@ -863,6 +894,7 @@ def main():
                             expert_df,
                             enable_tci=enable_tci,
                             enable_fisher=enable_fisher,
+                            enable_ecosar=enable_ecosar,
                         )
                         rows.append(row)
                     except Exception as e:
@@ -909,8 +941,9 @@ def main():
         <code>data/p2oasys_score_lookup.sqlite</code> (override
         <code>P2OASYS_SCORE_LOOKUP_DB</code>); on-demand <b>Fisher</b> and <b>TCI</b> SDS/catalog
         (best-effort; TCI may hit Akamai/403 — local cache used when present).
-        Sigma/Millipore stubbed (access pending).<br>
-        <b>P2OASys:</b> overall = max of Auto6 category maxima; source column =
+        Optional <b>ECOSAR</b> via <code>pyepisuite</code> remote API (unofficial; not EPA; no EPA binary redistributed; notes only — does not auto-fill P2OASys Ecological). Sigma/Millipore stubbed (access pending).<br>
+        <b>P2OASys:</b> expert overall = site evaluation when available, else mean of
+        Auto6 category maxima; auto = max of Auto6; source column =
         <code>expert</code> | <code>auto</code> | <code>-</code>.<br>
         <b>Reference:</b> Column structure matches TURI DoSS.xlsx sheet
         'DoSS original datapoints'.<br>
