@@ -20,7 +20,7 @@ Keep Cursor posted: update this file after meaningful steps (not chat alone).
 - NOTE | Fierro25 (`7b3409c3-…`) is connected for chat sends but hazquery tree not verified there; canonical = Fierro22
 
 ## Builds (code)
-- 2026-09-20 ET | code | ECOSAR pyepisuite remote client + DoSS wire (sidebar `enable_ecosar` / `DOSS_ENABLE_ECOSAR`; notes only) | branch `feat/ecosar-pyepisuite` | TARGET/PASS when committed
+- 2026-09-20 ET | code | ECOSAR pyepisuite remote client + DoSS wire (sidebar `enable_ecosar` / `DOSS_ENABLE_ECOSAR`; notes only) | `feat/ecosar-pyepisuite` `910c3d5` pushed | PASS
 - 2026-09-18 ~05:36 ET | code | robocopy monorepo → TURI-SafeChemDB-TeamsPack\app (excl .git/.venv/__pycache__) | sqlite+docx+bat verified | PASS
 - 2026-09-13 ET | code | Initial push + Teams-first onboarding | `3920787`, `bbc1cd1` @ main | PASS
 - 2026-09-13 ET | code | CAMEO NFPA 704 local sqlite lookup | branch `feat/cameo-nfpa-lookup` `bb162a9` | PASS (not merged to main)
