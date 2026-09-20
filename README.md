@@ -5,7 +5,7 @@
 See that pack's `README_START_HERE.md`.
 
 ## Updating the code?
-Clone this private repo: https://github.com/glsalierno/turi-safe-chem-db  
+Clone this public repo: https://github.com/glsalierno/turi-safe-chem-db  
 This git tree is the **source of truth for developers**. Coworkers should stay on the Teams pack.
 
 ---
@@ -30,6 +30,7 @@ Built for TURI / UMass Lowell research workflows. Shareable code is MIT; HSPiP b
 | PubChem identity / physchem / GHS / NFPA | Yes |
 | **Fisher SDS enrich** (sidebar toggle; default from `DOSS_ENABLE_FISHER`) | Yes |
 | **TCI SDS enrich** (sidebar toggle; default **ON**) | Yes — best-effort |
+| Optional **ECOSAR** (PyEPISuite remote; sidebar / `DOSS_ENABLE_ECOSAR`) | Opt-in — notes only; no EPA binary; does not auto-fill P2OASys Ecological |
 | HSPiP `.sofx` D/P/H/RER fill | Env / sidebar `HSPIP_DATA` |
 | HSPiP CLI for new CAS (Y-MBSX) | Opt-in; licensed `HSPiP.exe` |
 | HSP-predicted glove polymer screen | Yes (not breakthrough-time) |
@@ -91,6 +92,19 @@ Both vendors are **intentional, shareable** on-demand enrichers (not mass scrape
 
 Seed catalogs: `data/fisher_catalog_by_cas.csv` (and optional TCI catalog files if you add them under `data/`).
 
+
+## Optional ECOSAR (PyEPISuite remote)
+
+Aquatic QSAR enrichment via the unofficial MIT package [`pyepisuite`](https://pypi.org/project/pyepisuite/) talking to a **remote EPI Suite API**.
+
+- **Not EPA.** Unaffiliated with EPA; this repo does **not** redistribute EPA EPI Suite / ECOSAR binaries (same hard rule as HSPiP).
+- Install optional deps: `pip install -r requirements-ecosar.txt` (`pyepisuite>=1.2.0`).
+- Set `PYEPISUITE_MODE=remote` for API-only (the DoSS client also defaults this).
+- DoSS sidebar: **Advanced / data sources → ECOSAR (PyEPISuite remote API)** (default **OFF**, or `DOSS_ENABLE_ECOSAR=1`).
+- When enabled, results go into **enrichment notes only**. Values are never invented.
+- **Hard rule:** do **not** map ECOSAR outputs into P2OASys Ecological subcategory scores automatically.
+- Spike helper: `scripts/batch_ecosar_spike.py` → `data/ecosar_spike/` (optional artifact).
+
 ## HSPiP
 
 **Due diligence / self-install:** This repo never ships `HSPiP.exe`, CLI licenses, or `.sofx` files. Obtain HSPiP from [hansen-solubility.com](https://www.hansen-solubility.com/HSPiP).
@@ -136,6 +150,7 @@ Developers who prefer git should use this **`turi-safe-chem-db`** repo as source
 See [requirements.txt](requirements.txt). Optional:
 
 ```bash
+pip install -r requirements-ecosar.txt   # optional ECOSAR / pyepisuite remote
 pip install -r requirements-dev.txt   # vulture, pytest
 # RDKit (vendors/cas_to_hspip CLI canonicalize only) — prefer conda:
 # conda install -c conda-forge rdkit
