@@ -32,6 +32,7 @@ from packages.p2oasys_core.lookup import (
 )
 from packages.doss_core.pubchem import (
     PubChemError,
+    PubChemThrottledError,
     fetch_compound_data,
     get_smiles_for_cas,
     parse_numeric_with_unit,
@@ -837,6 +838,13 @@ def main():
                         row = apply_cli_hsp_to_row(row, result)
                     st.session_state["current_row"] = row
                     st.session_state["current_rows"] = [row]
+                except PubChemThrottledError as e:
+                    st.error(
+                        "⚠️ **PubChem throttled** — the service is experiencing high request volume "
+                        "from your organization or network. Try again in a few minutes, or use the "
+                        "bundled P2OASys SQLite scores which work offline."
+                    )
+                    st.caption(f"Technical: {e}")
                 except PubChemError as e:
                     st.error(f"PubChem lookup failed: {e}")
                 except Exception as e:
@@ -897,6 +905,7 @@ def main():
                 rows = []
                 errors = []
 
+                throttled = False
                 for i, cas in enumerate(cas_list):
                     status_text.text(f"Processing {cas} ({i+1}/{len(cas_list)})")
                     progress_bar.progress((i + 1) / len(cas_list))
@@ -910,6 +919,15 @@ def main():
                             enable_fisher=enable_fisher,
                         )
                         rows.append(row)
+                    except PubChemThrottledError as e:
+                        errors.append(f"{cas}: THROTTLED - {e}")
+                        empty = empty_row()
+                        empty["CAS"] = cas
+                        empty["P2OASys Source"] = EMPTY_VALUE
+                        rows.append(empty)
+                        throttled = True
+                        status_text.text(f"Stopped at {cas} — PubChem throttled")
+                        break
                     except Exception as e:
                         errors.append(f"{cas}: {e}")
                         empty = empty_row()
@@ -917,7 +935,14 @@ def main():
                         empty["P2OASys Source"] = EMPTY_VALUE
                         rows.append(empty)
 
-                status_text.text("Done!")
+                if not throttled:
+                    status_text.text("Done!")
+                else:
+                    st.error(
+                        "⚠️ **PubChem throttled** — batch processing stopped. "
+                        "The service is experiencing high request volume from your organization. "
+                        "Partial results shown below. Try again later or reduce batch size."
+                    )
 
                 if errors:
                     with st.expander(f"⚠️ {len(errors)} lookup errors"):
