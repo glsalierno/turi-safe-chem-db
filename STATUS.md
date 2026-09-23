@@ -9,6 +9,7 @@ Product rule: **Teams pack is the coworker product**; GitHub is for code updates
 Keep Cursor posted: update this file after meaningful steps (not chat alone).
 
 ## Now
+- PASS | 2026-09-23 ET PubChem throttle hardening: rate limiting, cache, backoff+jitter, PubChemThrottledError, UI messaging, tests
 - PASS | 2026-09-23 ET DoSS app now based on full P2OASys universe (~1,250 CAS), not priority-62 set
 - PASS | 2026-09-23 ET Added searchable chemical picker from bundled SQLite universe
 - PASS | 2026-09-23 ET Priority-62 CSV now optional overlay (sidebar toggle), not default basis
@@ -46,3 +47,4 @@ Keep Cursor posted: update this file after meaningful steps (not chat alone).
 - No secrets in STATUS or git
 - Do not silently ship dependency or schema/sqlite changes without STATUS lines + user ping
 - Teams pack = coworker product; localhost is per-PC
+- Respect PubChem throttling: rate limit, backoff, cache-first (see [NCBI docs](https://pubchem.ncbi.nlm.nih.gov/docs/dynamic-request-throttling))

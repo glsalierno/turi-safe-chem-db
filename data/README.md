@@ -16,6 +16,7 @@ Small **seed** files and bundled P2OASys sqlite DBs:
 - Raw harvest page CSVs / GHaz* trees
 - `*.sofx`, HSPiP binaries
 - Runtime SQLite caches (`cache/*.db`)
+- PubChem response cache (`cache/pubchem/*.json`) — auto-created, gitignored
 - Batch report CSVs with hundreds of rows (keep locally)
 
 Override paths with `EXPERT_P2OASYS_CSV`, `P2OASYS_SCORE_LOOKUP_DB`, `HSPIP_DATA`.
