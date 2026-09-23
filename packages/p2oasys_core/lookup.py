@@ -309,6 +309,55 @@ def resolve_p2oasys(
     }
 
 
+def load_cas_catalog(db_path: Path | str | None = None) -> list[dict[str, str]]:
+    """Load CAS + name catalog from the bundled score-lookup SQLite.
+
+    Returns list of dicts with keys: cas, name (best available from expert/auto),
+    has_expert, has_auto. Sorted by CAS. Used for UI searchable dropdowns.
+    """
+    path = Path(db_path) if db_path else default_lookup_db_path()
+    if not path.is_file():
+        return []
+    try:
+        conn = sqlite3.connect(str(path))
+        conn.row_factory = sqlite3.Row
+        try:
+            rows = conn.execute(
+                """SELECT cas, name_expert, name_auto, has_expert, has_auto
+                   FROM by_cas ORDER BY cas"""
+            ).fetchall()
+            result = []
+            for row in rows:
+                name = row["name_expert"] or row["name_auto"] or ""
+                result.append({
+                    "cas": row["cas"],
+                    "name": name,
+                    "has_expert": bool(row["has_expert"]),
+                    "has_auto": bool(row["has_auto"]),
+                })
+            return result
+        finally:
+            conn.close()
+    except Exception:
+        return []
+
+
+def cas_catalog_count(db_path: Path | str | None = None) -> int:
+    """Return count of CAS entries in the bundled score-lookup SQLite."""
+    path = Path(db_path) if db_path else default_lookup_db_path()
+    if not path.is_file():
+        return 0
+    try:
+        conn = sqlite3.connect(str(path))
+        try:
+            count = conn.execute("SELECT COUNT(*) FROM by_cas").fetchone()[0]
+            return count
+        finally:
+            conn.close()
+    except Exception:
+        return 0
+
+
 def documented_paths() -> dict[str, str]:
     """Paths used by this module (for README / UI captions)."""
     resolved = default_lookup_db_path()

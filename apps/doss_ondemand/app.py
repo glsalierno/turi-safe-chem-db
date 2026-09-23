@@ -25,6 +25,8 @@ from packages.p2oasys_core.lookup import (
     DEFAULT_EXPERT_CSV,
     documented_paths,
     default_lookup_db_path,
+    load_cas_catalog,
+    cas_catalog_count,
     load_expert_csv,
     resolve_p2oasys,
 )
@@ -685,48 +687,65 @@ def render_coverage_sidebar(row: Dict[str, Any]):
         )
 
 
+@st.cache_data(ttl=3600)
+def _load_universe_catalog():
+    """Cache the CAS catalog from SQLite for searchable dropdown."""
+    return load_cas_catalog()
+
+
 def main():
     st.title("🧪 TURI Safe Chem DB")
     st.markdown(
-        "Enter a CAS number (example: acetone `67-64-1`). "
+        "Select or search for a chemical from the P2OASys universe, or enter any CAS. "
         "We'll build a safer-solvent (DoSS) row."
     )
 
-    expert_df = load_expert_csv()
+    universe_catalog = _load_universe_catalog()
+    universe_count = len(universe_catalog)
+
+    expert_df = None
 
     st.sidebar.markdown("## Settings")
 
-    uploaded_file = st.sidebar.file_uploader(
-        "Upload P2OASys Expert CSV",
-        type=["csv"],
-        help="CSV with 'cas' column and Auto6 category max columns for P2OASys scoring",
-    )
-    if uploaded_file is not None:
-        try:
-            expert_df = pd.read_csv(uploaded_file)
-            cols_lower = {c.lower(): c for c in expert_df.columns}
-            if "cas" in cols_lower and cols_lower["cas"] != "cas":
-                expert_df = expert_df.rename(columns={cols_lower["cas"]: "cas"})
-            expert_df["cas"] = expert_df["cas"].astype(str).str.strip()
-            st.sidebar.success("Loaded P2OASys expert data (upload)")
-        except Exception as e:
-            st.sidebar.error(f"Failed to load CSV: {e}")
-    elif expert_df is not None:
-        src = (
-            os.environ.get("EXPERT_P2OASYS_CSV")
-            if os.environ.get("EXPERT_P2OASYS_CSV")
-            and os.path.exists(os.environ.get("EXPERT_P2OASYS_CSV", ""))
-            else str(DEFAULT_EXPERT_CSV)
-        )
-        st.sidebar.info(f"Expert CSV: `{os.path.basename(src)}` ({len(expert_df)} rows)")
-    else:
-        st.sidebar.warning("No expert P2OASys CSV loaded")
-
     _lookup_db = default_lookup_db_path()
     if _lookup_db.is_file():
-        st.sidebar.caption(f"Auto/expert SQLite: `{_lookup_db.name}`")
+        st.sidebar.success(f"P2OASys universe: **{universe_count:,}** chemicals")
+        st.sidebar.caption(f"Score DB: `{_lookup_db.name}`")
     else:
-        st.sidebar.caption("P2OASys score lookup DB not found (auto fallback unavailable)")
+        st.sidebar.warning("P2OASys score lookup DB not found")
+
+    with st.sidebar.expander("Expert CSV overlay (optional)", expanded=False):
+        st.caption(
+            "Optional: upload a custom expert CSV to override scores for specific CAS. "
+            "The bundled SQLite (expert + auto) is the default source."
+        )
+        uploaded_file = st.file_uploader(
+            "Upload P2OASys Expert CSV",
+            type=["csv"],
+            help="CSV with 'cas' column and Auto6 category max columns for P2OASys scoring",
+            key="expert_csv_upload",
+        )
+        load_default_csv = st.checkbox(
+            "Load default priority-62 CSV",
+            value=False,
+            help=f"Load {DEFAULT_EXPERT_CSV.name} as overlay (62-solvent curated subset)",
+        )
+        if uploaded_file is not None:
+            try:
+                expert_df = pd.read_csv(uploaded_file)
+                cols_lower = {c.lower(): c for c in expert_df.columns}
+                if "cas" in cols_lower and cols_lower["cas"] != "cas":
+                    expert_df = expert_df.rename(columns={cols_lower["cas"]: "cas"})
+                expert_df["cas"] = expert_df["cas"].astype(str).str.strip()
+                st.success(f"Loaded expert CSV ({len(expert_df)} rows)")
+            except Exception as e:
+                st.error(f"Failed to load CSV: {e}")
+        elif load_default_csv:
+            expert_df = load_expert_csv()
+            if expert_df is not None:
+                st.info(f"Priority-62 overlay: {len(expert_df)} rows")
+            else:
+                st.warning("Default CSV not found")
 
     # Vendor toggles under expander — keep defaults ON for enrichment
     _fisher_env = (os.environ.get("DOSS_ENABLE_FISHER") or "1").strip().lower()
@@ -754,11 +773,37 @@ def main():
         col1, col2 = st.columns([1, 2])
 
         with col1:
-            cas_input = st.text_input(
-                "CAS Number",
-                placeholder="e.g., 67-64-1 (acetone)",
-                help="Chemical ID — try acetone 67-64-1",
+            catalog_options = [""] + [
+                f"{item['cas']} — {item['name']}" if item["name"] else item["cas"]
+                for item in universe_catalog
+            ]
+            st.markdown("**From P2OASys universe:**")
+            selected_chem = st.selectbox(
+                "Search chemicals",
+                options=catalog_options,
+                index=0,
+                placeholder="Type to search CAS or name…",
+                help=f"Browse {universe_count:,} chemicals from the bundled P2OASys score database",
+                label_visibility="collapsed",
             )
+
+            st.markdown("**Or enter any CAS:**")
+            cas_input = st.text_input(
+                "CAS Number (any)",
+                placeholder="e.g., 67-64-1",
+                help="Enter CAS for chemicals not in the universe (uses PubChem lookup)",
+                label_visibility="collapsed",
+            )
+
+            final_cas = ""
+            if selected_chem:
+                final_cas = selected_chem.split(" — ")[0].strip()
+            elif cas_input:
+                final_cas = cas_input.strip()
+
+            if final_cas:
+                st.caption(f"Selected: **{final_cas}**")
+
             name_input = st.text_input(
                 "Solvent Name (optional)",
                 placeholder="e.g., Acetone",
@@ -766,11 +811,11 @@ def main():
             )
             generate_btn = st.button("Generate Row", type="primary", use_container_width=True)
 
-        if generate_btn and cas_input:
+        if generate_btn and final_cas:
             with st.spinner("Fetching PubChem / P2OASys / Fisher / TCI…"):
                 try:
                     pubchem_data = fetch_compound_data(
-                        cas_input.strip(),
+                        final_cas,
                         name_hint=name_input.strip() if name_input else None,
                     )
                     row = build_doss_row(
@@ -898,18 +943,15 @@ def main():
                         use_container_width=True,
                     )
 
-    paths = documented_paths()
     st.markdown("---")
     st.markdown(
         f"""
         <small>
-        <b>Data Sources:</b> PubChem PUG REST; expert P2OASys CSV
-        (<code>{os.path.basename(paths['default_expert_csv'])}</code> /
-        <code>EXPERT_P2OASYS_CSV</code>); bundled harvest/auto lookup
-        <code>data/p2oasys_score_lookup.sqlite</code> (override
-        <code>P2OASYS_SCORE_LOOKUP_DB</code>); on-demand <b>Fisher</b> and <b>TCI</b> SDS/catalog
-        (best-effort; TCI may hit Akamai/403 — local cache used when present).
-        Sigma/Millipore stubbed (access pending).<br>
+        <b>Data Sources:</b> Bundled P2OASys score universe
+        (<code>data/p2oasys_score_lookup.sqlite</code> — {universe_count:,} chemicals;
+        override <code>P2OASYS_SCORE_LOOKUP_DB</code>); PubChem PUG REST for identity/physchem;
+        on-demand <b>Fisher</b> and <b>TCI</b> SDS/catalog enrichment
+        (best-effort; TCI may hit Akamai/403). Optional expert CSV overlay via sidebar.<br>
         <b>P2OASys:</b> overall = max of Auto6 category maxima; source column =
         <code>expert</code> | <code>auto</code> | <code>-</code>.<br>
         <b>Reference:</b> Column structure matches TURI DoSS.xlsx sheet
