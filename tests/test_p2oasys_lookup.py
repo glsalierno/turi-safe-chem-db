@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from packages.p2oasys_core.lookup import (
+    cas_catalog_count,
     default_lookup_db_path,
+    load_cas_catalog,
     load_expert_csv,
     lookup_expert_csv,
     resolve_p2oasys,
@@ -32,3 +34,46 @@ def test_priority62_csv_still_wins_for_acetone():
     hit = resolve_p2oasys("67-64-1", expert_df)
     assert hit["source"] == "expert"
     assert hit["detail"] == "expert_csv"
+
+
+def test_load_cas_catalog_returns_universe():
+    """Catalog loader returns the full P2OASys universe from SQLite."""
+    catalog = load_cas_catalog()
+    assert len(catalog) > 100, "Expected large universe catalog"
+    assert len(catalog) > 62, "Universe should be larger than priority-62 set"
+    first = catalog[0]
+    assert "cas" in first
+    assert "name" in first
+    assert "has_expert" in first
+    assert "has_auto" in first
+
+
+def test_cas_catalog_count_matches_load():
+    """cas_catalog_count returns same count as load_cas_catalog."""
+    count = cas_catalog_count()
+    catalog = load_cas_catalog()
+    assert count == len(catalog)
+    assert count > 0
+
+
+def test_catalog_includes_harvest_only_cas():
+    """Universe catalog includes CAS that is NOT in priority-62 CSV."""
+    catalog = load_cas_catalog()
+    cas_set = {item["cas"].replace("-", "") for item in catalog}
+    harvest_digits = HARVEST_ONLY_CAS.replace("-", "")
+    assert harvest_digits in cas_set or HARVEST_ONLY_CAS in {item["cas"] for item in catalog}
+
+
+def test_resolve_p2oasys_without_csv_uses_sqlite():
+    """Without expert CSV, resolve_p2oasys falls through to SQLite expert/auto."""
+    hit = resolve_p2oasys("67-64-1", expert_df=None)
+    assert hit["source"] in ("expert", "auto")
+    assert hit["overall"] != "-"
+    assert "sqlite" in str(hit.get("detail") or "")
+
+
+def test_resolve_acetone_without_csv_finds_score():
+    """Acetone should resolve from SQLite when no CSV is provided."""
+    hit = resolve_p2oasys("67-64-1", expert_df=None)
+    assert hit["source"] in ("expert", "auto")
+    assert hit["overall"] != "-"
