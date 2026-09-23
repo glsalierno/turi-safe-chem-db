@@ -24,9 +24,11 @@ Built for TURI / UMass Lowell research workflows. Shareable code is MIT; HSPiP b
 | Feature | Status |
 |---------|--------|
 | Single-CAS DoSS lookup (Streamlit, port **8502**) | Yes |
+| Searchable chemical picker (full P2OASys universe) | Yes (~1,250 CAS) |
+| Free-text CAS for out-of-universe chemicals | Yes |
 | Batch CAS mode + CSV download | Yes |
-| Expert P2OASys CSV (`data/priority_expert_p2oasys_scores.csv`) | Yes |
 | Bundled `data/p2oasys_score_lookup.sqlite` expert + auto (harvest) | Yes (~1,250 CAS; override `P2OASYS_SCORE_LOOKUP_DB`) |
+| Optional expert CSV overlay (`data/priority_expert_p2oasys_scores.csv`) | Yes (sidebar toggle) |
 | PubChem identity / physchem / GHS / NFPA | Yes |
 | **Fisher SDS enrich** (sidebar toggle; default from `DOSS_ENABLE_FISHER`) | Yes |
 | **TCI SDS enrich** (sidebar toggle; default **ON**) | Yes — best-effort |
@@ -73,8 +75,8 @@ docs/                   # INSTALL, HSPiP_CLI, TEAMS_DEPLOY
 
 | Variable | Purpose |
 |----------|---------|
-| `EXPERT_P2OASYS_CSV` | Path to expert P2OASys scores CSV (else `data/priority_expert_p2oasys_scores.csv`) |
-| `P2OASYS_SCORE_LOOKUP_DB` | Override path to P2OASys score lookup sqlite. Default is bundled `data/p2oasys_score_lookup.sqlite` (expert harvest + auto for missing CAS). |
+| `P2OASYS_SCORE_LOOKUP_DB` | Override path to P2OASys score lookup SQLite. Default is bundled `data/p2oasys_score_lookup.sqlite` (~1,250 CAS with expert harvest + auto scores). |
+| `EXPERT_P2OASYS_CSV` | Path to optional expert P2OASys scores CSV overlay. Not loaded by default; enable via sidebar checkbox or upload. |
 | `HSPIP_PATH` / `HSPIP_EXE` | HSPiP install dir or `HSPiP.exe` (sidebar prompt + CLI scripts). Placeholder: `<YOUR_HSPIP_INSTALL>` |
 | `HSPIP_DATA` / `HSPIP_DATA_DIR` | Directory of licensed HSPiP `.sofx` libraries. Placeholder: `%HSPIP_DATA%` / `<YOUR_HSPIP_DATA>` |
 | `DOSS_ENABLE_FISHER` | Default for Fisher SDS sidebar toggle (`1`/`0`; default on) |
