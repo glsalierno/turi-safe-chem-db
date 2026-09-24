@@ -29,7 +29,7 @@ Built for TURI / UMass Lowell research workflows. Shareable code is MIT; HSPiP b
 | Batch CAS mode + CSV download | Yes |
 | Bundled `data/p2oasys_score_lookup.sqlite` expert + auto (harvest) | Yes (~1,250 CAS; override `P2OASYS_SCORE_LOOKUP_DB`) |
 | Optional expert CSV overlay (`data/priority_expert_p2oasys_scores.csv`) | Yes (sidebar toggle) |
-| PubChem identity / physchem / GHS / NFPA | Yes |
+| PubChem identity / physchem / GHS / NFPA | Yes (throttle-hardened) |
 | **Fisher SDS enrich** (sidebar toggle; default from `DOSS_ENABLE_FISHER`) | Yes |
 | **TCI SDS enrich** (sidebar toggle; default **ON**) | Yes — best-effort |
 | HSPiP `.sofx` D/P/H/RER fill | Env / sidebar `HSPIP_DATA` |
@@ -80,9 +80,35 @@ docs/                   # INSTALL, HSPiP_CLI, TEAMS_DEPLOY
 | `HSPIP_PATH` / `HSPIP_EXE` | HSPiP install dir or `HSPiP.exe` (sidebar prompt + CLI scripts). Placeholder: `<YOUR_HSPIP_INSTALL>` |
 | `HSPIP_DATA` / `HSPIP_DATA_DIR` | Directory of licensed HSPiP `.sofx` libraries. Placeholder: `%HSPIP_DATA%` / `<YOUR_HSPIP_DATA>` |
 | `DOSS_ENABLE_FISHER` | Default for Fisher SDS sidebar toggle (`1`/`0`; default on) |
+| `PUBCHEM_MIN_INTERVAL_S` | Minimum seconds between PubChem requests (default `0.35`; conservative) |
+| `PUBCHEM_MAX_RETRIES` | Max retries on 429/503 before raising `PubChemThrottledError` (default `5`) |
+| `PUBCHEM_CACHE_DIR` | Custom cache directory for PubChem responses (default `data/cache/pubchem/`) |
+| `PUBCHEM_CACHE_MAX_AGE_S` | Cache TTL in seconds (default `86400` = 24h) |
 | `PYTHONPATH` | Set to repo root if not using editable install |
 
 The DoSS sidebar **HSPiP setup** section also persists exe / data paths to `config/hspip_path.txt` (gitignored) and `~/.turi-safe-chem-db/hspip_path.txt`.
+
+## PubChem API and Throttle Handling
+
+The PubChem client (`packages/doss_core/pubchem.py`) implements [NCBI Dynamic Request Throttling](https://pubchem.ncbi.nlm.nih.gov/docs/dynamic-request-throttling) compliance:
+
+| Behavior | Default | Env Override |
+|----------|---------|--------------|
+| **Minimum request interval** | 0.35s process-wide | `PUBCHEM_MIN_INTERVAL_S` |
+| **Max retries on 429/503** | 5 | `PUBCHEM_MAX_RETRIES` |
+| **Exponential backoff** | Base 1.5s, max 60s, with jitter | — |
+| **Honor Retry-After** | Yes | — |
+| **Disk cache** | `data/cache/pubchem/` (24h TTL) | `PUBCHEM_CACHE_DIR`, `PUBCHEM_CACHE_MAX_AGE_S` |
+
+When PubChem returns HTTP 503 / 429 ("ServerBusy", "Too many requests"), the client:
+1. Backs off exponentially with jitter
+2. Honors `Retry-After` header when present
+3. After retries exhausted, raises `PubChemThrottledError`
+4. UI surfaces this as: "PubChem throttled — try later / use bundled SQLite scores"
+
+**For batch scripts:** on throttle, batch stops immediately to avoid further rate limiting.
+
+**Cache-first:** Cached responses are used on hit (default 24h); write on successful fetch. No invented chemical data.
 
 ## Fisher & TCI SDS enrichment
 

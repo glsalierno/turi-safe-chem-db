@@ -76,7 +76,11 @@ from packages.doss_core.schema import (  # noqa: E402
     empty_row,
 )
 from packages.p2oasys_core.lookup import load_expert_csv, resolve_p2oasys  # noqa: E402
-from packages.doss_core.pubchem import PubChemError, fetch_compound_data  # noqa: E402
+from packages.doss_core.pubchem import (  # noqa: E402
+    PubChemError,
+    PubChemThrottledError,
+    fetch_compound_data,
+)
 from apps.doss_ondemand.app import build_doss_row, generate_csv  # noqa: E402
 
 CAS_LIST_PATH = APP_DIR / "priority_cas_list.txt"
@@ -259,6 +263,15 @@ def main() -> int:
                 f"glove={row.get('Glove Type')}",
                 flush=True,
             )
+        except PubChemThrottledError as e:
+            print(f"  THROTTLED: {e}", flush=True)
+            print("  ** PubChem throttled — stopping batch to avoid further rate limiting **", flush=True)
+            rows.append(error_row(cas, name_hint, f"PubChemThrottled: {e}", expert_df))
+            for remaining_cas in cas_list[i:]:
+                if remaining_cas != cas:
+                    rh = name_map.get(remaining_cas)
+                    rows.append(error_row(remaining_cas, rh, "skipped_due_to_throttle", expert_df))
+            break
         except PubChemError as e:
             print(f"  PubChem fail: {e}", flush=True)
             rows.append(error_row(cas, name_hint, f"PubChemError: {e}", expert_df))
