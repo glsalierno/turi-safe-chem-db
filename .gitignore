@@ -26,6 +26,7 @@ HSPiP_Data/
 
 # Caches / DBs
 cache/*.db
+data/cache/
 *.sqlite
 *.sqlite3
 !data/p2oasys_score_lookup.sqlite
