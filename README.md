@@ -16,6 +16,7 @@ This git tree is the **source of truth for developers**. Coworkers should stay o
 - **P2OASys** — expert CSV + optional auto/expert SQLite score lookup (Auto6 category max convention)
 - **Fisher + TCI SDS** — on-demand SDS/product enrichment (NFPA, physchem, gloves, lab $/kg when available)
 - **HSPiP glue** — local `.sofx` D/P/H/RER lookup + optional licensed CLI for new CAS 
+- **ECOSAR** — optional ecological toxicity via pyepisuite remote API (no EPA binaries)
 
 Built for TURI / UMass Lowell research workflows. Shareable code is MIT; HSPiP binaries and `.sofx` libraries are **not** included.
 
@@ -135,10 +136,46 @@ Seed catalogs: `data/fisher_catalog_by_cas.csv` (and optional TCI catalog files 
 
 See [docs/HSPiP_CLI.md](docs/HSPiP_CLI.md).
 
+## ECOSAR (optional)
+
+**ECOSAR ecological toxicity** predictions via the unofficial [pyepisuite](https://pypi.org/project/pyepisuite/) remote API. This is an **optional dependency** — the module degrades gracefully when pyepisuite is not installed.
+
+- Uses `PYEPISUITE_MODE=remote` (API-only, no EPA binaries redistributed)
+- Provides acute aquatic toxicity summaries (Fish LC50, Daphnid LC50, Algae EC50)
+- **Never invents values** — returns error dicts when data unavailable
+
+Install the optional dependency:
+
+```bash
+pip install -r requirements-ecosar.txt
+```
+
+Usage:
+
+```python
+from packages.doss_core.ecosar import ecosar_available, summarize_ecosar_for_cas
+
+if ecosar_available():
+    result = summarize_ecosar_for_cas("67-64-1")  # acetone
+    print(result["fish_96h_lc50"])
+```
+
+When pyepisuite is not installed, all functions return safe error dicts:
+
+```python
+from packages.doss_core.ecosar import fetch_ecosar_rows
+
+result = fetch_ecosar_rows(["67-64-1"])
+# {"ok": False, "error": "pyepisuite_not_installed", ...}
+```
+
+**Note:** pyepisuite is MIT-licensed and unaffiliated with EPA. This repo never ships EPA ECOSAR binaries.
+
 ## What is NOT included
 
 - `HSPiP.exe`, license keys, install trees
 - `*.sofx` solvent libraries / full harvest dumps
+- EPA ECOSAR binaries (pyepisuite uses remote API only)
 - Large batch report CSVs / Streamlit logs / `__pycache__`
 - Guaranteed live Fisher/TCI access (network / bot-protection dependent)
 

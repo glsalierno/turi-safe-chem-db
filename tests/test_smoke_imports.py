@@ -13,6 +13,7 @@ def test_key_modules_parse():
         REPO / "packages/doss_core/tci.py",
         REPO / "packages/doss_core/fisher.py",
         REPO / "packages/doss_core/hspip.py",
+        REPO / "packages/doss_core/ecosar.py",
         REPO / "packages/p2oasys_core/lookup.py",
     ]
     for p in paths:
@@ -22,8 +23,10 @@ def test_key_modules_parse():
 def test_import_packages():
     import packages.doss_core.tci as tci
     import packages.doss_core.fisher as fisher
+    import packages.doss_core.ecosar as ecosar
     import packages.p2oasys_core.lookup as lookup
 
     assert hasattr(tci, "enrich_from_tci")
     assert hasattr(fisher, "enrich_from_fisher")
+    assert hasattr(ecosar, "ecosar_available")
     assert hasattr(lookup, "resolve_p2oasys")
