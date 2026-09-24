@@ -9,6 +9,7 @@ Product rule: **Teams pack is the coworker product**; GitHub is for code updates
 Keep Cursor posted: update this file after meaningful steps (not chat alone).
 
 ## Now
+- PASS | 2026-09-24 ET Optional ECOSAR via pyepisuite remote API (no EPA binaries) | branch `cursor/ecosar-pyepisuite-a133` | PR
 - PASS | 2026-09-23 ET PubChem throttle hardening: rate limiting, cache, backoff+jitter, PubChemThrottledError, UI messaging, tests
 - PASS | 2026-09-23 ET DoSS app now based on full P2OASys universe (~1,250 CAS), not priority-62 set
 - PASS | 2026-09-23 ET Added searchable chemical picker from bundled SQLite universe
@@ -22,6 +23,7 @@ Keep Cursor posted: update this file after meaningful steps (not chat alone).
 - NOTE | Fierro25 (`7b3409c3-…`) is connected for chat sends but hazquery tree not verified there; canonical = Fierro22
 
 ## Builds (code)
+- 2026-09-24 ET | code | Optional ECOSAR module via pyepisuite remote API; graceful degradation; tests | branch `cursor/ecosar-pyepisuite-a133` | PR
 - 2026-09-23 ET | code | Full P2OASys universe picker in DoSS app; priority-62 CSV optional overlay | branch `cursor/full-universe-picker-e2cc` | PR
 - 2026-09-18 ~05:36 ET | code | robocopy monorepo → TURI-SafeChemDB-TeamsPack\app (excl .git/.venv/__pycache__) | sqlite+docx+bat verified | PASS
 - 2026-09-13 ET | code | Initial push + Teams-first onboarding | `3920787`, `bbc1cd1` @ main | PASS
@@ -43,7 +45,8 @@ Keep Cursor posted: update this file after meaningful steps (not chat alone).
 
 ## Hard rules
 - No HSPiP.exe, licenses, or `.sofx` in git
-- Never invent HSP / NFPA / prices
+- No EPA ECOSAR binaries in git (pyepisuite uses remote API only)
+- Never invent HSP / NFPA / prices / ECOSAR values
 - No secrets in STATUS or git
 - Do not silently ship dependency or schema/sqlite changes without STATUS lines + user ping
 - Teams pack = coworker product; localhost is per-PC
