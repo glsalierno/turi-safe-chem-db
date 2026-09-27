@@ -9,6 +9,7 @@ Product rule: **Teams pack is the coworker product**; GitHub is for code updates
 Keep Cursor posted: update this file after meaningful steps (not chat alone).
 
 ## Now
+- PASS | 2026-09-27 ET Port GHaz7/8 P2OASys scorer engine to packages/p2oasys_scorer | branch cursor/scorer-port-d679 | [PR #8](https://github.com/glsalierno/turi-safe-chem-db/pull/8)
 - PASS | 2026-09-23 ET PubChem throttle hardening: rate limiting, cache, backoff+jitter, PubChemThrottledError, UI messaging, tests
 - PASS | 2026-09-23 ET DoSS app now based on full P2OASys universe (~1,250 CAS), not priority-62 set
 - PASS | 2026-09-23 ET Added searchable chemical picker from bundled SQLite universe
