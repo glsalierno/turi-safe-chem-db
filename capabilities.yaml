@@ -169,6 +169,82 @@ capabilities:
     status: "TODO"
     note: "Interface ready, model files not yet provided"
 
+  auto_p2oasys_iuclid:
+    name: "Auto P2OASys IUCLID adapter"
+    description: "ECHA REACH study results (inhalation LC50, repeated dose, genotoxicity, biodegradation, chronic NOEC)"
+    module: "packages.auto_p2oasys.adapters.iuclid"
+    required: false
+    licensed: false
+    env_vars:
+      - "IUCLID_CACHE_DB"
+    test_id: "test_auto_p2oasys::TestIUCLIDAdapter::test_echa_attribution_constant"
+    status: "optional"
+    note: "ECHA attribution required for all IUCLID-sourced evidence"
+
+  auto_p2oasys_dsstox:
+    name: "Auto P2OASys DSSTox adapter"
+    description: "EPA CompTox DSSTox chemical identifiers (DTXSID, SMILES)"
+    module: "packages.auto_p2oasys.adapters.comptox"
+    required: false
+    licensed: false
+    env_vars:
+      - "DSSTOX_CACHE_PATH"
+    test_id: "test_auto_p2oasys::TestCompToxAdapter::test_dsstox_availability_check"
+    status: "optional"
+
+  auto_p2oasys_toxvaldb:
+    name: "Auto P2OASys ToxValDB adapter"
+    description: "EPA ToxValDB toxicity values (oral LD50, dermal LD50, inhalation LC50)"
+    module: "packages.auto_p2oasys.adapters.comptox"
+    required: false
+    licensed: false
+    env_vars:
+      - "EPA_API_KEY"
+    test_id: "test_auto_p2oasys::TestCompToxAdapter::test_toxvaldb_availability_check"
+    status: "optional"
+
+  auto_p2oasys_cpdb:
+    name: "Auto P2OASys CPDB adapter"
+    description: "Carcinogenic Potency Database TD50 values"
+    module: "packages.auto_p2oasys.adapters.cpdb"
+    required: false
+    licensed: false
+    env_vars:
+      - "CPDB_DB_PATH"
+    test_id: "test_auto_p2oasys::TestCPDBAdapter::test_cpdb_availability_check"
+    status: "optional"
+
+  auto_p2oasys_ipcc_gwp:
+    name: "Auto P2OASys IPCC GWP adapter"
+    description: "IPCC AR4-AR6 Global Warming Potential lookup"
+    module: "packages.auto_p2oasys.adapters.atmospheric"
+    required: false
+    licensed: false
+    env_vars:
+      - "ATMO_DIR"
+    test_id: "test_auto_p2oasys::TestAtmosphericAdapter::test_ipcc_availability_check"
+    status: "optional"
+
+  auto_p2oasys_atmospheric_rules:
+    name: "Auto P2OASys atmospheric rules"
+    description: "Atmospheric hazard rules (acid rain precursor, default GWP/ODP)"
+    module: "packages.auto_p2oasys.adapters.atmospheric"
+    required: true
+    licensed: false
+    env_vars: []
+    test_id: "test_auto_p2oasys::TestAtmosphericAdapter::test_atmospheric_rules_defaults"
+    status: "active"
+
+  auto_p2oasys_ph_cascade:
+    name: "Auto P2OASys pH cascade"
+    description: "pH estimation cascade (experimental, pKa, SMARTS heuristic)"
+    module: "packages.auto_p2oasys.adapters.atmospheric"
+    required: true
+    licensed: false
+    env_vars: []
+    test_id: "test_auto_p2oasys::TestAtmosphericAdapter::test_ph_cascade_experimental"
+    status: "active"
+
   # ─────────────────────────────────────────────────────────────────────────────
   # SDS enrichment capabilities
   # ─────────────────────────────────────────────────────────────────────────────

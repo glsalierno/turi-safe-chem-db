@@ -625,3 +625,74 @@ def test_load_matrix_bundled():
     matrix = load_p2oasys_matrix(DEFAULT_MATRIX_PATH)
     assert "Acute Human Effects" in matrix
     assert "Physical Properties" in matrix
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Auto P2OASys adapter capabilities
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_echa_attribution_constant():
+    """IUCLID adapter has ECHA attribution constant."""
+    from packages.auto_p2oasys.adapters.iuclid import ECHA_ATTRIBUTION
+
+    assert "ECHA" in ECHA_ATTRIBUTION
+    assert "European Chemicals Agency" in ECHA_ATTRIBUTION
+
+
+def test_dsstox_availability_check():
+    """DSSTox adapter has availability check function."""
+    from packages.auto_p2oasys.adapters.comptox import is_dsstox_available
+
+    result = is_dsstox_available()
+    assert isinstance(result, bool)
+
+
+def test_toxvaldb_availability_check():
+    """ToxValDB adapter has availability check function."""
+    from packages.auto_p2oasys.adapters.comptox import is_toxvaldb_available
+
+    result = is_toxvaldb_available()
+    assert isinstance(result, bool)
+
+
+def test_cpdb_availability_check():
+    """CPDB adapter has availability check function."""
+    from packages.auto_p2oasys.adapters.cpdb import is_cpdb_available
+
+    result = is_cpdb_available()
+    assert isinstance(result, bool)
+
+
+def test_ipcc_availability_check():
+    """IPCC GWP adapter has availability check function."""
+    from packages.auto_p2oasys.adapters.atmospheric import is_ipcc_available
+
+    result = is_ipcc_available()
+    assert isinstance(result, bool)
+
+
+def test_atmospheric_rules_defaults():
+    """Atmospheric rules provides default GWP/ODP values."""
+    from packages.auto_p2oasys.adapters.atmospheric import apply_atmospheric_rules
+
+    hazard_data = {"hazard_metrics": {}}
+    result = apply_atmospheric_rules("67-64-1", hazard_data)
+
+    assert isinstance(result, list)
+    assert len(result) >= 2
+    endpoints = [ev.endpoint for ev in result]
+    assert "gwp100" in endpoints or "odp" in endpoints
+
+
+def test_ph_cascade_experimental():
+    """pH cascade uses experimental pH when available."""
+    from packages.auto_p2oasys.adapters.atmospheric import estimate_ph
+
+    hazard_data = {"exp_ph_1pct": 5.5}
+    result = estimate_ph("67-64-1", hazard_data)
+
+    assert len(result) == 1
+    assert result[0].endpoint == "ph_estimate"
+    assert result[0].value == 5.5
+    assert result[0].predicted is False

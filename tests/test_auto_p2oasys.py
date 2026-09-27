@@ -454,8 +454,118 @@ class TestFlashPointRouting:
         assert result == []
 
 
-class TestHazardBuilder:
-    """Additional tests for HazardDataBuilder."""
+def test_flash_predict_stub():
+    """Test that flash point prediction interface exists (model not yet provided)."""
+    from packages.auto_p2oasys.adapters.predictions import gather_flash_prediction
+
+    result = gather_flash_prediction("67-64-1", measured_available=False)
+    assert isinstance(result, list)
+
+
+class TestCompToxAdapter:
+    """Tests for CompTox DSSTox and ToxValDB adapters."""
+
+    def test_dsstox_availability_check(self):
+        from packages.auto_p2oasys.adapters.comptox import is_dsstox_available
+
+        result = is_dsstox_available()
+        assert isinstance(result, bool)
+
+    def test_toxvaldb_availability_check(self):
+        from packages.auto_p2oasys.adapters.comptox import is_toxvaldb_available
+
+        result = is_toxvaldb_available()
+        assert isinstance(result, bool)
+
+    def test_dsstox_gather_returns_list(self):
+        from packages.auto_p2oasys.adapters.comptox import gather_dsstox
+
+        result = gather_dsstox("67-64-1")
+        assert isinstance(result, list)
+
+    def test_toxvaldb_gather_returns_list(self):
+        from packages.auto_p2oasys.adapters.comptox import gather_toxvaldb
+
+        result = gather_toxvaldb("67-64-1")
+        assert isinstance(result, list)
+
+
+class TestCPDBAdapter:
+    """Tests for CPDB carcinogenic potency adapter."""
+
+    def test_cpdb_availability_check(self):
+        from packages.auto_p2oasys.adapters.cpdb import is_cpdb_available
+
+        result = is_cpdb_available()
+        assert isinstance(result, bool)
+
+    def test_cpdb_gather_returns_list(self):
+        from packages.auto_p2oasys.adapters.cpdb import gather_cpdb
+
+        result = gather_cpdb("71-43-2")
+        assert isinstance(result, list)
+
+
+class TestAtmosphericAdapter:
+    """Tests for atmospheric hazard adapters."""
+
+    def test_ipcc_availability_check(self):
+        from packages.auto_p2oasys.adapters.atmospheric import is_ipcc_available
+
+        result = is_ipcc_available()
+        assert isinstance(result, bool)
+
+    def test_ipcc_gwp_gather_returns_list(self):
+        from packages.auto_p2oasys.adapters.atmospheric import gather_ipcc_gwp
+
+        result = gather_ipcc_gwp("75-45-6")
+        assert isinstance(result, list)
+
+    def test_atmospheric_rules_defaults(self):
+        from packages.auto_p2oasys.adapters.atmospheric import apply_atmospheric_rules
+
+        hazard_data = {"hazard_metrics": {}}
+        result = apply_atmospheric_rules("67-64-1", hazard_data)
+
+        assert isinstance(result, list)
+        assert len(result) >= 2
+        endpoints = [ev.endpoint for ev in result]
+        assert "gwp100" in endpoints or "odp" in endpoints
+
+    def test_ph_cascade_experimental(self):
+        from packages.auto_p2oasys.adapters.atmospheric import estimate_ph
+
+        hazard_data = {"exp_ph_1pct": 5.5}
+        result = estimate_ph("67-64-1", hazard_data)
+
+        assert len(result) == 1
+        assert result[0].endpoint == "ph_estimate"
+        assert result[0].value == 5.5
+        assert result[0].predicted is False
+
+    def test_ph_cascade_pka(self):
+        from packages.auto_p2oasys.adapters.atmospheric import estimate_ph
+
+        hazard_data = {"pKa": 2.5}
+        result = estimate_ph("64-19-7", hazard_data)
+
+        assert len(result) == 1
+        assert result[0].endpoint == "ph_estimate"
+        assert result[0].predicted is True
+
+    def test_ph_cascade_smarts(self):
+        from packages.auto_p2oasys.adapters.atmospheric import estimate_ph
+
+        hazard_data = {"smiles": "CC(=O)O"}
+        result = estimate_ph("64-19-7", hazard_data)
+
+        assert len(result) == 1
+        assert result[0].endpoint == "ph_estimate"
+        assert result[0].predicted is True
+
+
+class TestHazardBuilderAttributions:
+    """Tests for HazardDataBuilder attributions and special tracking."""
 
     def test_epa_carcinogen_added(self):
         from packages.auto_p2oasys.evidence import Evidence
