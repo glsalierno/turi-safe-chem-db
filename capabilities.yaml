@@ -72,15 +72,102 @@ capabilities:
 
   p2oasys_matrix_scorer:
     name: "P2OASys matrix + scorer"
-    description: "Full P2OASys hazard matrix computation and scoring"
-    module: "packages.p2oasys_core.scorer"
+    description: "Full P2OASys hazard matrix computation and scoring (v6.7)"
+    module: "packages.p2oasys_scorer.utils.p2oasys_scorer"
     required: false
     licensed: false
     env_vars:
-      - "P2OASYS_MATRIX_DIR"
-    test_id: "test_capabilities::test_p2oasys_matrix_scorer"
-    pr: "#8"
+      - "P2OASYS_DATA_DIR"
+    test_id: "test_p2oasys_scorer::test_load_matrix_bundled"
+    status: "active"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Auto P2OASys (PR F) — expert-first routing with fast pipeline fallback
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  auto_p2oasys_entry:
+    name: "auto_p2oasys() entry point"
+    description: "Main entry point with expert-first routing and fast pipeline fallback"
+    module: "packages.auto_p2oasys.core"
+    required: true
+    licensed: false
+    env_vars:
+      - "AUTO_P2OASYS_OFFLINE"
+    test_id: "test_auto_p2oasys::TestExpertLookup::test_expert_lookup_acetone"
+    status: "active"
+
+  auto_p2oasys_expert_lookup:
+    name: "Auto P2OASys expert lookup"
+    description: "Returns expert scores from SQLite when available (mode=expert)"
+    module: "packages.auto_p2oasys.core"
+    required: true
+    licensed: false
+    env_vars:
+      - "P2OASYS_SCORE_LOOKUP_DB"
+    test_id: "test_auto_p2oasys::TestExpertLookup::test_expert_lookup_acetone"
+    status: "active"
+
+  auto_p2oasys_fast_pipeline:
+    name: "Auto P2OASys fast pipeline"
+    description: "Runs adapters when expert missing or force_fast=True"
+    module: "packages.auto_p2oasys.pipeline"
+    required: true
+    licensed: false
+    env_vars:
+      - "AUTO_P2OASYS_OFFLINE"
+    test_id: "test_auto_p2oasys::TestForceFast::test_force_fast_returns_expert_plus_fast"
+    status: "active"
+
+  auto_p2oasys_evidence:
+    name: "Auto P2OASys evidence records"
+    description: "Traceable evidence from each data source"
+    module: "packages.auto_p2oasys.evidence"
+    required: true
+    licensed: false
+    env_vars: []
+    test_id: "test_auto_p2oasys::TestEvidence::test_evidence_creation"
+    status: "active"
+
+  auto_p2oasys_source_report:
+    name: "Auto P2OASys source report"
+    description: "Shows which adapters ran/skipped/disabled"
+    module: "packages.auto_p2oasys.source_report"
+    required: true
+    licensed: false
+    env_vars: []
+    test_id: "test_auto_p2oasys::TestSourceReport::test_source_report_add"
+    status: "active"
+
+  auto_p2oasys_cli:
+    name: "Auto P2OASys CLI"
+    description: "Command-line interface for auto_p2oasys"
+    module: "packages.auto_p2oasys.__main__"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_auto_p2oasys::TestCLI::test_cli_version"
+    status: "active"
+
+  auto_p2oasys_gapfill:
+    name: "Auto P2OASys gap-fill layer"
+    description: "Gap-fill strategies for 34 auto subcategories"
+    module: "packages.auto_p2oasys.gapfill.layer"
+    required: true
+    licensed: false
+    env_vars: []
+    test_id: "test_auto_p2oasys::TestGapFillLayer::test_gapfill_measured_preferred"
+    status: "active"
+
+  auto_p2oasys_flash_predict:
+    name: "Auto P2OASys flash point predictor"
+    description: "Maestri/Salierno flash point prediction model"
+    module: "packages.auto_p2oasys.adapters.predictions"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_auto_p2oasys::test_flash_predict_stub"
     status: "TODO"
+    note: "Interface ready, model files not yet provided"
 
   # ─────────────────────────────────────────────────────────────────────────────
   # SDS enrichment capabilities
@@ -259,14 +346,15 @@ capabilities:
 
   assess_spine:
     name: "assess() spine"
-    description: "Core assessment orchestration function"
+    description: "Core assessment orchestration function (superseded by auto_p2oasys PR F)"
     module: "packages.assess"
     required: false
     licensed: false
     env_vars: []
     test_id: "test_capabilities::test_assess_spine"
     pr: "#5"
-    status: "TODO"
+    status: "superseded"
+    note: "Superseded by auto_p2oasys (PR F); PR #5 to be closed"
 
   # ─────────────────────────────────────────────────────────────────────────────
   # GHaz7/GHaz8 stack capabilities (ported from fast P2OASys)

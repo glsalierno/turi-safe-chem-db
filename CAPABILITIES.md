@@ -46,12 +46,77 @@ The capability registry ensures:
 | Capability | Status | Description |
 |------------|--------|-------------|
 | **P2OASys score lookup** | ✅ active | Expert/auto overall scores from bundled SQLite |
-| **P2OASys matrix + scorer** | 📝 TODO (#8) | Full hazard matrix computation |
+| **P2OASys matrix + scorer** | ✅ active | Full hazard matrix computation (v6.7 from PR #8/#10) |
 
 ### Environment Variables
 - `P2OASYS_SCORE_LOOKUP_DB` — Override path to score lookup SQLite
 - `EXPERT_P2OASYS_CSV` — Optional expert CSV overlay
-- `P2OASYS_MATRIX_DIR` — Directory for hazard matrix data (PR #8)
+- `P2OASYS_DATA_DIR` — Directory for hazard matrix and reference data
+
+---
+
+## Auto P2OASys (PR F)
+
+Clean automatic P2OASys scoring with expert-first routing and fast pipeline fallback.
+
+| Capability | Status | Description |
+|------------|--------|-------------|
+| **auto_p2oasys()** | ✅ active | Main entry point with expert-first routing |
+| **Expert lookup** | ✅ active | Returns expert scores when available (mode=`expert`) |
+| **Fast pipeline** | ✅ active | Runs adapters when expert missing or `force_fast=True` |
+| **Expert+fast mode** | ✅ active | Returns both when `force_fast=True` (mode=`expert+fast`) |
+| **Evidence records** | ✅ active | Traceable evidence from each source |
+| **Source report** | ✅ active | Shows which adapters ran/skipped/disabled |
+| **CLI** | ✅ active | `python -m packages.auto_p2oasys --cas ... [--fast]` |
+
+### Adapters
+
+| Adapter | Status | Description |
+|---------|--------|-------------|
+| **PubChem identity** | ✅ active | CID, SMILES, MW from PubChem |
+| **PubChem hazard** | ✅ active | GHS, NFPA, flash point, VP from PubChem |
+| **CAMEO NFPA** | ✅ active | NFPA 704 from bundled CAMEO sqlite |
+| **IARC table** | ✅ active | IARC carcinogen classification |
+| **ODP/GWP tables** | ✅ active | ODP and GWP100 from bundled tables |
+| **CAA HAP list** | ✅ active | Clean Air Act §112(b) HAP list |
+| **SDS parse** | ✅ active | Extract CAS, flash point from SDS PDFs |
+| **OPERA predictions** | 🔶 optional | Log Kow, BCF, biodeg from OPERA cache |
+| **ECOSAR predictions** | 🔶 optional | Aquatic LC50 via pyepisuite API |
+| **HSPiP VP** | 🔒 licensed | Vapor pressure from HSPiP (optional) |
+| **Flash point predict** | 📝 TODO | Maestri/Salierno model (interface ready, model pending) |
+| **IUCLID** | 🔶 optional | IUCLID dossier data (PR #9) |
+| **ToxValDB** | 🔶 optional | CompTox ToxValDB (API key required) |
+| **CPDB** | 🔶 optional | Carcinogenic Potency DB (sqlite not bundled) |
+
+### Gap-Fill Layer
+
+For each of the 34 auto subcategories (Acute 9, Chronic 7, Ecological 2, Fate 3, Atmospheric 4, Physical 9):
+- Try pathways in order, measured before predicted
+- Stop at first reliable one (P2OASys OR-of-pathways)
+- Keep other evidence in trace
+- Predicted-only values labeled
+
+### Environment Variables
+- `AUTO_P2OASYS_OFFLINE` — Set `1` to disable network adapters (use fixtures)
+- `ECOSAR_API_URL` — pyepisuite API endpoint for ECOSAR
+- `OPERA_PRECOMPUTE_DB_PATH` — Path to OPERA precompute cache
+- `CAMEO_NFPA_DB` — Path to CAMEO NFPA SQLite
+
+### CLI Usage
+
+```bash
+# Expert score from lookup (offline)
+python -m packages.auto_p2oasys --cas 67-64-1
+
+# Force fast pipeline (expert+fast mode)
+python -m packages.auto_p2oasys --cas 67-64-1 --fast
+
+# Parse SDS PDF for CAS and data
+python -m packages.auto_p2oasys --sds tfa.pdf
+
+# JSON output
+python -m packages.auto_p2oasys --cas 67-64-1 --json result.json
+```
 
 ---
 
@@ -158,7 +223,7 @@ The capability registry ensures:
 | Capability | Status | Description |
 |------------|--------|-------------|
 | **DoSS app** | ✅ active | Streamlit DoSS row generator |
-| **assess() spine** | 📝 TODO (#5) | Core assessment orchestration |
+| **assess() spine** | ⏹️ superseded | Core assessment — superseded by auto_p2oasys (PR F) |
 
 ### Environment Variables
 - `PYTHONPATH` — Set to repo root if not using editable install
