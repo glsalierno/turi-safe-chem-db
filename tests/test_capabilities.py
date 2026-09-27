@@ -189,11 +189,19 @@ def test_p2oasys_score_lookup():
 
 
 def test_p2oasys_matrix_scorer():
-    """P2OASys matrix scorer is TODO."""
+    """P2OASys matrix scorer is now active (v6.7)."""
     registry = load_registry()
     cap = registry["capabilities"]["p2oasys_matrix_scorer"]
-    assert cap["status"] == "TODO", "p2oasys_matrix_scorer should be TODO until PR #8"
-    pytest.skip("p2oasys_matrix_scorer is TODO (PR #8)")
+    assert cap["status"] == "active", "p2oasys_matrix_scorer is now active"
+
+    from packages.p2oasys_scorer.utils.p2oasys_scorer import load_p2oasys_matrix, DEFAULT_MATRIX_PATH
+
+    if not DEFAULT_MATRIX_PATH.exists():
+        pytest.skip(f"Matrix file not found: {DEFAULT_MATRIX_PATH}")
+
+    matrix = load_p2oasys_matrix(DEFAULT_MATRIX_PATH)
+    assert "Acute Human Effects" in matrix
+    assert "Physical Properties" in matrix
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -382,11 +390,11 @@ def test_doss_app():
 
 
 def test_assess_spine():
-    """assess() spine is TODO."""
+    """assess() spine is superseded by auto_p2oasys."""
     registry = load_registry()
     cap = registry["capabilities"]["assess_spine"]
-    assert cap["status"] == "TODO", "assess_spine should be TODO until PR #5"
-    pytest.skip("assess_spine is TODO (PR #5)")
+    assert cap["status"] == "superseded", "assess_spine is superseded by auto_p2oasys"
+    pytest.skip("assess_spine is superseded by auto_p2oasys (PR F)")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -502,3 +510,118 @@ def test_scorer_unit_conversion():
     cap = registry["capabilities"]["scorer_unit_conversion"]
     assert cap["status"] == "TODO", "scorer_unit_conversion should be TODO until PR #10"
     pytest.skip("scorer_unit_conversion is TODO (PR #10)")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Auto P2OASys capabilities (PR F)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_expert_lookup_acetone():
+    """Auto P2OASys expert lookup works for acetone (67-64-1)."""
+    from packages.auto_p2oasys import auto_p2oasys, P2OASysMode
+
+    result = auto_p2oasys("67-64-1")
+    assert result.mode == P2OASysMode.EXPERT
+    assert result.cas == "67-64-1"
+    assert result.overall is not None
+
+
+def test_force_fast_returns_expert_plus_fast():
+    """Auto P2OASys force_fast returns expert+fast mode."""
+    import os
+    os.environ["AUTO_P2OASYS_OFFLINE"] = "1"
+
+    from packages.auto_p2oasys import auto_p2oasys, P2OASysMode
+
+    result = auto_p2oasys("67-64-1", force_fast=True)
+    assert result.mode == P2OASysMode.EXPERT_PLUS_FAST
+    assert result.expert_overall is not None
+
+
+def test_evidence_creation():
+    """Evidence record creation and serialization."""
+    from packages.auto_p2oasys.evidence import Evidence
+
+    ev = Evidence(
+        cas="67-64-1",
+        endpoint="flash_point",
+        value=-17.8,
+        unit="°C",
+        source="PubChem",
+    )
+    assert ev.cas == "67-64-1"
+    d = ev.to_dict()
+    assert d["value"] == -17.8
+
+
+def test_source_report_add():
+    """Source report tracks adapter results."""
+    from packages.auto_p2oasys.source_report import SourceReport, AdapterStatus
+
+    report = SourceReport()
+    report.add("pubchem", AdapterStatus.RAN, evidence_count=5)
+    assert len(report.ran) == 1
+    assert report.total_evidence == 5
+
+
+def test_cli_version():
+    """CLI version command works."""
+    from packages.auto_p2oasys.__main__ import main
+    import io
+    import sys
+
+    old_stdout = sys.stdout
+    sys.stdout = io.StringIO()
+    try:
+        exit_code = main(["--version"])
+        output = sys.stdout.getvalue()
+    finally:
+        sys.stdout = old_stdout
+
+    assert exit_code == 0
+    assert "auto_p2oasys" in output
+
+
+def test_gapfill_measured_preferred():
+    """Gap-fill layer prefers measured over predicted."""
+    from packages.auto_p2oasys.evidence import Evidence
+    from packages.auto_p2oasys.gapfill import GapFillLayer
+
+    evidence = [
+        Evidence(
+            cas="67-64-1",
+            endpoint="oral_ld50",
+            value=5800,
+            unit="mg/kg",
+            source="PubChem",
+            predicted=False,
+        ),
+    ]
+    layer = GapFillLayer(evidence)
+    result = layer.fill("Oral Toxicity")
+    assert result.predicted is False
+
+
+def test_flash_predict_stub():
+    """Flash point predictor stub exists (TODO: model files)."""
+    from packages.auto_p2oasys.adapters.predictions import FlashPointPredictor
+
+    predictor = FlashPointPredictor.get_instance()
+    assert predictor.is_available() is False
+    pytest.skip("Flash point model files not yet provided (TODO)")
+
+
+def test_load_matrix_bundled():
+    """P2OASys matrix loads from bundled data."""
+    from packages.p2oasys_scorer.utils.p2oasys_scorer import (
+        load_p2oasys_matrix,
+        DEFAULT_MATRIX_PATH,
+    )
+
+    if not DEFAULT_MATRIX_PATH.exists():
+        pytest.skip(f"Matrix file not found: {DEFAULT_MATRIX_PATH}")
+
+    matrix = load_p2oasys_matrix(DEFAULT_MATRIX_PATH)
+    assert "Acute Human Effects" in matrix
+    assert "Physical Properties" in matrix
