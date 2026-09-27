@@ -56,3 +56,6 @@ config/hspip_path.txt
 config/env.bat
 **/hspip_path.txt
 .turi-safe-chem-db/
+
+# User survey answers (public repo - don't commit user data)
+data/survey_answers/

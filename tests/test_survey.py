@@ -38,23 +38,31 @@ class TestMatrixDefinitions:
     """Test TURI matrix band definitions."""
 
     def test_process_factors_subcategories(self):
-        """Process Factors has expected subcategories."""
+        """Process Factors has expected subcategories from TURI matrix."""
         subcats = get_subcategories(Category.PROCESS_FACTORS)
-        assert len(subcats) == 5
-        assert "Exposure Potential" in subcats
+        assert len(subcats) == 10
+        # From "Hazard Matrix Group Review 9-19-23.xlsx" Process Factors sheet
+        assert "Heat" in subcats
+        assert "Cold" in subcats
+        assert "Noise" in subcats
+        assert "Vibration" in subcats
         assert "Ergonomic Hazard" in subcats
         assert "Psychosocial Hazard" in subcats
         assert "High/Low Pressure System" in subcats
+        assert "High/Low Temperature System" in subcats
         assert "Water Use" in subcats
+        assert "Energy Use" in subcats
 
     def test_life_cycle_factors_subcategories(self):
-        """Life Cycle Factors has expected subcategories."""
+        """Life Cycle Factors has expected subcategories from TURI matrix."""
         subcats = get_subcategories(Category.LIFE_CYCLE_FACTORS)
-        assert len(subcats) == 4
-        assert "Upstream Processing and Manufacturing" in subcats
+        assert len(subcats) == 5
+        # From "Hazard Matrix Group Review 9-19-23.xlsx" Life Cycle Factors sheet
+        assert "Upstream Effects" in subcats
+        assert "Consumer Hazard" in subcats
+        assert "Disposal Hazard" in subcats
+        assert "Recycling" in subcats
         assert "Renewable to Nonrenewable Resource" in subcats
-        assert "Usage and Retail" in subcats
-        assert "End of life" in subcats
 
     def test_all_subcategories_have_band_descriptions(self):
         """Every subcategory must have descriptions for all band scores."""
@@ -67,7 +75,7 @@ class TestMatrixDefinitions:
 
     def test_get_all_options(self):
         """get_all_options returns score-description pairs."""
-        options = get_all_options(Category.PROCESS_FACTORS, "Exposure Potential")
+        options = get_all_options(Category.PROCESS_FACTORS, "Heat")
         assert len(options) == 5
         scores = [o["score"] for o in options]
         assert scores == [2, 4, 6, 8, 10]
@@ -88,7 +96,7 @@ class TestSubcategoryAnswer:
         """Create answer with valid score."""
         answer = SubcategoryAnswer(
             category="Process Factors",
-            subcategory="Exposure Potential",
+            subcategory="Heat",
             score=6,
         )
         assert answer.score == 6
@@ -99,7 +107,7 @@ class TestSubcategoryAnswer:
         """Create blank answer (score=None)."""
         answer = SubcategoryAnswer(
             category="Process Factors",
-            subcategory="Exposure Potential",
+            subcategory="Heat",
             score=None,
         )
         assert answer.score is None
@@ -110,7 +118,7 @@ class TestSubcategoryAnswer:
         with pytest.raises(ValueError):
             SubcategoryAnswer(
                 category="Process Factors",
-                subcategory="Exposure Potential",
+                subcategory="Heat",
                 score=5,  # Invalid: not in BAND_SCORES
             )
 
@@ -118,7 +126,7 @@ class TestSubcategoryAnswer:
         """Serialize and deserialize answer."""
         original = SubcategoryAnswer(
             category="Life Cycle Factors",
-            subcategory="End of life",
+            subcategory="Disposal Hazard",
             score=8,
             note="Based on MSDS review",
             answered_at="2024-01-15T10:30:00",
@@ -138,17 +146,17 @@ class TestSurveyAnswers:
         survey = SurveyAnswers(cas="67-64-1")
         assert survey.cas == "67-64-1"
         assert survey.count_answered() == 0
-        assert survey.count_total() == 9  # 5 + 4 subcategories
+        assert survey.count_total() == 15  # 10 Process + 5 Life Cycle subcategories
 
     def test_set_and_get_answer(self):
         """Set and retrieve answers."""
         survey = SurveyAnswers(cas="67-64-1")
-        survey.set_answer(Category.PROCESS_FACTORS, "Exposure Potential", 4, "Low exposure")
+        survey.set_answer(Category.PROCESS_FACTORS, "Heat", 4, "Low heat exposure")
 
-        answer = survey.get_answer(Category.PROCESS_FACTORS, "Exposure Potential")
+        answer = survey.get_answer(Category.PROCESS_FACTORS, "Heat")
         assert answer is not None
         assert answer.score == 4
-        assert answer.note == "Low exposure"
+        assert answer.note == "Low heat exposure"
         assert answer.source == "user"
 
     def test_blank_stays_blank_never_default_to_2(self):
@@ -182,7 +190,7 @@ class TestSurveyAnswers:
     def test_category_max_with_partial_answers(self):
         """category_max uses only answered subcategories."""
         survey = SurveyAnswers(cas="67-64-1")
-        survey.set_answer(Category.PROCESS_FACTORS, "Exposure Potential", 4)
+        survey.set_answer(Category.PROCESS_FACTORS, "Heat", 4)
         survey.set_answer(Category.PROCESS_FACTORS, "Ergonomic Hazard", 8)
         
         # Max should be 8 (not including blanks)
@@ -191,8 +199,8 @@ class TestSurveyAnswers:
     def test_category_mean_with_partial_answers(self):
         """category_mean averages only answered subcategories."""
         survey = SurveyAnswers(cas="67-64-1")
-        survey.set_answer(Category.LIFE_CYCLE_FACTORS, "End of life", 2)
-        survey.set_answer(Category.LIFE_CYCLE_FACTORS, "Usage and Retail", 6)
+        survey.set_answer(Category.LIFE_CYCLE_FACTORS, "Disposal Hazard", 2)
+        survey.set_answer(Category.LIFE_CYCLE_FACTORS, "Consumer Hazard", 6)
         
         # Mean of [2, 6] = 4.0
         assert survey.category_mean(Category.LIFE_CYCLE_FACTORS) == 4.0
@@ -203,8 +211,8 @@ class TestSurveyAnswers:
     def test_count_answered_by_category(self):
         """count_answered filters by category when provided."""
         survey = SurveyAnswers(cas="67-64-1")
-        survey.set_answer(Category.PROCESS_FACTORS, "Exposure Potential", 4)
-        survey.set_answer(Category.LIFE_CYCLE_FACTORS, "End of life", 6)
+        survey.set_answer(Category.PROCESS_FACTORS, "Heat", 4)
+        survey.set_answer(Category.LIFE_CYCLE_FACTORS, "Disposal Hazard", 6)
         
         assert survey.count_answered() == 2
         assert survey.count_answered(Category.PROCESS_FACTORS) == 1
@@ -213,12 +221,12 @@ class TestSurveyAnswers:
     def test_set_blank_answer(self):
         """Setting score=None explicitly marks as blank."""
         survey = SurveyAnswers(cas="67-64-1")
-        survey.set_answer(Category.PROCESS_FACTORS, "Exposure Potential", 6)
+        survey.set_answer(Category.PROCESS_FACTORS, "Heat", 6)
         
         # Now clear it
-        survey.set_answer(Category.PROCESS_FACTORS, "Exposure Potential", None)
+        survey.set_answer(Category.PROCESS_FACTORS, "Heat", None)
         
-        answer = survey.get_answer(Category.PROCESS_FACTORS, "Exposure Potential")
+        answer = survey.get_answer(Category.PROCESS_FACTORS, "Heat")
         assert answer is not None  # Answer object exists
         assert answer.score is None  # But score is blank
         assert answer.is_answered is False
@@ -226,8 +234,8 @@ class TestSurveyAnswers:
     def test_to_dict_from_dict_roundtrip(self):
         """Full survey serialization roundtrip."""
         survey = SurveyAnswers(cas="67-64-1", chemical_name="Acetone")
-        survey.set_answer(Category.PROCESS_FACTORS, "Exposure Potential", 4, "Note 1")
-        survey.set_answer(Category.LIFE_CYCLE_FACTORS, "End of life", 2, "Note 2")
+        survey.set_answer(Category.PROCESS_FACTORS, "Heat", 4, "Note 1")
+        survey.set_answer(Category.LIFE_CYCLE_FACTORS, "Disposal Hazard", 2, "Note 2")
         
         data = survey.to_dict()
         restored = SurveyAnswers.from_dict(data)
@@ -235,19 +243,19 @@ class TestSurveyAnswers:
         assert restored.cas == survey.cas
         assert restored.chemical_name == survey.chemical_name
         assert restored.count_answered() == 2
-        assert restored.get_score(Category.PROCESS_FACTORS, "Exposure Potential") == 4
+        assert restored.get_score(Category.PROCESS_FACTORS, "Heat") == 4
 
     def test_summary(self):
         """summary() returns expected structure."""
         survey = SurveyAnswers(cas="67-64-1", chemical_name="Acetone")
-        survey.set_answer(Category.PROCESS_FACTORS, "Exposure Potential", 4)
+        survey.set_answer(Category.PROCESS_FACTORS, "Heat", 4)
         survey.set_answer(Category.PROCESS_FACTORS, "Water Use", 6)
         
         summary = survey.summary()
         assert summary["cas"] == "67-64-1"
         assert summary["chemical_name"] == "Acetone"
         assert summary["process_factors"]["answered"] == 2
-        assert summary["process_factors"]["total"] == 5
+        assert summary["process_factors"]["total"] == 10
         assert summary["process_factors"]["max"] == 6
         assert summary["life_cycle_factors"]["max"] is None
 
@@ -260,7 +268,7 @@ class TestSaveLoadSurvey:
         monkeypatch.setenv("SURVEY_ANSWERS_DIR", str(tmp_path))
         
         survey = SurveyAnswers(cas="67-64-1", chemical_name="Acetone")
-        survey.set_answer(Category.PROCESS_FACTORS, "Exposure Potential", 4)
+        survey.set_answer(Category.PROCESS_FACTORS, "Heat", 4)
         
         path = save_survey(survey)
         assert path.exists()
@@ -268,7 +276,7 @@ class TestSaveLoadSurvey:
         loaded = load_survey("67-64-1")
         assert loaded is not None
         assert loaded.cas == "67-64-1"
-        assert loaded.get_score(Category.PROCESS_FACTORS, "Exposure Potential") == 4
+        assert loaded.get_score(Category.PROCESS_FACTORS, "Heat") == 4
 
     def test_load_nonexistent_returns_none(self, tmp_path, monkeypatch):
         """Loading non-existent survey returns None."""
@@ -283,11 +291,11 @@ class TestSaveLoadSurvey:
         
         # Save two surveys
         s1 = SurveyAnswers(cas="67-64-1", chemical_name="Acetone")
-        s1.set_answer(Category.PROCESS_FACTORS, "Exposure Potential", 4)
+        s1.set_answer(Category.PROCESS_FACTORS, "Heat", 4)
         save_survey(s1)
         
         s2 = SurveyAnswers(cas="64-17-5", chemical_name="Ethanol")
-        s2.set_answer(Category.LIFE_CYCLE_FACTORS, "End of life", 2)
+        s2.set_answer(Category.LIFE_CYCLE_FACTORS, "Disposal Hazard", 2)
         save_survey(s2)
         
         surveys = list_saved_surveys()
@@ -335,9 +343,9 @@ class TestSurveyDataModel:
             assert survey.category_max(cat) is None
         
         # Set some answers
-        survey.set_answer(Category.PROCESS_FACTORS, "Exposure Potential", 6)
+        survey.set_answer(Category.PROCESS_FACTORS, "Heat", 6)
         assert survey.count_answered() == 1
-        assert survey.get_score(Category.PROCESS_FACTORS, "Exposure Potential") == 6
+        assert survey.get_score(Category.PROCESS_FACTORS, "Heat") == 6
         
         # Verify serialization
         data = survey.to_dict()
@@ -346,7 +354,7 @@ class TestSurveyDataModel:
         
         # Verify deserialization
         restored = SurveyAnswers.from_dict(data)
-        assert restored.get_score(Category.PROCESS_FACTORS, "Exposure Potential") == 6
+        assert restored.get_score(Category.PROCESS_FACTORS, "Heat") == 6
 
 
 class TestStreamlitSurveyImports:
@@ -391,7 +399,7 @@ class TestCLIInterface:
         cli_set_answer(
             cas="67-64-1",
             category_name="Process Factors",
-            subcategory="Exposure Potential",
+            subcategory="Heat",
             score_str="6",
             note="Test note",
         )
@@ -402,7 +410,7 @@ class TestCLIInterface:
         # Verify it was saved
         loaded = load_survey("67-64-1")
         assert loaded is not None
-        assert loaded.get_score(Category.PROCESS_FACTORS, "Exposure Potential") == 6
+        assert loaded.get_score(Category.PROCESS_FACTORS, "Heat") == 6
 
     def test_cli_set_blank_answer(self, tmp_path, monkeypatch, capsys):
         """CLI can set blank answer."""
@@ -411,16 +419,16 @@ class TestCLIInterface:
         monkeypatch.setenv("SURVEY_ANSWERS_DIR", str(tmp_path))
         
         # First set a score
-        cli_set_answer("67-64-1", "Process Factors", "Exposure Potential", "6")
+        cli_set_answer("67-64-1", "Process Factors", "Heat", "6")
         
         # Then clear it
-        cli_set_answer("67-64-1", "Process Factors", "Exposure Potential", "blank")
+        cli_set_answer("67-64-1", "Process Factors", "Heat", "blank")
         
         captured = capsys.readouterr()
         assert "blank" in captured.out
         
         loaded = load_survey("67-64-1")
-        assert loaded.get_score(Category.PROCESS_FACTORS, "Exposure Potential") is None
+        assert loaded.get_score(Category.PROCESS_FACTORS, "Heat") is None
 
     def test_cli_invalid_category(self, capsys):
         """CLI rejects invalid category."""
@@ -436,7 +444,7 @@ class TestCLIInterface:
         """CLI rejects invalid score."""
         from packages.p2oasys_core.survey import cli_set_answer
         
-        cli_set_answer("67-64-1", "Process Factors", "Exposure Potential", "5")  # 5 is invalid
+        cli_set_answer("67-64-1", "Process Factors", "Heat", "5")  # 5 is invalid
         
         captured = capsys.readouterr()
         assert "Error" in captured.out

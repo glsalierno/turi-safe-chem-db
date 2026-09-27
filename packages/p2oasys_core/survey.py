@@ -38,75 +38,118 @@ class Category(str, Enum):
 # ─────────────────────────────────────────────────────────────────────────────
 # TURI Matrix Band Definitions
 # Process Factors and Life Cycle Factors subcategories with score criteria.
-# Source: TURI P2OASys methodology (scores: 2=low concern → 10=high concern)
+# Source: "Hazard Matrix Group Review 9-19-23.xlsx" from TURI P2OASys
+# Users can assign whatever score they think appropriate; indicators are a guide.
 # ─────────────────────────────────────────────────────────────────────────────
 
 PROCESS_FACTORS_MATRIX: Dict[str, Dict[int, str]] = {
-    "Exposure Potential": {
-        2: "Low exposure potential: closed system, minimal handling, no vapor release",
-        4: "Moderate-low exposure: occasional open handling, low volatility, good ventilation",
-        6: "Moderate exposure: regular handling, moderate volatility, standard controls",
-        8: "High exposure potential: frequent open handling, volatile, limited controls",
-        10: "Very high exposure: continuous open use, highly volatile, inadequate controls",
+    "Heat": {
+        2: "No symptoms (WBGT <25°C)",
+        4: "Heat rash - sweating, red clusters of pimples/blisters (WBGT 27°C, sun stress after 45 min)",
+        6: "Heat cramps - muscle pain, water loss and salts (WBGT 30°C, sun stress after 30 min)",
+        8: "Heat exhaustion - headache, nausea, dizziness, weakness, irritability, thirst, heavy sweating, elevated body temperature, decreased urine output (WBGT 32°C, sun stress after 20 min)",
+        10: "Heat stroke - confusion, loss of consciousness, seizures, very high body temperature, hot dry skin or profuse sweating (WBGT >32°C, sun stress after 15 min)",
+    },
+    "Cold": {
+        2: "No symptoms",
+        4: "Hypothermia (prolonged cold exposure) - shivering, fatigue, loss of coordination, confusion, disorientation; late symptoms - no shivering, blue skin, dilated pupils, slowed pulse and breathing, loss of consciousness",
+        6: "Frostbite (freezing, often affects nose, ears, cheeks, chin, fingers, toes) - reduced blood flow to hands and feet, numbness, aching, tingling or stinging, bluish or pale waxy skin",
+        8: "Trench foot (prolonged wet/cold exposure, can occur at temps up to 60°F) - reddening of skin, numbness, leg cramps, tingling pain, blisters or ulcers, bleeding under the skin, gangrene",
+        10: "Chilblains (just above freezing to 60°F) - ulcers formed by damaged blood vessels, redness, itching, blistering, inflammation, possible ulcerations",
+    },
+    "Noise": {
+        2: "80 dBA/no time limit - no symptoms",
+        4: "85 dBA/8 hr limit - no symptoms",
+        6: "88 dBA/4 hr limit - Hearing impairment; hear ringing or humming in ears when leaving work",
+        8: "90 dBA/2 hr limit - Tinnitus; have to shout to be heard by coworker at arm's length; temporary hearing loss when leaving work",
+        10: ">90 dBA/1.5 hr limit - Noise-induced hearing loss; permanent hearing loss",
+    },
+    "Vibration": {
+        2: "Class 1 Small Machine: 0.71 mm/s; Class 2 Medium: 1.12 mm/s; Class 3 Large Rigid: 1.8 mm/s; Class 4 Large Soft: 1.8 mm/s",
+        4: "Class 1: 1.8 mm/s; Class 2: 2.8 mm/s; Class 3: 4.5 mm/s; Class 4: 4.5 mm/s",
+        6: "Class 1: 4.5 mm/s; Class 2: 7.1 mm/s; Class 3: 7.1 mm/s; Class 4: 11.2 mm/s",
+        8: "Elevated vibration levels across machine classes",
+        10: "Class 1: 7.1 mm/s; Class 2: 11.2 mm/s; Class 3: 18 mm/s; Class 4: 28 mm/s",
     },
     "Ergonomic Hazard": {
-        2: "Minimal ergonomic concern: light weight, easy handling, no repetitive motions",
-        4: "Low ergonomic concern: modest weight, occasional handling requirements",
-        6: "Moderate ergonomic concern: regular lifting/handling, some repetitive tasks",
-        8: "High ergonomic concern: heavy containers, frequent handling, awkward positions",
-        10: "Severe ergonomic hazard: very heavy loads, continuous handling, injury risk",
+        2: "Rare, unlikely, improbable occurrence; insignificant hazard, no injury, no impact on time",
+        4: "Unlikely/remote occurrence; minor injury/illness, minor impact on time lost",
+        6: "Possible occurrence; moderate injury, lost time",
+        8: "Likely and probable occurrence; major long-term injury or health effect or permanent disability",
+        10: "Constant/almost certain occurrence; catastrophic - kill or cause permanent disability or ill health",
     },
     "Psychosocial Hazard": {
-        2: "Minimal psychosocial concern: routine chemical, well-understood, workers comfortable",
-        4: "Low concern: familiar chemical class, adequate training provided",
-        6: "Moderate concern: requires attention to handling, some worker uncertainty",
-        8: "High concern: known hazardous reputation, worker anxiety, complex procedures",
-        10: "Severe psychosocial hazard: feared chemical, significant worker stress, stigma",
+        2: "Process improves workload; adequate machine pacing; improves time constraints; normalizes shift work; eliminates isolation; includes worker input; improved equipment quality; improves workspace conditions",
+        4: "Process allows for minor changes in real-time by worker",
+        6: "Process provides worker with access to supervisor about needed changes; requires restricted access",
+        8: "Process contributes to underload or work overload; high/low machine pacing; creates time pressure/deadlines; creates irregular shift work; creates isolation; does not allow workers in decision process; inadequate equipment; poor environmental conditions",
+        10: "Process creates excessive shift work; changes in process lead to excessive production failures",
     },
     "High/Low Pressure System": {
-        2: "Ambient pressure operation, no pressurized systems involved",
-        4: "Low pressure systems (<50 psig), standard equipment, minimal concern",
-        6: "Moderate pressure operations (50-150 psig), requires trained operators",
-        8: "High pressure systems (150-500 psig), specialized equipment, safety protocols",
-        10: "Very high pressure (>500 psig) or vacuum systems, extreme caution required",
+        2: "0% delta change from ambient pressure",
+        4: "20% delta change from ambient pressure",
+        6: "50% delta change from ambient - Gases under pressure (H280, H284); chemical under pressure may explode if heated",
+        8: "100% delta change from ambient - Flammable chemical under pressure may explode if heated (H283)",
+        10: ">100% delta change from ambient - Extremely flammable chemical under pressure may explode if heated (H282)",
+    },
+    "High/Low Temperature System": {
+        2: "0% delta change from ambient temperature",
+        4: "20% delta change from ambient temperature",
+        6: "50% delta change from ambient - Contains refrigerated gas; may cause cryogenic burns or injury (H281)",
+        8: "100% delta change from ambient temperature",
+        10: ">100% delta change from ambient temperature",
     },
     "Water Use": {
-        2: "No water use in process, dry application or closed loop",
-        4: "Minimal water use: occasional rinsing, small volumes recycled",
-        6: "Moderate water use: regular cleaning, treatment available",
-        8: "High water consumption: continuous flow, significant wastewater generated",
-        10: "Very high water intensity: large volumes, complex treatment required",
+        2: ">75% water reduction; >75% reuse",
+        4: "50% water reduction; 50% reuse",
+        6: "<0-25% water reduction; <25% reuse",
+        8: "25% water increase; 25% discharge",
+        10: ">50% water increase; >50% discharge",
+    },
+    "Energy Use": {
+        2: ">50% energy reduction; 30% renewable energy",
+        4: "25% energy reduction; 25% renewable energy",
+        6: "<0-10% energy reduction; 15% renewable energy",
+        8: "25% energy increase; 5% renewable energy",
+        10: ">50% energy increase; 0% renewable energy",
     },
 }
 
 LIFE_CYCLE_FACTORS_MATRIX: Dict[str, Dict[int, str]] = {
-    "Upstream Processing and Manufacturing": {
-        2: "Green manufacturing: renewable feedstocks, low energy, minimal waste",
-        4: "Relatively clean production: some fossil inputs, efficient process",
-        6: "Standard chemical manufacturing: typical energy/waste profile",
-        8: "Energy-intensive production: significant fossil inputs, notable waste streams",
-        10: "Very high impact manufacturing: hazardous synthesis, major pollution concerns",
+    "Upstream Effects": {
+        2: "Eliminates suppliers' use of hazardous materials AND reduces use of energy, water, and resources",
+        4: "Eliminates suppliers' use of hazardous materials OR reduces use of energy, water, and resources",
+        6: "Process reduces suppliers' use of hazardous materials, energy, water and other resources",
+        8: "Process requires suppliers to use hazardous materials OR excess energy, water, and other resources",
+        10: "Process requires suppliers to use hazardous materials AND excess energy, water, and other resources",
+    },
+    "Consumer Hazard": {
+        2: "Product contains no hazardous components",
+        4: "Product contains hazardous components with no consumer/user exposure potential",
+        6: "Product contains hazardous components with low consumer/user exposure potential",
+        8: "Product contains hazardous components with moderate consumer/user exposure potential",
+        10: "Product contains hazardous components with consumer/user exposure potential",
+    },
+    "Disposal Hazard": {
+        2: "Prevents/reduces amount of waste material being created",
+        4: "Creates some concern for air, water or land",
+        6: "Creates concern for air, water or land and disposed of as hazardous waste",
+        8: "Causes contamination of air, water OR land",
+        10: "Causes contamination of air, water AND land",
+    },
+    "Recycling": {
+        2: "100% recyclable at end of life; uses products with 90% recycled material",
+        4: "75% recyclable at end of life; uses products with 75% recycled material",
+        6: "50% recyclable at end of life; uses products with 25% recycled material",
+        8: "25% recyclable at end of life; uses products with <25% recycled material",
+        10: "<25% recyclable at end of life; uses products with 0% recycled material",
     },
     "Renewable to Nonrenewable Resource": {
-        2: "Fully renewable: bio-based, sustainably sourced feedstock",
-        4: "Mostly renewable: >75% bio-based or recycled content",
-        6: "Mixed sourcing: partial bio-based, partial petrochemical",
-        8: "Mostly non-renewable: >75% petrochemical or mined feedstock",
-        10: "Fully non-renewable: 100% fossil-derived, finite resource base",
-    },
-    "Usage and Retail": {
-        2: "Minimal end-use concern: contained use, no consumer exposure, recyclable packaging",
-        4: "Low concern: limited consumer exposure, returnable/recyclable systems",
-        6: "Moderate concern: some consumer exposure, standard disposal expected",
-        8: "High concern: direct consumer contact, difficult-to-recycle packaging",
-        10: "Very high concern: extensive consumer exposure, single-use, disposal issues",
-    },
-    "End of life": {
-        2: "Readily biodegradable, non-toxic breakdown products, no accumulation",
-        4: "Biodegradable with low-concern intermediates, standard waste treatment",
-        6: "Moderate persistence, requires treatment, manageable disposal",
-        8: "Persistent or requires specialized disposal, limited treatment options",
-        10: "Highly persistent, hazardous waste designation, major disposal challenge",
+        2: "75% renewable materials - renewable",
+        4: "50% renewable materials - contains 50% renewable materials",
+        6: "25% renewable materials - contains 25% renewable materials",
+        8: "5% renewable materials - contains 10% renewable materials",
+        10: "0% renewable materials - nonrenewable materials",
     },
 }
 
