@@ -1,0 +1,15 @@
+{
+  "cas": "67-64-1",
+  "name": "Acetone",
+  "mode": "expert",
+  "expert_overall": 4.5,
+  "expert_categories": {
+    "Acute Human Effects": 4.0,
+    "Chronic Human Effects": 2.0,
+    "Ecological Hazards": 2.0,
+    "Environmental Fate & Transport": 2.0,
+    "Atmospheric Hazard": 2.0,
+    "Physical Properties": 9.0
+  },
+  "notes": "Expert score from p2oasys_score_lookup.sqlite (bundled)"
+}
