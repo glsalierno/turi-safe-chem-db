@@ -35,6 +35,7 @@ Built for TURI / UMass Lowell research workflows. Shareable code is MIT; HSPiP b
 | HSPiP `.sofx` D/P/H/RER fill | Env / sidebar `HSPIP_DATA` |
 | HSPiP CLI for new CAS (Y-MBSX) | Opt-in; licensed `HSPiP.exe` |
 | HSP-predicted glove polymer screen | Yes (not breakthrough-time) |
+| **Process/Life Cycle user survey** | Yes — in-app + CLI; save/load per CAS |
 | Open vendor wrappers (`vendors/cas_to_hspip/`) | Yes |
 | Batch scripts (`scripts/batch_priority_doss.py`, `fill_hspip_dph_rer.py`) | Yes |
 
@@ -117,6 +118,7 @@ scores, trace = compute_p2oasys_scores_with_trace(hazard_data, matrix)
 | `PUBCHEM_MAX_RETRIES` | Max retries on 429/503 before raising `PubChemThrottledError` (default `5`) |
 | `PUBCHEM_CACHE_DIR` | Custom cache directory for PubChem responses (default `data/cache/pubchem/`) |
 | `PUBCHEM_CACHE_MAX_AGE_S` | Cache TTL in seconds (default `86400` = 24h) |
+| `SURVEY_ANSWERS_DIR` | Custom directory for Process/Life Cycle survey answers (default `data/survey_answers/`) |
 | `PYTHONPATH` | Set to repo root if not using editable install |
 
 The DoSS sidebar **HSPiP setup** section also persists exe / data paths to `config/hspip_path.txt` (gitignored) and `~/.turi-safe-chem-db/hspip_path.txt`.
@@ -167,6 +169,24 @@ Seed catalogs: `data/fisher_catalog_by_cas.csv` (and optional TCI catalog files 
 - Open wrappers: `vendors/cas_to_hspip/` (set `PATH_TO_HSPIP_INSTALLATION` placeholders; optional RDKit via conda for CLI batch).
 
 See [docs/HSPiP_CLI.md](docs/HSPiP_CLI.md).
+
+## Process Factors & Life Cycle Factors Survey
+
+The P2OASys Auto6 categories (Acute, Chronic, Ecological, Fate, Atmospheric, Physical) are auto-scored from chemical data. **Process Factors** and **Life Cycle Factors** require human expert assessment and cannot be auto-scored.
+
+The survey feature provides:
+- In-app tab: "📋 Process/Life Cycle Survey" in the main DoSS Streamlit app
+- CLI: `python -m packages.p2oasys_core.survey show <CAS>`
+- Multiple-choice questions for each subcategory with TURI matrix band descriptions (scores 2, 4, 6, 8, 10)
+- **Default is "Don't know / leave blank"** — blank stays blank, never defaults to 2
+- Save/load answers per CAS (JSON in `data/survey_answers/`, override with `SURVEY_ANSWERS_DIR`)
+- Summary displays Process/Life Cycle results **separately** from Auto6 overall
+
+**Process Factors** subcategories:
+- Exposure Potential, Ergonomic Hazard, Psychosocial Hazard, High/Low Pressure System, Water Use
+
+**Life Cycle Factors** subcategories:
+- Upstream Processing and Manufacturing, Renewable to Nonrenewable Resource, Usage and Retail, End of life
 
 ## What is NOT included
 
