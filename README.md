@@ -110,6 +110,60 @@ When PubChem returns HTTP 503 / 429 ("ServerBusy", "Too many requests"), the cli
 
 **Cache-first:** Cached responses are used on hit (default 24h); write on successful fetch. No invented chemical data.
 
+## PubChem Bulk Index (Optional)
+
+For high-volume CAS lookups, you can build a local index from PubChem's FTP bulk files. This reduces API calls by checking the local index first, falling back to the throttled API on cache miss.
+
+### Bulk Files Indexed
+
+| File | Purpose | Size |
+|------|---------|------|
+| `CID-Synonym-filtered.gz` | CAS → CID mapping | ~600 MB |
+| `CID-SMILES.gz` | CID → SMILES | ~700 MB |
+| `CID-Title.gz` | CID → compound name | ~400 MB |
+| `CID-InChI-Key.gz` | CID → InChI key | ~500 MB |
+
+**Total disk footprint:** ~2-3 GB compressed files + ~500 MB SQLite index
+
+### CLI Commands
+
+```bash
+# Download bulk files and build SQLite index (takes 30-60 min)
+python -m packages.doss_core.pubchem_bulk build
+
+# Check and update if stale (>30 days old)
+python -m packages.doss_core.pubchem_bulk refresh
+
+# Show index status and statistics
+python -m packages.doss_core.pubchem_bulk status
+
+# Look up a CAS number (for testing)
+python -m packages.doss_core.pubchem_bulk lookup 67-64-1
+
+# Remove all bulk data
+python -m packages.doss_core.pubchem_bulk clear --yes
+```
+
+### Environment Variables
+
+| Variable | Purpose |
+|----------|---------|
+| `PUBCHEM_BULK_DIR` | Override bulk data directory (default `~/.turi-safe-chem-db/pubchem-bulk/` or `$XDG_DATA_HOME/turi-safe-chem-db/pubchem-bulk/`) |
+| `PUBCHEM_DISABLE_BULK` | Set to `1` to skip bulk lookup entirely and always use API |
+
+### Behavior
+
+1. **CAS lookup:** Checks local bulk index first → falls back to throttled PUG-REST API on miss
+2. **SMILES lookup:** If CID is from bulk, tries bulk SMILES first → falls back to API
+3. **GHS hazards:** Always from PUG-View API (not in bulk files)
+4. **Monthly refresh:** Files are considered stale after 30 days; `refresh` command updates them
+
+### Important Notes
+
+- **Bulk files are NOT committed to git** — they're stored in user data directories
+- **Streaming parser:** Files are processed line-by-line with bounded memory (never loaded entirely)
+- **No invented data:** Bulk index only stores what PubChem provides; missing entries fall back to API
+
 ## Fisher & TCI SDS enrichment
 
 Both vendors are **intentional, shareable** on-demand enrichers (not mass scrapers):

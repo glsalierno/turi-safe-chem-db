@@ -7,11 +7,17 @@ Implements NCBI PubChem Dynamic Request Throttling compliance:
   https://pubchem.ncbi.nlm.nih.gov/docs/dynamic-request-throttling
 
 Key behaviors:
+  - Optional local bulk index from PubChem FTP files (CAS → CID, SMILES, etc.)
+  - Falls back to PUG-REST API on bulk cache miss
   - Process-wide rate limiting (default 0.35s between requests; env PUBCHEM_MIN_INTERVAL_S)
   - Exponential backoff with jitter on 429/503/5xx
   - Honors Retry-After header when present
   - Disk cache under data/cache/pubchem/ to reduce redundant fetches
   - Clear PubChemThrottledError for UI handling
+
+Bulk index env vars:
+  - PUBCHEM_BULK_DIR: Override bulk data directory
+  - PUBCHEM_DISABLE_BULK=1: Skip bulk lookup entirely
 """
 
 from __future__ import annotations
@@ -45,6 +51,31 @@ _last_request_lock = threading.Lock()
 _last_request_at = 0.0
 
 _CACHE_DIR: Path | None = None
+
+
+def _try_bulk_lookup(cas: str) -> Optional[int]:
+    """Try to get CID from local bulk index.
+
+    Returns CID if found, None on miss or if bulk is disabled/unavailable.
+    """
+    try:
+        from packages.doss_core.pubchem_bulk import lookup_cid_by_cas
+        return lookup_cid_by_cas(cas)
+    except ImportError:
+        return None
+    except Exception:
+        return None
+
+
+def _get_bulk_data(cid: int) -> Optional[Dict[str, Any]]:
+    """Try to get compound data (SMILES, title, inchikey) from bulk index."""
+    try:
+        from packages.doss_core.pubchem_bulk import lookup_cid_data
+        return lookup_cid_data(cid)
+    except ImportError:
+        return None
+    except Exception:
+        return None
 
 
 def _get_cache_dir() -> Path:
@@ -256,13 +287,19 @@ def _get_with_retries(
 def get_cid_by_cas(cas: str) -> Optional[int]:
     """Look up PubChem CID by CAS registry number.
 
+    First checks local bulk index (if available), then falls back to PUG-REST API.
+
     Returns:
         CID if found, None if not found
 
     Raises:
-        PubChemThrottledError: On throttling after retries
-        PubChemError: On other failures
+        PubChemThrottledError: On throttling after retries (API only)
+        PubChemError: On other failures (API only)
     """
+    bulk_cid = _try_bulk_lookup(cas)
+    if bulk_cid is not None:
+        return bulk_cid
+
     url = f"{PUBCHEM_BASE}/compound/name/{cas}/cids/JSON"
     try:
         resp = _get_with_retries(url, label=f"CID lookup for CAS {cas}")
@@ -291,10 +328,18 @@ def get_compound_properties(cid: int) -> Dict[str, Any]:
 
 
 def get_smiles_for_cas(cas: str) -> Optional[str]:
-    """PubChem Canonical/Isomeric SMILES for a CAS. None if unknown. Never invents."""
+    """PubChem Canonical/Isomeric SMILES for a CAS. None if unknown. Never invents.
+
+    Tries bulk index first for CID → SMILES, falls back to API.
+    """
     cid = get_cid_by_cas(cas)
     if cid is None:
         return None
+
+    bulk_data = _get_bulk_data(cid)
+    if bulk_data and bulk_data.get("smiles"):
+        return bulk_data["smiles"]
+
     props = get_compound_properties(cid)
     smiles = (
         props.get("CanonicalSMILES")
