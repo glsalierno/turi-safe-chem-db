@@ -376,3 +376,140 @@ class TestP2OASysResult:
         summary = result.print_summary()
         assert "67-64-1" in summary
         assert "expert" in summary.lower()
+
+
+class TestIUCLIDAdapter:
+    """Tests for IUCLID adapter with ECHA attribution."""
+
+    def test_echa_attribution_constant(self):
+        from packages.auto_p2oasys.adapters.iuclid import ECHA_ATTRIBUTION
+
+        assert "ECHA" in ECHA_ATTRIBUTION
+        assert "European Chemicals Agency" in ECHA_ATTRIBUTION
+
+    def test_iuclid_endpoints_defined(self):
+        from packages.auto_p2oasys.adapters.iuclid import IUCLID_ENDPOINTS
+
+        assert "inhalation_lc50" in IUCLID_ENDPOINTS
+        assert "repeated_dose_toxicity" in IUCLID_ENDPOINTS
+        assert "genotoxicity_in_vitro" in IUCLID_ENDPOINTS
+        assert "biodegradation" in IUCLID_ENDPOINTS
+        assert "chronic_aquatic_noec" in IUCLID_ENDPOINTS
+
+
+class TestCarcinogenLookup:
+    """Tests for IARC + EPA carcinogen matching."""
+
+    def test_iarc_cas_normalization(self):
+        from packages.auto_p2oasys.cas_utils import normalize_cas
+
+        assert normalize_cas("71-43-2") == "71432"
+        assert normalize_cas("71432") == "71432"
+
+    def test_epa_carcinogen_function_exists(self):
+        from packages.auto_p2oasys.adapters.lookup_tables import gather_epa_carcinogen
+
+        result = gather_epa_carcinogen("71-43-2")
+        assert isinstance(result, list)
+
+
+class TestOdorThreshold:
+    """Tests for odor threshold lookup."""
+
+    def test_odor_threshold_missing_flag(self):
+        from packages.auto_p2oasys.adapters.lookup_tables import gather_odor_threshold
+
+        result = gather_odor_threshold("99999-99-9")
+        assert len(result) == 1
+        assert result[0].source == "MISSING"
+
+
+class TestNotWired:
+    """Tests for NOT_WIRED endpoint markers."""
+
+    def test_idlh_not_wired(self):
+        from packages.auto_p2oasys.adapters.lookup_tables import gather_idlh
+
+        result = gather_idlh("67-64-1")
+        assert len(result) == 1
+        assert result[0].source == "NOT_WIRED"
+        assert result[0].endpoint == "idlh"
+
+    def test_reportable_quantity_not_wired(self):
+        from packages.auto_p2oasys.adapters.lookup_tables import gather_reportable_quantity
+
+        result = gather_reportable_quantity("67-64-1")
+        assert len(result) == 1
+        assert result[0].source == "NOT_WIRED"
+        assert result[0].endpoint == "reportable_quantity"
+
+
+class TestFlashPointRouting:
+    """Tests for flash point measured-first routing."""
+
+    def test_flash_prediction_skips_when_measured(self):
+        from packages.auto_p2oasys.adapters.predictions import gather_flash_prediction
+
+        result = gather_flash_prediction("67-64-1", measured_available=True)
+        assert result == []
+
+
+class TestHazardBuilder:
+    """Additional tests for HazardDataBuilder."""
+
+    def test_epa_carcinogen_added(self):
+        from packages.auto_p2oasys.evidence import Evidence
+        from packages.auto_p2oasys.hazard_builder import HazardDataBuilder
+
+        builder = HazardDataBuilder("71-43-2")
+        builder.add_evidence(
+            Evidence(
+                cas="71-43-2",
+                endpoint="epa_carcinogen",
+                value="A",
+                source="EPA IRIS",
+            )
+        )
+
+        hazard_data = builder.build()
+        tox_values = [t["value"] for t in hazard_data["toxicities"]]
+        assert any("EPA Carcinogen" in v for v in tox_values)
+
+    def test_not_wired_tracked(self):
+        from packages.auto_p2oasys.evidence import Evidence
+        from packages.auto_p2oasys.hazard_builder import HazardDataBuilder
+
+        builder = HazardDataBuilder("67-64-1")
+        builder.add_evidence(
+            Evidence(
+                cas="67-64-1",
+                endpoint="idlh",
+                value=None,
+                source="NOT_WIRED",
+                reference="IDLH not implemented",
+            )
+        )
+
+        hazard_data = builder.build()
+        assert "not_wired_endpoints" in hazard_data
+        assert "idlh" in hazard_data["not_wired_endpoints"]
+
+    def test_iuclid_attribution_tracked(self):
+        from packages.auto_p2oasys.evidence import Evidence
+        from packages.auto_p2oasys.hazard_builder import HazardDataBuilder
+        from packages.auto_p2oasys.adapters.iuclid import ECHA_ATTRIBUTION
+
+        builder = HazardDataBuilder("71-43-2")
+        builder.add_evidence(
+            Evidence(
+                cas="71-43-2",
+                endpoint="inhalation_lc50",
+                value=10.5,
+                unit="mg/L",
+                source=ECHA_ATTRIBUTION,
+            )
+        )
+
+        hazard_data = builder.build()
+        assert "iuclid_attribution" in hazard_data
+        assert ECHA_ATTRIBUTION in hazard_data["iuclid_attribution"]
