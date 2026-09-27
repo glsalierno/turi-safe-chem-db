@@ -107,3 +107,30 @@ def test_xylenes_name_not_methanol():
             f"Xylenes name_auto should contain 'xylene': {row['name_auto']}"
     finally:
         conn.close()
+
+
+def test_xylenes_auto_scores_cleared():
+    """CAS 1330-20-7 (Xylenes) auto_* scores were contaminated from methanol and cleared.
+
+    The original harvest incorrectly copied methanol's auto_* scores to the xylenes row.
+    Since these scores are invalid, has_auto should be 0 and auto_* columns NULL.
+    """
+    import sqlite3
+    from packages.p2oasys_core.lookup import default_lookup_db_path
+
+    conn = sqlite3.connect(str(default_lookup_db_path()))
+    conn.row_factory = sqlite3.Row
+    try:
+        row = conn.execute(
+            "SELECT has_expert, has_auto, auto_acute, auto_overall, auto_sources "
+            "FROM by_cas WHERE cas = '1330-20-7'"
+        ).fetchone()
+        assert row is not None
+        assert row["has_expert"] == 1, "Expert scores should remain valid"
+        assert row["has_auto"] == 0, "Auto scores should be cleared (contaminated)"
+        assert row["auto_acute"] is None, "auto_acute should be NULL"
+        assert row["auto_overall"] is None, "auto_overall should be NULL"
+        assert "contaminated" in (row["auto_sources"] or "").lower(), \
+            "auto_sources should note contamination"
+    finally:
+        conn.close()
