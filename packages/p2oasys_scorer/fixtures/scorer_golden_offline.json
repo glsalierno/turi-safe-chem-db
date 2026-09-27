@@ -74,92 +74,114 @@
      "Inhalation Toxicity": {
       "LC50 ppm": 2,
       "GHS H Phrases": 8,
-      "_max": 5.0
+      "_max": 5.0,
+      "_predicted": false
      },
      "Oral Toxicity": {
       "LD50 mg/kg": 6,
-      "_max": 6.0
+      "_max": 6.0,
+      "_predicted": false
      },
      "Dermal Irritation": {
       "GHS H Phrases": 8,
-      "_max": 8.0
+      "_max": 8.0,
+      "_predicted": false
      },
      "Eye Irritation": {
       "GHS H Phrases": 8,
-      "_max": 8.0
+      "_max": 8.0,
+      "_predicted": false
      },
      "Health": {
       "NFPA/HMIS 0,1,2,3,4": 6,
-      "_max": 6.0
+      "_max": 6.0,
+      "_predicted": false
      },
-     "_category_max": 8.0
+     "_category_max": 8.0,
+     "_category_predicted": false
     },
     "Chronic Human Effects": {
      "Carcinogen": {
       "IARC Category": 10,
       "GHS H Phrases": 8,
-      "_max": 9.0
+      "_max": 9.0,
+      "_predicted": false
      },
      "Mutagen/ Teratogen": {
       "GHS H Phrase": 8,
-      "_max": 8.0
+      "_max": 8.0,
+      "_predicted": false
      },
      "Other Chronic Organ Effects": {
       "GHS H-Phrase - Repeated Exposure": 10,
-      "_max": 10.0
+      "_max": 10.0,
+      "_predicted": false
      },
-     "_category_max": 9.5
+     "_category_max": 9.5,
+     "_category_predicted": false
     },
     "Ecological Hazards": {
      "Acute Aquatic Toxicity": {
       "Acute Fish LC50 (mg/l)": 6,
-      "_max": 6.0
+      "_max": 6.0,
+      "_predicted": false
      },
      "Chronic Aquatic Toxicity (fish, crustacea or algae)": {
       "GHS H Phrases": 6,
-      "_max": 6.0
+      "_max": 6.0,
+      "_predicted": false
      },
-     "_category_max": 6.0
+     "_category_max": 6.0,
+     "_category_predicted": false
     },
     "Environmental Fate & Transport": {
      "Bioconcentration/ Bioaccumulation": {
       "Log Kow / Pow": 4,
-      "_max": 4.0
+      "_max": 4.0,
+      "_predicted": false
      },
-     "_category_max": 4.0
+     "_category_max": 4.0,
+     "_category_predicted": false
     },
     "Atmospheric Hazard": {
      "Atmospheric Hazard": {
       "GWP Relative to CO2": 2,
-      "_max": 2.0
+      "_max": 2.0,
+      "_predicted": false
      },
      "Ozone Depletor": {
       "ODP Units": 2,
-      "_max": 2.0
+      "_max": 2.0,
+      "_predicted": false
      },
-     "_category_max": 2.0
+     "_category_max": 2.0,
+     "_category_predicted": false
     },
     "Physical Properties": {
      "Vapor Pressure": {
       "mm Hg": 8,
-      "_max": 8.0
+      "_max": 8.0,
+      "_predicted": false
      },
      "Flammability: Liquid": {
       "NFPA/HMIS 0,1,2,3,4": 8,
       "GHS H Phrase": 8,
       "Flash Point deg C": 10,
-      "_max": 9.0
+      "_max": 9.0,
+      "_predicted": false
      },
-     "_category_max": 8.5
+     "_category_max": 8.5,
+     "_category_predicted": false
     },
-    "Process Factors": {
-     "Heat": {
-      "WBGT, deg C": 2,
-      "_max": 2.0
-     },
-     "_category_max": 2.0
-    },
-    "Life Cycle Factors": {}
+    "Process Factors": {},
+    "Life Cycle Factors": {},
+    "_overall": {
+     "score": 9.5,
+     "predicted": false,
+     "auto6_count": 6,
+     "categories_at_8_or_above": 3,
+     "measured_categories_at_8_or_above": 3
+    }
    },
    "trace": {
     "scorer_version": "p2oasys_scorer_v6.8_bug_fixes",
@@ -178,12 +200,18 @@
       "qualifier": null,
       "raw": "10,000",
       "unit": "ppm",
-      "source_unit": "ppm"
+      "source_unit": "ppm",
+      "predicted": false
      },
      "aquatic_lc50": {
       "value": 5.3,
+      "predicted": false,
+      "source": "toxicity",
+      "beyond_solubility": false,
+      "low_confidence": false,
       "unit": "mg/L"
      },
+     "aquatic_chv": null,
      "flash_point_c": {
       "value": -11.0,
       "unit": "degC"
@@ -194,6 +222,7 @@
      },
      "nfpa_health": 2,
      "nfpa_fire": 3,
+     "nfpa_reactivity": null,
      "iarc": "1",
      "epa_carcinogen": null,
      "gwp100": {
@@ -722,15 +751,15 @@
          2
         ],
         [
-         30.0,
+         200.0,
          4
         ],
         [
-         200.0,
+         300.0,
          6
         ],
         [
-         300.0,
+         1000.0,
          8
         ],
         [
@@ -947,49 +976,6 @@
        ]
       },
       "score": 10,
-      "status": "Scored",
-      "predicted": false
-     },
-     {
-      "category": "Process Factors",
-      "subcategory": "Heat",
-      "unit": "WBGT, deg C",
-      "input_value": -11.0,
-      "qualifier": null,
-      "matrix_rule": {
-       "type": "numeric",
-       "unit": "WBGT, deg C",
-       "cell_labels": {
-        "2": "25",
-        "4": "27",
-        "6": "30",
-        "8": "32",
-        "10": ">32"
-       },
-       "thresholds": [
-        [
-         25.0,
-         2
-        ],
-        [
-         27.0,
-         4
-        ],
-        [
-         30.0,
-         6
-        ],
-        [
-         32.0,
-         8
-        ],
-        [
-         32.0,
-         10
-        ]
-       ]
-      },
-      "score": 2,
       "status": "Scored",
       "predicted": false
      }
@@ -1434,7 +1420,7 @@
       "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
       "unit": "ChV mg/l",
       "status": "No data",
-      "reason": "numeric unit not mapped to an extractor"
+      "reason": "no aquatic ChV (chronic value)"
      },
      {
       "category": "Ecological Hazards",
@@ -1665,7 +1651,7 @@
       "subcategory": "Reactivity",
       "unit": "NFPA/HMIS 0,1,2,3,4",
       "status": "No data",
-      "reason": "no applicable evidence"
+      "reason": "no NFPA reactivity/instability rating"
      },
      {
       "category": "Physical Properties",
@@ -1755,6 +1741,13 @@
       "category": "Process Factors",
       "subcategory": "Process Factors",
       "unit": "Work Environment Process Factors",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Heat",
+      "unit": "WBGT, deg C",
       "status": "No data",
       "reason": "numeric unit not mapped to an extractor"
      },
@@ -2060,8 +2053,15 @@
      "Environmental Fate & Transport": "Scored",
      "Atmospheric Hazard": "Scored",
      "Physical Properties": "Scored",
-     "Process Factors": "Scored",
+     "Process Factors": "No data",
      "Life Cycle Factors": "No data"
+    },
+    "overall": {
+     "score": 9.5,
+     "predicted": false,
+     "auto6_count": 6,
+     "categories_at_8_or_above": 3,
+     "measured_categories_at_8_or_above": 3
     }
    }
   },
@@ -2106,65 +2106,80 @@
     "Acute Human Effects": {
      "Oral Toxicity": {
       "LD50 mg/kg": 2,
-      "_max": 2.0
+      "_max": 2.0,
+      "_predicted": false
      },
      "Dermal Toxicity": {
       "LD50 mg/kg": 2,
-      "_max": 2.0
+      "_max": 2.0,
+      "_predicted": false
      },
      "Eye Irritation": {
       "GHS H Phrases": 8,
-      "_max": 8.0
+      "_max": 8.0,
+      "_predicted": false
      },
      "Health": {
       "NFPA/HMIS 0,1,2,3,4": 4,
-      "_max": 4.0
+      "_max": 4.0,
+      "_predicted": false
      },
-     "_category_max": 6.0
+     "_category_max": 6.0,
+     "_category_predicted": false
     },
     "Chronic Human Effects": {
      "Neurotoxicity": {
       "GHS H Phrase": 6,
-      "_max": 6.0
+      "_max": 6.0,
+      "_predicted": false
      },
-     "_category_max": 6.0
+     "_category_max": 6.0,
+     "_category_predicted": false
     },
     "Ecological Hazards": {
      "Acute Aquatic Toxicity": {
       "Acute Fish LC50 (mg/l)": 4,
-      "_max": 4.0
+      "_max": 4.0,
+      "_predicted": false
      },
-     "_category_max": 4.0
+     "_category_max": 4.0,
+     "_category_predicted": false
     },
     "Environmental Fate & Transport": {
      "Bioconcentration/ Bioaccumulation": {
       "Log Kow / Pow": 2,
-      "_max": 2.0
+      "_max": 2.0,
+      "_predicted": false
      },
-     "_category_max": 2.0
+     "_category_max": 2.0,
+     "_category_predicted": false
     },
     "Atmospheric Hazard": {},
     "Physical Properties": {
      "Vapor Pressure": {
       "mm Hg": 10,
-      "_max": 10.0
+      "_max": 10.0,
+      "_predicted": false
      },
      "Flammability: Liquid": {
       "NFPA/HMIS 0,1,2,3,4": 8,
       "GHS H Phrase": 8,
       "Flash Point deg C": 10,
-      "_max": 9.0
+      "_max": 9.0,
+      "_predicted": false
      },
-     "_category_max": 9.5
+     "_category_max": 9.5,
+     "_category_predicted": false
     },
-    "Process Factors": {
-     "Heat": {
-      "WBGT, deg C": 2,
-      "_max": 2.0
-     },
-     "_category_max": 2.0
-    },
-    "Life Cycle Factors": {}
+    "Process Factors": {},
+    "Life Cycle Factors": {},
+    "_overall": {
+     "score": 9.5,
+     "predicted": false,
+     "auto6_count": 5,
+     "categories_at_8_or_above": 1,
+     "measured_categories_at_8_or_above": 1
+    }
    },
    "trace": {
     "scorer_version": "p2oasys_scorer_v6.8_bug_fixes",
@@ -2182,13 +2197,19 @@
       "qualifier": null,
       "raw": "15,800",
       "route": "dermal",
-      "unit": "mg/kg"
+      "unit": "mg/kg",
+      "predicted": false
      },
      "inhalation_lc50": null,
      "aquatic_lc50": {
       "value": 76.0,
+      "predicted": false,
+      "source": "toxicity",
+      "beyond_solubility": false,
+      "low_confidence": false,
       "unit": "mg/L"
      },
+     "aquatic_chv": null,
      "flash_point_c": {
       "value": -20.0,
       "unit": "degC"
@@ -2199,6 +2220,7 @@
      },
      "nfpa_health": 1,
      "nfpa_fire": 3,
+     "nfpa_reactivity": null,
      "iarc": null,
      "epa_carcinogen": null,
      "gwp100": null,
@@ -2657,49 +2679,6 @@
        ]
       },
       "score": 10,
-      "status": "Scored",
-      "predicted": false
-     },
-     {
-      "category": "Process Factors",
-      "subcategory": "Heat",
-      "unit": "WBGT, deg C",
-      "input_value": -20.0,
-      "qualifier": null,
-      "matrix_rule": {
-       "type": "numeric",
-       "unit": "WBGT, deg C",
-       "cell_labels": {
-        "2": "25",
-        "4": "27",
-        "6": "30",
-        "8": "32",
-        "10": ">32"
-       },
-       "thresholds": [
-        [
-         25.0,
-         2
-        ],
-        [
-         27.0,
-         4
-        ],
-        [
-         30.0,
-         6
-        ],
-        [
-         32.0,
-         8
-        ],
-        [
-         32.0,
-         10
-        ]
-       ]
-      },
-      "score": 2,
       "status": "Scored",
       "predicted": false
      }
@@ -3179,7 +3158,7 @@
       "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
       "unit": "ChV mg/l",
       "status": "No data",
-      "reason": "numeric unit not mapped to an extractor"
+      "reason": "no aquatic ChV (chronic value)"
      },
      {
       "category": "Ecological Hazards",
@@ -3431,7 +3410,7 @@
       "subcategory": "Reactivity",
       "unit": "NFPA/HMIS 0,1,2,3,4",
       "status": "No data",
-      "reason": "no applicable evidence"
+      "reason": "no NFPA reactivity/instability rating"
      },
      {
       "category": "Physical Properties",
@@ -3521,6 +3500,13 @@
       "category": "Process Factors",
       "subcategory": "Process Factors",
       "unit": "Work Environment Process Factors",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Heat",
+      "unit": "WBGT, deg C",
       "status": "No data",
       "reason": "numeric unit not mapped to an extractor"
      },
@@ -3826,8 +3812,15 @@
      "Environmental Fate & Transport": "Scored",
      "Atmospheric Hazard": "No data",
      "Physical Properties": "Scored",
-     "Process Factors": "Scored",
+     "Process Factors": "No data",
      "Life Cycle Factors": "No data"
+    },
+    "overall": {
+     "score": 9.5,
+     "predicted": false,
+     "auto6_count": 5,
+     "categories_at_8_or_above": 1,
+     "measured_categories_at_8_or_above": 1
     }
    }
   },
