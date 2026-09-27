@@ -89,6 +89,10 @@ Clean automatic P2OASys scoring with expert-first routing and fast pipeline fall
 | **IUCLID endpoints** | 🔶 optional | ECHA REACH study results (see attribution below) |
 | **ToxValDB** | 🔶 optional | CompTox ToxValDB (API key required) |
 | **CPDB** | 🔶 optional | Carcinogenic Potency DB (sqlite not bundled) |
+| **DSSTox** | 🔶 optional | CompTox chemical identifiers (DTXSID, SMILES) |
+| **IPCC GWP** | 🔶 optional | IPCC AR4-AR6 Global Warming Potential lookup |
+| **Atmospheric rules** | ✅ active | Acid rain precursor, default GWP/ODP values |
+| **pH cascade** | ✅ active | pH estimation (experimental, pKa, SMARTS heuristic) |
 
 ### IUCLID Endpoints (with ECHA Attribution)
 
