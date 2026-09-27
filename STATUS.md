@@ -10,6 +10,7 @@ Keep Cursor posted: update this file after meaningful steps (not chat alone).
 
 ## Now
 - WIP  | 2026-09-27 ET Auto P2OASys: expert-first routing + fast pipeline | branch cursor/auto-p2oasys-fd22 | PR F
+- WIP  | 2026-09-27 ET Process/Life Cycle user survey: Streamlit + CLI + data model + tests | branch cursor/process-lifecycle-survey-1481 | [PR #14](https://github.com/glsalierno/turi-safe-chem-db/pull/14)
 - PASS | 2026-09-27 ET Capability registry: `capabilities.yaml`, `CAPABILITIES.md`, `test_capabilities.py`, capability_report CLI | [PR #11](https://github.com/glsalierno/turi-safe-chem-db/pull/11)
 - PASS | 2026-09-27 ET Port GHaz7/8 P2OASys scorer engine to packages/p2oasys_scorer | branch cursor/scorer-port-d679 | [PR #8](https://github.com/glsalierno/turi-safe-chem-db/pull/8)
 - PASS | 2026-09-23 ET PubChem throttle hardening: rate limiting, cache, backoff+jitter, PubChemThrottledError, UI messaging, tests

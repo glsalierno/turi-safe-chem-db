@@ -52,6 +52,18 @@ from packages.doss_core.hspip import (
     save_hspip_paths,
 )
 from packages.doss_core.glove_hsp import format_glove_hsp_flag
+from packages.p2oasys_core.survey import (
+    Category,
+    SurveyAnswers,
+    get_subcategories,
+    list_saved_surveys,
+    load_survey,
+    save_survey,
+)
+from apps.doss_ondemand.survey_page import (
+    render_survey_page,
+    render_combined_results,
+)
 
 st.set_page_config(
     page_title="TURI Safe Chem DB - DoSS",
@@ -768,7 +780,7 @@ def main():
 
     st.sidebar.markdown("---")
 
-    tab1, tab2 = st.tabs(["Single Lookup", "Batch Mode"])
+    tab1, tab2, tab3 = st.tabs(["Single Lookup", "Batch Mode", "📋 Process/Life Cycle Survey"])
 
     with tab1:
         col1, col2 = st.columns([1, 2])
@@ -967,6 +979,92 @@ def main():
                         mime="text/csv",
                         use_container_width=True,
                     )
+
+    with tab3:
+        st.markdown(
+            "Assess **Process Factors** and **Life Cycle Factors** for chemicals. "
+            "These are the non-auto-scored TURI P2OASys categories that require human expert input."
+        )
+        st.info(
+            "📋 **Note:** These surveys are SEPARATE from the Auto6 science categories. "
+            "The overall Auto6 score remains the max of the six auto-scored categories only. "
+            "Process and Life Cycle results are shown alongside but never mixed in."
+        )
+
+        # Survey CAS selector
+        survey_col1, survey_col2 = st.columns([1, 2])
+
+        with survey_col1:
+            st.markdown("**Select chemical to survey:**")
+            survey_options = [""] + [
+                f"{item['cas']} — {item['name']}" if item["name"] else item["cas"]
+                for item in universe_catalog
+            ]
+            selected_survey_chem = st.selectbox(
+                "Search chemicals for survey",
+                options=survey_options,
+                index=0,
+                placeholder="Type to search CAS or name…",
+                key="survey_chem_select",
+                label_visibility="collapsed",
+            )
+
+            st.markdown("**Or enter any CAS:**")
+            survey_cas_input = st.text_input(
+                "CAS Number for survey",
+                placeholder="e.g., 67-64-1",
+                key="survey_cas_text",
+                label_visibility="collapsed",
+            )
+
+            survey_cas = ""
+            if selected_survey_chem:
+                survey_cas = selected_survey_chem.split(" — ")[0].strip()
+            elif survey_cas_input:
+                survey_cas = survey_cas_input.strip()
+
+            # Show saved surveys
+            st.markdown("---")
+            st.markdown("**Saved surveys:**")
+            saved = list_saved_surveys()
+            if saved:
+                for s in saved[:5]:
+                    progress = s["answered"] / s["total"] if s["total"] > 0 else 0
+                    label = s["cas"]
+                    if s["chemical_name"]:
+                        label += f" ({s['chemical_name'][:15]}…)" if len(s["chemical_name"]) > 15 else f" ({s['chemical_name']})"
+                    st.progress(progress, text=f"{label}: {s['answered']}/{s['total']}")
+            else:
+                st.caption("No saved surveys yet")
+
+        with survey_col2:
+            if survey_cas:
+                # Get Auto6 score for combined display
+                p2_result = resolve_p2oasys(survey_cas, expert_df)
+                auto6_overall = None
+                auto6_source = "-"
+                if p2_result["overall"] != EMPTY_VALUE:
+                    try:
+                        auto6_overall = float(p2_result["overall"])
+                        auto6_source = p2_result["source"]
+                    except (ValueError, TypeError):
+                        pass
+
+                # Get chemical name from universe if available
+                chem_name = ""
+                for item in universe_catalog:
+                    if item["cas"] == survey_cas:
+                        chem_name = item["name"]
+                        break
+
+                render_survey_page(
+                    cas=survey_cas,
+                    chemical_name=chem_name,
+                    auto6_overall=auto6_overall,
+                    auto6_source=auto6_source,
+                )
+            else:
+                st.info("Select or enter a CAS number to start a survey.")
 
     st.markdown("---")
     st.markdown(
