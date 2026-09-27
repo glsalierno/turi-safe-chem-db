@@ -240,6 +240,31 @@ class ExternalToolsConfig:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Batch / precalc configuration
+# ─────────────────────────────────────────────────────────────────────────────
+
+class BatchConfig:
+    """Batch processing and precalc configuration."""
+
+    @staticmethod
+    def precalc_dir() -> Path:
+        """Directory for precalc data and locks."""
+        return _env_path(
+            "PRECALC_DIR", default=USER_CONFIG_DIR / "precalc"
+        ) or (USER_CONFIG_DIR / "precalc")
+
+    @staticmethod
+    def pubchem_batch_lock() -> Path:
+        """Lock file for PubChem batch operations."""
+        return BatchConfig.precalc_dir() / "pubchem_batch.lock"
+
+    @staticmethod
+    def coverage_output_dir() -> Path | None:
+        """Override output directory for coverage reports."""
+        return _env_path("COVERAGE_OUTPUT_DIR")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Utility: get all config as dict (for reporting)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -284,6 +309,11 @@ def get_all_config() -> dict[str, Any]:
             "ecosar_disabled": ExternalToolsConfig.ecosar_disabled(),
             "iuclid_api_url": ExternalToolsConfig.iuclid_api_url(),
             "iuclid_api_key_set": bool(ExternalToolsConfig.iuclid_api_key()),
+        },
+        "batch": {
+            "precalc_dir": str(BatchConfig.precalc_dir()),
+            "pubchem_batch_lock": str(BatchConfig.pubchem_batch_lock()),
+            "coverage_output_dir": str(BatchConfig.coverage_output_dir()) if BatchConfig.coverage_output_dir() else None,
         },
     }
 
@@ -383,6 +413,14 @@ ENV_VAR_DOCS: dict[str, dict[str, str]] = {
     },
     "PYTHONPATH": {
         "purpose": "Set to repo root if not using editable install",
+        "default": "(none)",
+    },
+    "PRECALC_DIR": {
+        "purpose": "Directory for precalc data and locks",
+        "default": "~/.turi-safe-chem-db/precalc/",
+    },
+    "COVERAGE_OUTPUT_DIR": {
+        "purpose": "Override output directory for coverage reports",
         "default": "(none)",
     },
 }

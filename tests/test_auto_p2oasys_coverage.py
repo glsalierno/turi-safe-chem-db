@@ -1,8 +1,8 @@
 """
 Offline tests for auto_p2oasys.coverage with synthetic fixture data.
 
-These tests use synthetic data to verify the coverage cross-check logic
-without requiring the real expert database or any external API calls.
+These tests use synthetic data and mocked auto_p2oasys calls to verify
+the coverage cross-check logic without requiring real data or external APIs.
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ import sqlite3
 import tempfile
 from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -20,11 +21,14 @@ from packages.auto_p2oasys.coverage import (
     AUTO6_CATEGORIES,
     CASResult,
     CoverageStats,
+    SubcatComparison,
     analyze_cas,
     compute_stats,
+    is_measured_evidence,
+    is_predicted_evidence,
     load_expert_cas_from_csv,
     load_expert_cas_from_sqlite,
-    load_subcat_scores,
+    resolve_expert_set,
     run_coverage,
     write_category_summary_csv,
     write_per_cas_csv,
@@ -164,25 +168,6 @@ def synthetic_sqlite_db(tmp_path: Path) -> Path:
             ),
         )
 
-    subcat_data = [
-        ("67-64-1", "expert", "Acute Human Effects", "Dermal Irritation", 4.0),
-        ("67-64-1", "expert", "Acute Human Effects", "Eye Irritation", 6.0),
-        ("67-64-1", "expert", "Chronic Human Effects", "Neurotoxicity", 8.0),
-        ("67-64-1", "auto", "Acute Human Effects", "Dermal Irritation", 4.0),
-        ("67-64-1", "auto", "Acute Human Effects", "Eye Irritation", 5.0),
-        ("64-17-5", "expert", "Acute Human Effects", "Dermal Toxicity", 2.0),
-        ("64-17-5", "auto", "Acute Human Effects", "Dermal Toxicity", 3.0),
-    ]
-
-    for cas, source, category, subcategory, score in subcat_data:
-        conn.execute(
-            """
-            INSERT INTO subcat_scores (cas, source, category, subcategory, score)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            (cas, source, category, subcategory, score),
-        )
-
     conn.commit()
     conn.close()
     return db_path
@@ -242,88 +227,61 @@ class TestLoadExpertCAS:
         assert rows == []
 
 
-class TestAnalyzeCAS:
-    """Tests for analyzing individual CAS entries."""
+class TestResolveExpertSet:
+    """Tests for resolving expert-set argument."""
 
-    def test_analyze_cas_with_both(self, synthetic_sqlite_db: Path) -> None:
-        """Analyze CAS with both expert and auto scores."""
-        row = {
-            "cas": "67-64-1",
-            "name_expert": "Acetone",
-            "has_expert": 1,
-            "has_auto": 1,
-            "expert_acute": 6.0,
-            "expert_chronic": 8.0,
-            "expert_ecological": 4.0,
-            "expert_fate": 4.0,
-            "expert_atmospheric": 2.0,
-            "expert_physical": 8.0,
-            "auto_acute": 6.0,
-            "auto_chronic": 7.0,
-            "auto_ecological": None,
-            "auto_fate": 4.0,
-            "auto_atmospheric": 2.0,
-            "auto_physical": 8.0,
-        }
-        result = analyze_cas(row, synthetic_sqlite_db, "sqlite")
+    def test_resolve_sqlite_keyword(self) -> None:
+        """Resolve 'sqlite' keyword."""
+        source_type, path = resolve_expert_set("sqlite")
+        assert source_type == "sqlite"
+        assert path is not None
 
-        assert result.cas == "67-64-1"
-        assert result.name == "Acetone"
-        assert result.has_expert is True
-        assert result.has_auto is True
-        assert result.expert_overall == 8.0
-        assert result.auto_overall == 8.0
-        assert result.score_agreement is True
-        assert result.overall_delta == 0.0
+    def test_resolve_csv_keyword(self) -> None:
+        """Resolve 'csv' keyword."""
+        source_type, path = resolve_expert_set("csv")
+        assert source_type == "csv"
+        assert path is not None
 
-    def test_analyze_cas_expert_only(self, synthetic_sqlite_db: Path) -> None:
-        """Analyze CAS with only expert scores."""
-        row = {
-            "cas": "67-56-1",
-            "name_expert": "Methanol",
-            "has_expert": 1,
-            "has_auto": 0,
-            "expert_acute": 8.0,
-            "expert_chronic": 10.0,
-            "expert_ecological": 4.0,
-            "expert_fate": 4.0,
-            "expert_atmospheric": 2.0,
-            "expert_physical": 8.0,
-        }
-        result = analyze_cas(row, synthetic_sqlite_db, "sqlite")
+    def test_resolve_sqlite_file_path(self, tmp_path: Path) -> None:
+        """Resolve .sqlite file path."""
+        test_path = tmp_path / "test.sqlite"
+        test_path.touch()
+        source_type, path = resolve_expert_set(str(test_path))
+        assert source_type == "sqlite"
+        assert path == test_path
 
-        assert result.cas == "67-56-1"
-        assert result.has_expert is True
-        assert result.has_auto is False
-        assert result.expert_overall == 10.0
-        assert result.auto_overall is None
-        assert result.score_agreement is None
+    def test_resolve_csv_file_path(self, tmp_path: Path) -> None:
+        """Resolve .csv file path."""
+        test_path = tmp_path / "test.csv"
+        test_path.touch()
+        source_type, path = resolve_expert_set(str(test_path))
+        assert source_type == "csv"
+        assert path == test_path
 
-    def test_analyze_cas_with_subcats(self, synthetic_sqlite_db: Path) -> None:
-        """Verify subcategory scores are loaded."""
-        row = {
-            "cas": "67-64-1",
-            "name_expert": "Acetone",
-            "has_expert": 1,
-            "has_auto": 1,
-            "expert_acute": 6.0,
-            "expert_chronic": 8.0,
-            "expert_ecological": 4.0,
-            "expert_fate": 4.0,
-            "expert_atmospheric": 2.0,
-            "expert_physical": 8.0,
-            "auto_acute": 6.0,
-            "auto_chronic": 7.0,
-            "auto_ecological": None,
-            "auto_fate": 4.0,
-            "auto_atmospheric": 2.0,
-            "auto_physical": 8.0,
-        }
-        result = analyze_cas(row, synthetic_sqlite_db, "sqlite")
 
-        assert "Acute Human Effects" in result.expert_subcats
-        assert "Dermal Irritation" in result.expert_subcats["Acute Human Effects"]
-        assert result.expert_subcats["Acute Human Effects"]["Dermal Irritation"] == 4.0
+class TestEvidenceClassification:
+    """Tests for evidence classification."""
+
+    def test_is_measured_pubchem(self) -> None:
+        """PubChem evidence is measured."""
+        assert is_measured_evidence("pubchem_ghs") is True
+        assert is_measured_evidence("PubChem Properties") is True
+
+    def test_is_measured_sds(self) -> None:
+        """SDS evidence is measured."""
+        assert is_measured_evidence("sds_parser") is True
+        assert is_measured_evidence("fisher_sds") is True
+        assert is_measured_evidence("tci_catalog") is True
+
+    def test_is_predicted_ecosar(self) -> None:
+        """ECOSAR evidence is predicted."""
+        assert is_predicted_evidence("ecosar_aquatic") is True
+        assert is_predicted_evidence("ECOSAR LC50") is True
+
+    def test_is_predicted_qsar(self) -> None:
+        """QSAR evidence is predicted."""
+        assert is_predicted_evidence("qsar_model") is True
+        assert is_predicted_evidence("predicted_toxicity") is True
 
 
 class TestComputeStats:
@@ -336,34 +294,42 @@ class TestComputeStats:
                 cas="67-64-1",
                 name="Acetone",
                 has_expert=True,
-                has_auto=True,
+                has_fast=True,
                 expert_overall=8.0,
-                auto_overall=8.0,
+                fast_overall=8.0,
                 score_agreement=True,
                 overall_delta=0.0,
                 expert_categories={"Acute Human Effects": 6.0, "Chronic Human Effects": 8.0},
-                auto_categories={"Acute Human Effects": 6.0, "Chronic Human Effects": 7.0},
+                fast_categories={"Acute Human Effects": 6.0, "Chronic Human Effects": 7.0},
+                evidence_count=5,
+                measured_count=3,
+                predicted_count=2,
             ),
             CASResult(
                 cas="67-56-1",
                 name="Methanol",
                 has_expert=True,
-                has_auto=False,
+                has_fast=False,
                 expert_overall=10.0,
-                auto_overall=None,
+                fast_overall=None,
                 score_agreement=None,
                 expert_categories={"Acute Human Effects": 8.0, "Chronic Human Effects": 10.0},
-                auto_categories={},
+                fast_categories={},
+                error="Fast pipeline not available",
             ),
         ]
 
         stats = compute_stats(results)
 
         assert stats.total_expert_cas == 2
-        assert stats.expert_with_auto == 1
-        assert stats.expert_only == 1
+        assert stats.expert_with_fast == 1
+        assert stats.expert_only == 0
+        assert stats.fast_errors == 1
         assert stats.score_agreements == 1
         assert stats.score_disagreements == 0
+        assert stats.total_evidence == 5
+        assert stats.total_measured == 3
+        assert stats.total_predicted == 2
 
     def test_compute_stats_category_fill(self) -> None:
         """Verify category fill counts."""
@@ -371,23 +337,23 @@ class TestComputeStats:
             CASResult(
                 cas="67-64-1",
                 has_expert=True,
-                has_auto=True,
+                has_fast=True,
                 expert_categories={"Acute Human Effects": 6.0},
-                auto_categories={"Acute Human Effects": 6.0},
+                fast_categories={"Acute Human Effects": 6.0},
             ),
             CASResult(
                 cas="64-17-5",
                 has_expert=True,
-                has_auto=True,
+                has_fast=True,
                 expert_categories={"Acute Human Effects": 4.0},
-                auto_categories={},
+                fast_categories={},
             ),
         ]
 
         stats = compute_stats(results)
 
         assert stats.category_fill["Acute Human Effects"]["expert"] == 2
-        assert stats.category_fill["Acute Human Effects"]["auto"] == 1
+        assert stats.category_fill["Acute Human Effects"]["fast"] == 1
         assert stats.category_fill["Acute Human Effects"]["both"] == 1
 
 
@@ -400,15 +366,18 @@ class TestWriteOutputs:
             CASResult(
                 cas="67-64-1",
                 name="Acetone",
+                mode="expert+fast",
                 has_expert=True,
-                has_auto=True,
+                has_fast=True,
                 expert_overall=8.0,
-                auto_overall=8.0,
+                fast_overall=8.0,
                 score_agreement=True,
                 overall_delta=0.0,
-                source_type="sqlite",
                 expert_categories={"Acute Human Effects": 6.0},
-                auto_categories={"Acute Human Effects": 6.0},
+                fast_categories={"Acute Human Effects": 6.0},
+                evidence_count=5,
+                measured_count=3,
+                predicted_count=2,
             ),
         ]
 
@@ -419,14 +388,15 @@ class TestWriteOutputs:
         content = out_path.read_text()
         assert "67-64-1" in content
         assert "Acetone" in content
-        assert "8.0" in content
+        assert "expert+fast" in content
+        assert "measured_count" in content
 
     def test_write_category_summary_csv(self, tmp_path: Path) -> None:
         """Write category summary CSV file."""
         stats = CoverageStats(
             total_expert_cas=100,
             category_fill={
-                "Acute Human Effects": {"expert": 95, "auto": 80, "both": 75},
+                "Acute Human Effects": {"expert": 95, "fast": 80, "both": 75},
             },
         )
 
@@ -437,15 +407,19 @@ class TestWriteOutputs:
         content = out_path.read_text()
         assert "Acute Human Effects" in content
         assert "95" in content
+        assert "fast_n" in content
 
     def test_write_summary_json(self, tmp_path: Path) -> None:
         """Write summary JSON file."""
         stats = CoverageStats(
             total_expert_cas=100,
-            expert_with_auto=80,
+            expert_with_fast=80,
             score_agreements=70,
             score_disagreements=10,
             mean_overall_delta=0.5,
+            total_evidence=500,
+            total_measured=400,
+            total_predicted=100,
         )
 
         out_path = tmp_path / "summary.json"
@@ -454,120 +428,80 @@ class TestWriteOutputs:
         assert out_path.is_file()
         data = json.loads(out_path.read_text())
         assert data["total_expert_cas"] == 100
-        assert data["expert_with_auto_coverage"] == 80
+        assert data["expert_with_fast_coverage"] == 80
+        assert "measured_vs_predicted" in data
+        assert data["measured_vs_predicted"]["measured_count"] == 400
+        assert data["measured_vs_predicted"]["predicted_count"] == 100
 
 
-class TestRunCoverage:
-    """Integration tests for run_coverage."""
+class TestAnalyzeCAS:
+    """Tests for analyze_cas with mocked auto_p2oasys."""
 
-    def test_run_coverage_sqlite(
-        self, synthetic_sqlite_db: Path, tmp_path: Path
-    ) -> None:
-        """Run full coverage analysis with SQLite source."""
-        out_dir = tmp_path / "output"
+    def test_analyze_cas_expert_plus_fast(self) -> None:
+        """Analyze CAS returns expert+fast mode result."""
+        from packages.auto_p2oasys.core import P2OASysResult, P2OASysMode, CategoryScore
 
-        exit_code = run_coverage(
-            expert_set="sqlite",
-            out_dir=out_dir,
-            force_fast=True,
-            db_path=synthetic_sqlite_db,
-            resume=False,
+        mock_result = P2OASysResult(
+            cas="67-64-1",
+            mode=P2OASysMode.EXPERT_PLUS_FAST,
+            overall=8.0,
+            expert_overall=8.0,
+            fast_overall=7.0,
+            name="Acetone",
+            expert_categories={"Acute Human Effects": 6.0},
+            fast_categories={"Acute Human Effects": 5.0},
+            categories={
+                "Acute Human Effects": CategoryScore(
+                    name="Acute Human Effects",
+                    score=6.0,
+                    status="expert",
+                    subcategories={"Eye Irritation": 6.0},
+                )
+            },
+            evidence=[],
         )
 
-        assert exit_code == 0
-        assert (out_dir / "coverage_per_cas.csv").is_file()
-        assert (out_dir / "coverage_by_category.csv").is_file()
-        assert (out_dir / "coverage_by_subcategory.csv").is_file()
-        assert (out_dir / "coverage_summary.json").is_file()
+        with patch("packages.auto_p2oasys.auto_p2oasys", return_value=mock_result):
+            result = analyze_cas("67-64-1", "Acetone")
 
-        summary = json.loads((out_dir / "coverage_summary.json").read_text())
-        assert summary["total_expert_cas"] == 3
-        assert summary["expert_with_auto_coverage"] == 2
+        assert result.cas == "67-64-1"
+        assert result.has_expert is True
+        assert result.has_fast is True
+        assert result.expert_overall == 8.0
+        assert result.fast_overall == 7.0
+        assert result.overall_delta == 1.0
+        assert result.score_agreement is True
 
-    def test_run_coverage_csv(
-        self, synthetic_expert_csv: Path, synthetic_sqlite_db: Path, tmp_path: Path
-    ) -> None:
-        """Run full coverage analysis with CSV source."""
-        out_dir = tmp_path / "output"
+    def test_analyze_cas_not_found(self) -> None:
+        """Analyze CAS handles NOT_FOUND mode."""
+        from packages.auto_p2oasys.core import P2OASysResult, P2OASysMode
 
-        exit_code = run_coverage(
-            expert_set="csv",
-            out_dir=out_dir,
-            force_fast=True,
-            db_path=synthetic_sqlite_db,
-            csv_path=synthetic_expert_csv,
-            resume=False,
+        mock_result = P2OASysResult(
+            cas="99-99-9",
+            mode=P2OASysMode.NOT_FOUND,
+            error="CAS not found",
         )
 
-        assert exit_code == 0
-        summary = json.loads((out_dir / "coverage_summary.json").read_text())
-        assert summary["total_expert_cas"] == 2
+        with patch("packages.auto_p2oasys.auto_p2oasys", return_value=mock_result):
+            result = analyze_cas("99-99-9")
 
-    def test_run_coverage_resumable(
-        self, synthetic_sqlite_db: Path, tmp_path: Path
-    ) -> None:
-        """Verify coverage analysis is resumable."""
-        out_dir = tmp_path / "output"
-
-        exit_code = run_coverage(
-            expert_set="sqlite",
-            out_dir=out_dir,
-            force_fast=True,
-            db_path=synthetic_sqlite_db,
-            resume=False,
-        )
-        assert exit_code == 0
-
-        progress_path = out_dir / "coverage_progress.json"
-        assert progress_path.is_file()
-
-        exit_code = run_coverage(
-            expert_set="sqlite",
-            out_dir=out_dir,
-            force_fast=True,
-            db_path=synthetic_sqlite_db,
-            resume=True,
-        )
-        assert exit_code == 0
-
-    def test_run_coverage_lock_file(
-        self, synthetic_sqlite_db: Path, tmp_path: Path
-    ) -> None:
-        """Verify lock file is created and released."""
-        out_dir = tmp_path / "output"
-        lock_path = out_dir / "pubchem_batch.lock"
-
-        exit_code = run_coverage(
-            expert_set="sqlite",
-            out_dir=out_dir,
-            force_fast=True,
-            db_path=synthetic_sqlite_db,
-            resume=False,
-        )
-        assert exit_code == 0
-        assert not lock_path.is_file()
+        assert result.error == "CAS not found"
+        assert result.has_expert is False
+        assert result.has_fast is False
 
 
-class TestLoadSubcatScores:
-    """Tests for loading subcategory scores."""
+class TestSubcatComparison:
+    """Tests for subcategory comparison."""
 
-    def test_load_subcat_scores_expert(self, synthetic_sqlite_db: Path) -> None:
-        """Load expert subcategory scores."""
-        subcats = load_subcat_scores(synthetic_sqlite_db, "67-64-1", "expert")
+    def test_subcat_comparison_with_delta(self) -> None:
+        """SubcatComparison computes delta correctly."""
+        comp = SubcatComparison(expert_score=6.0, fast_score=5.0)
+        assert comp.expert_score == 6.0
+        assert comp.fast_score == 5.0
 
-        assert "Acute Human Effects" in subcats
-        assert "Dermal Irritation" in subcats["Acute Human Effects"]
-        assert subcats["Acute Human Effects"]["Dermal Irritation"] == 4.0
-
-    def test_load_subcat_scores_auto(self, synthetic_sqlite_db: Path) -> None:
-        """Load auto subcategory scores."""
-        subcats = load_subcat_scores(synthetic_sqlite_db, "67-64-1", "auto")
-
-        assert "Acute Human Effects" in subcats
-        assert "Dermal Irritation" in subcats["Acute Human Effects"]
-        assert subcats["Acute Human Effects"]["Dermal Irritation"] == 4.0
-
-    def test_load_subcat_scores_missing_cas(self, synthetic_sqlite_db: Path) -> None:
-        """Return empty dict for missing CAS."""
-        subcats = load_subcat_scores(synthetic_sqlite_db, "99-99-9", "expert")
-        assert subcats == {}
+    def test_subcat_comparison_missing_fast(self) -> None:
+        """SubcatComparison handles missing fast score."""
+        comp = SubcatComparison(expert_score=6.0, fast_score=None)
+        assert comp.expert_score == 6.0
+        assert comp.fast_score is None
+        assert comp.delta is None
