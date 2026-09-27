@@ -378,6 +378,61 @@ class TestP2OASysResult:
         assert "expert" in summary.lower()
 
 
+class TestCAMEOAdapter:
+    """Tests for CAMEO NFPA adapter."""
+
+    def test_cameo_acetone_nfpa(self):
+        """CAMEO adapter returns correct NFPA ratings for acetone."""
+        from packages.auto_p2oasys.adapters.cameo import gather_nfpa, is_cameo_available
+
+        if not is_cameo_available():
+            pytest.skip("CAMEO database not available")
+
+        evidence = gather_nfpa("67-64-1")
+        endpoints = {ev.endpoint: ev.value for ev in evidence}
+
+        assert endpoints.get("nfpa_health") == 1
+        assert endpoints.get("nfpa_flam") == 3
+        assert endpoints.get("nfpa_react") == 0
+
+    def test_cameo_uses_correct_columns(self):
+        """CAMEO uses nfpa_flam and nfpa_react (not nfpa_fire/nfpa_reactivity)."""
+        from packages.auto_p2oasys.adapters.cameo import gather_nfpa, is_cameo_available
+
+        if not is_cameo_available():
+            pytest.skip("CAMEO database not available")
+
+        evidence = gather_nfpa("67-64-1")
+        endpoint_names = [ev.endpoint for ev in evidence]
+
+        assert "nfpa_flam" in endpoint_names
+        assert "nfpa_react" in endpoint_names
+        assert "nfpa_fire" not in endpoint_names
+        assert "nfpa_reactivity" not in endpoint_names
+
+
+class TestIARCLookup:
+    """Tests for IARC carcinogen lookup."""
+
+    def test_iarc_benzene_group_1(self):
+        """Benzene (71-43-2) should return IARC Group 1."""
+        from packages.auto_p2oasys.adapters.lookup_tables import gather_iarc
+
+        evidence = gather_iarc("71-43-2")
+        assert len(evidence) == 1
+        assert evidence[0].endpoint == "iarc"
+        assert evidence[0].value == "1"
+        assert evidence[0].source == "IARC"
+
+    def test_iarc_uses_correct_column(self):
+        """IARC uses 'iarc' column (not iarc_group)."""
+        from packages.auto_p2oasys.adapters.lookup_tables import gather_iarc
+
+        evidence = gather_iarc("71-43-2")
+        assert len(evidence) == 1
+        assert evidence[0].value == "1"
+
+
 class TestIUCLIDAdapter:
     """Tests for IUCLID adapter with ECHA attribution."""
 
