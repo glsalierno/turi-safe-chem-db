@@ -6,21 +6,38 @@ Provides TD50 values for carcinogenicity assessment.
 
 from __future__ import annotations
 
-import os
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 from ..evidence import Evidence
 from ..cas_utils import normalize_cas, format_cas_display
 
 
+class CPDBError(Exception):
+    """Error accessing CPDB database."""
+    pass
+
+
+def _row_get(row: Any, key: str, default: Any = None) -> Any:
+    """Get value from sqlite3.Row safely."""
+    try:
+        val = row[key]
+        return val if val is not None else default
+    except (KeyError, IndexError, TypeError):
+        return default
+
+
 def _get_cpdb_path() -> Path | None:
-    """Find CPDB sqlite database."""
-    env_path = os.environ.get("CPDB_DB_PATH", "").strip()
-    if env_path and Path(env_path).is_file():
-        return Path(env_path)
+    """Find CPDB sqlite database via capability_config."""
+    try:
+        from packages.capability_config import ExternalToolsConfig
+        cfg_path = ExternalToolsConfig.cpdb_db_path()
+        if cfg_path and cfg_path.is_file():
+            return cfg_path
+    except ImportError:
+        pass
 
     candidates = [
         Path(__file__).resolve().parents[3] / "data" / "carcinogenic_potency.sqlite",
@@ -43,6 +60,9 @@ def gather_cpdb(cas: str) -> list[Evidence]:
     Gather TD50 carcinogenic potency from CPDB.
 
     Returns TD50 values for different species/routes if available.
+    
+    Raises:
+        CPDBError: If database access fails (not silently swallowed).
     """
     db_path = _get_cpdb_path()
     if db_path is None:
@@ -66,13 +86,14 @@ def gather_cpdb(cas: str) -> list[Evidence]:
         conn.close()
 
         for row in rows:
-            td50 = row.get("td50") or row.get("TD50")
+            td50 = _row_get(row, "td50") or _row_get(row, "TD50")
             if td50 is None:
                 continue
 
-            species = row.get("species", "")
-            route = row.get("route", "")
-            target = row.get("target_organ", "")
+            species = _row_get(row, "species", "")
+            route = _row_get(row, "route", "")
+            target = _row_get(row, "target_organ", "")
+            qualifier = _row_get(row, "qualifier")
 
             evidence.append(
                 Evidence(
@@ -80,7 +101,7 @@ def gather_cpdb(cas: str) -> list[Evidence]:
                     endpoint="td50",
                     value=float(td50),
                     unit="mg/kg/day",
-                    qualifier=row.get("qualifier"),
+                    qualifier=qualifier,
                     source="CPDB",
                     predicted=False,
                     reference=f"CPDB {species} {route} {target}".strip(),
@@ -88,7 +109,7 @@ def gather_cpdb(cas: str) -> list[Evidence]:
                 )
             )
 
-    except Exception:
-        pass
+    except sqlite3.Error as e:
+        raise CPDBError(f"CPDB database error: {e}") from e
 
     return evidence

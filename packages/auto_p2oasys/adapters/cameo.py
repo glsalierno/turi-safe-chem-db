@@ -1,34 +1,31 @@
 """
 CAMEO Chemicals NFPA 704 adapter for auto_p2oasys.
 
-Looks up NFPA health and flammability ratings from the bundled CAMEO sqlite.
+Looks up NFPA health, flammability, and reactivity ratings from the bundled CAMEO sqlite.
 """
 
 from __future__ import annotations
 
-import os
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 from ..evidence import Evidence
 from ..cas_utils import normalize_cas, format_cas_display
 
 
+class CameoError(Exception):
+    """Error accessing CAMEO database."""
+    pass
+
+
 def _get_cameo_db_path() -> Path | None:
-    """Find CAMEO NFPA sqlite database."""
-    env_path = os.environ.get("CAMEO_NFPA_DB", "").strip()
-    if env_path and Path(env_path).is_file():
-        return Path(env_path)
-
+    """Find CAMEO NFPA sqlite database via capability_config."""
     try:
-        from packages.p2oasys_scorer import config
-
-        if hasattr(config, "CAMEO_NFPA_DB_PATH"):
-            cfg_path = Path(config.CAMEO_NFPA_DB_PATH)
-            if cfg_path.is_file():
-                return cfg_path
+        from packages.capability_config import ScorerConfig
+        cfg_path = ScorerConfig.cameo_nfpa_db()
+        if cfg_path and cfg_path.is_file():
+            return cfg_path
     except ImportError:
         pass
 
@@ -43,11 +40,20 @@ def _get_cameo_db_path() -> Path | None:
     return None
 
 
+def is_cameo_available() -> bool:
+    """Check if CAMEO database is available."""
+    return _get_cameo_db_path() is not None
+
+
 def gather_nfpa(cas: str) -> list[Evidence]:
     """
     Look up NFPA 704 ratings from CAMEO Chemicals database.
 
-    Returns health and flammability ratings if found.
+    Returns health, flammability, and reactivity ratings if found.
+    Real column names: nfpa_health, nfpa_flam, nfpa_react, nfpa_special.
+
+    Raises:
+        CameoError: If database access fails (not silently swallowed).
     """
     evidence: list[Evidence] = []
     display_cas = format_cas_display(cas)
@@ -63,9 +69,9 @@ def gather_nfpa(cas: str) -> list[Evidence]:
         conn.row_factory = sqlite3.Row
 
         row = conn.execute(
-            """SELECT nfpa_health, nfpa_fire, nfpa_reactivity, nfpa_special
+            """SELECT nfpa_health, nfpa_flam, nfpa_react, nfpa_special
                FROM cameo_nfpa
-               WHERE cas = ? OR REPLACE(cas, '-', '') = ?
+               WHERE cas = ? OR cas_nodash = ?
                LIMIT 1""",
             (display_cas, digits),
         ).fetchone()
@@ -89,13 +95,13 @@ def gather_nfpa(cas: str) -> list[Evidence]:
                 )
             )
 
-        fire = row["nfpa_fire"]
-        if fire is not None:
+        flam = row["nfpa_flam"]
+        if flam is not None:
             evidence.append(
                 Evidence(
                     cas=display_cas,
-                    endpoint="nfpa_fire",
-                    value=int(fire),
+                    endpoint="nfpa_flam",
+                    value=int(flam),
                     source="CAMEO",
                     predicted=False,
                     reference="CAMEO Chemicals NFPA 704",
@@ -103,7 +109,35 @@ def gather_nfpa(cas: str) -> list[Evidence]:
                 )
             )
 
-    except Exception:
-        pass
+        react = row["nfpa_react"]
+        if react is not None:
+            evidence.append(
+                Evidence(
+                    cas=display_cas,
+                    endpoint="nfpa_react",
+                    value=int(react),
+                    source="CAMEO",
+                    predicted=False,
+                    reference="CAMEO Chemicals NFPA 704",
+                    retrieved_at=now,
+                )
+            )
+
+        special = row["nfpa_special"]
+        if special is not None:
+            evidence.append(
+                Evidence(
+                    cas=display_cas,
+                    endpoint="nfpa_special",
+                    value=str(special),
+                    source="CAMEO",
+                    predicted=False,
+                    reference="CAMEO Chemicals NFPA 704",
+                    retrieved_at=now,
+                )
+            )
+
+    except sqlite3.Error as e:
+        raise CameoError(f"CAMEO database error: {e}") from e
 
     return evidence

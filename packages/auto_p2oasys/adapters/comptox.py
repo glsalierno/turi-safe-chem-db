@@ -8,21 +8,40 @@ Provides access to EPA CompTox Dashboard data:
 
 from __future__ import annotations
 
-import os
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 from ..evidence import Evidence
 from ..cas_utils import normalize_cas, format_cas_display
 
 
+class CompToxError(Exception):
+    """Error accessing CompTox data."""
+    pass
+
+
+def _row_get(row: Any, key: str, default: Any = None) -> Any:
+    """Get value from row, handling both sqlite3.Row and pandas Series."""
+    try:
+        val = row[key]
+        if val is None:
+            return default
+        return val
+    except (KeyError, IndexError, TypeError):
+        return default
+
+
 def _get_dsstox_cache_path() -> Path | None:
-    """Find DSSTox cache parquet/sqlite."""
-    env_path = os.environ.get("DSSTOX_CACHE_PATH", "").strip()
-    if env_path and Path(env_path).is_file():
-        return Path(env_path)
+    """Find DSSTox cache parquet/sqlite via capability_config."""
+    try:
+        from packages.capability_config import ExternalToolsConfig
+        cfg_path = ExternalToolsConfig.dsstox_cache_path()
+        if cfg_path and cfg_path.is_file():
+            return cfg_path
+    except ImportError:
+        pass
 
     candidates = [
         Path(__file__).resolve().parents[3] / "data" / "dsstox_cache.parquet",
@@ -45,6 +64,9 @@ def gather_dsstox(cas: str) -> list[Evidence]:
     Gather identity data from DSSTox cache.
 
     Returns DTXSID, SMILES, InChI, molecular formula if available.
+    
+    Raises:
+        CompToxError: If database access fails (not silently swallowed).
     """
     cache_path = _get_dsstox_cache_path()
     if cache_path is None:
@@ -60,10 +82,10 @@ def gather_dsstox(cas: str) -> list[Evidence]:
             import pandas as pd
 
             df = pd.read_parquet(cache_path)
-            row = df[df["cas"].str.replace("-", "") == digits]
-            if row.empty:
+            matching = df[df["cas"].str.replace("-", "") == digits]
+            if matching.empty:
                 return []
-            row = row.iloc[0]
+            row = matching.iloc[0]
         else:
             conn = sqlite3.connect(str(cache_path))
             conn.row_factory = sqlite3.Row
@@ -77,7 +99,7 @@ def gather_dsstox(cas: str) -> list[Evidence]:
             if row is None:
                 return []
 
-        dtxsid = row.get("dtxsid") or row.get("DTXSID")
+        dtxsid = _row_get(row, "dtxsid") or _row_get(row, "DTXSID")
         if dtxsid:
             evidence.append(
                 Evidence(
@@ -91,7 +113,7 @@ def gather_dsstox(cas: str) -> list[Evidence]:
                 )
             )
 
-        smiles = row.get("smiles") or row.get("SMILES")
+        smiles = _row_get(row, "smiles") or _row_get(row, "SMILES")
         if smiles:
             evidence.append(
                 Evidence(
@@ -104,15 +126,20 @@ def gather_dsstox(cas: str) -> list[Evidence]:
                 )
             )
 
-    except Exception:
-        pass
+    except sqlite3.Error as e:
+        raise CompToxError(f"DSSTox database error: {e}") from e
 
     return evidence
 
 
 def _get_toxvaldb_api_key() -> str | None:
-    """Get EPA API key for ToxValDB."""
-    return os.environ.get("EPA_API_KEY", "").strip() or None
+    """Get EPA API key for ToxValDB via capability_config."""
+    try:
+        from packages.capability_config import ExternalToolsConfig
+        return ExternalToolsConfig.epa_api_key()
+    except ImportError:
+        import os
+        return os.environ.get("EPA_API_KEY", "").strip() or None
 
 
 def is_toxvaldb_available() -> bool:
@@ -126,6 +153,9 @@ def gather_toxvaldb(cas: str) -> list[Evidence]:
 
     Returns oral LD50, dermal LD50, inhalation LC50, aquatic LC50 if available.
     Requires EPA_API_KEY environment variable.
+    
+    Raises:
+        CompToxError: If API access fails (not silently swallowed).
     """
     api_key = _get_toxvaldb_api_key()
     if api_key is None:
@@ -143,7 +173,7 @@ def gather_toxvaldb(cas: str) -> list[Evidence]:
         resp = requests.get(url, headers=headers, timeout=30)
 
         if not resp.ok:
-            return []
+            raise CompToxError(f"ToxValDB API error: {resp.status_code} {resp.reason}")
 
         data = resp.json()
 
@@ -169,9 +199,7 @@ def gather_toxvaldb(cas: str) -> list[Evidence]:
                 )
             )
 
-    except ImportError:
-        pass
-    except Exception:
-        pass
+    except ImportError as e:
+        raise CompToxError(f"requests module not available: {e}") from e
 
     return evidence

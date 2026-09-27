@@ -29,7 +29,12 @@ def _get_data_dir() -> Path:
 
 
 def _load_csv_by_cas(filename: str, cas_col: str = "cas") -> dict[str, dict]:
-    """Load CSV file and index by normalized CAS."""
+    """Load CSV file and index by normalized CAS.
+    
+    Raises:
+        FileNotFoundError: If CSV file doesn't exist.
+        Exception: If CSV parsing fails (not silently swallowed).
+    """
     data_dir = _get_data_dir()
     path = data_dir / filename
 
@@ -37,15 +42,12 @@ def _load_csv_by_cas(filename: str, cas_col: str = "cas") -> dict[str, dict]:
         return {}
 
     result = {}
-    try:
-        with open(path, "r", encoding="utf-8", errors="replace") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                cas = normalize_cas(row.get(cas_col, ""))
-                if cas:
-                    result[cas] = row
-    except Exception:
-        pass
+    with open(path, "r", encoding="utf-8", errors="replace") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            cas = normalize_cas(row.get(cas_col, ""))
+            if cas:
+                result[cas] = row
 
     return result
 
@@ -56,17 +58,26 @@ _ODP_GWP_CACHE: dict[str, dict] | None = None
 _HAP_CACHE: dict[str, dict] | None = None
 
 
+class LookupError(Exception):
+    """Error accessing lookup table data."""
+    pass
+
+
 def gather_iarc(cas: str) -> list[Evidence]:
     """
     Look up IARC carcinogenicity classification.
 
     Returns IARC group (1, 2A, 2B, 3) if found.
+    CSV column name: 'iarc' (contains values like '1', '2A', '2B', '3').
     CAS normalization: strips hyphens for matching.
     """
     global _IARC_CACHE
 
-    if _IARC_CACHE is None:
-        _IARC_CACHE = _load_csv_by_cas("iarc_by_cas.csv")
+    try:
+        if _IARC_CACHE is None:
+            _IARC_CACHE = _load_csv_by_cas("iarc_by_cas.csv")
+    except Exception as e:
+        raise LookupError(f"Failed to load IARC table: {e}") from e
 
     digits = normalize_cas(cas)
     display_cas = format_cas_display(cas)
@@ -76,7 +87,7 @@ def gather_iarc(cas: str) -> list[Evidence]:
     if row is None:
         return []
 
-    iarc_group = row.get("iarc_group") or row.get("group") or row.get("classification")
+    iarc_group = row.get("iarc")
     if not iarc_group:
         return []
 
@@ -84,7 +95,7 @@ def gather_iarc(cas: str) -> list[Evidence]:
         Evidence(
             cas=display_cas,
             endpoint="iarc",
-            value=iarc_group.strip(),
+            value=str(iarc_group).strip(),
             source="IARC",
             predicted=False,
             reference="IARC Monographs on the Identification of Carcinogenic Hazards to Humans",
