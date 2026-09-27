@@ -1085,28 +1085,30 @@ def _extract_lc50_aquatic(hazard_data: dict, rejections: Optional[list] = None) 
     best = min(candidates, key=lambda c: c["value"])
 
     beyond_solubility = False
+    low_confidence = False
     ws_val = water_sol["value"] if water_sol else None
 
-    if ws_val is not None and best["value"] < ws_val:
+    # ECOSAR/GHS solubility rule:
+    # - LC50 BELOW water_solubility = achievable concentration, score normally
+    # - LC50 ABOVE water_solubility = implausible "no effects at saturation"
+    #   Flag but do NOT cap (capping manufactures fake toxicity)
+    if ws_val is not None and best["value"] > ws_val:
         beyond_solubility = True
-        reason = f"LC50 {best['value']:.2e} mg/L below water solubility {ws_val:.2e} mg/L"
-        if best["predicted"]:
-            _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
-            best["value"] = ws_val
-            best["capped_at_solubility"] = True
+        reason = f"LC50 {best['value']:.2e} mg/L above water solubility {ws_val:.2e} mg/L (implausible)"
+        _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
 
+    # logKow heuristic: extremely low predicted LC50 with high logKow suggests
+    # the prediction exceeds achievable concentration (poorly water-soluble compound).
+    # Flag as low_confidence but do NOT cap - prefer measured/other evidence.
     if log_kow and log_kow.get("value") is not None:
         kow = log_kow["value"]
-        if kow > 5 and best["value"] < 0.001:
-            beyond_solubility = True
-            if best["predicted"]:
-                reason = f"Predicted LC50 {best['value']:.2e} mg/L likely beyond solubility (logKow={kow:.1f})"
-                _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
-                if ws_val is not None:
-                    best["value"] = ws_val
-                    best["capped_at_solubility"] = True
+        if kow > 5 and best["value"] < 0.001 and best.get("predicted"):
+            low_confidence = True
+            reason = f"Predicted LC50 {best['value']:.2e} mg/L with logKow={kow:.1f} - may exceed solubility"
+            _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
 
     best["beyond_solubility"] = beyond_solubility
+    best["low_confidence"] = low_confidence
     if ws_val is not None:
         best["water_solubility_mg_l"] = ws_val
 

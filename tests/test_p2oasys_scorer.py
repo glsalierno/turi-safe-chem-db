@@ -426,62 +426,83 @@ def test_flash_point_threshold_boundaries(matrix, flash_c, expected_score):
     assert actual == expected_score, f"Flash {flash_c}°C: expected {expected_score}, got {actual}"
 
 
-def test_ecosar_lc50_capped_at_water_solubility(matrix):
-    """Predicted LC50 below water solubility is capped at solubility per ECOSAR/GHS practice.
+def test_ecosar_lc50_above_solubility_flagged(matrix):
+    """Predicted LC50 ABOVE water solubility is flagged as implausible.
 
-    Bug: Previously, ECOSAR predictions below water solubility (physically impossible)
-    would score as extremely toxic (Eco 10). Now they are capped and flagged.
+    ECOSAR/GHS rule: If LC50 > water_solubility, the chemical cannot dissolve
+    enough to reach the toxic concentration. Flag as beyond_solubility but
+    do NOT cap (capping would manufacture fake toxicity).
     """
     hd = _hd([], ghs={"h_codes": []})
-    hd["lc50_aquatic_mg_l"] = {"value": 0.013, "predicted": True}  # Below solubility
+    hd["lc50_aquatic_mg_l"] = {"value": 1.0, "predicted": True}  # ABOVE solubility
     hd["water_solubility_mg_l"] = {"value": 0.1, "predicted": True}  # Solubility limit
-    hd["log_kow"] = {"value": 5.2, "predicted": True}
 
     scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
 
     aquatic_ev = trace["evidence"].get("aquatic_lc50")
     assert aquatic_ev is not None
     assert aquatic_ev.get("beyond_solubility") is True, "Should flag beyond_solubility"
-    assert aquatic_ev.get("capped_at_solubility") is True, "Should cap at solubility"
-    assert aquatic_ev["value"] == 0.1, f"Should be capped at solubility 0.1, got {aquatic_ev['value']}"
+    # Value should NOT be capped - keep original for trace
+    assert aquatic_ev["value"] == 1.0, f"Should NOT cap value, got {aquatic_ev['value']}"
+    assert not aquatic_ev.get("capped_at_solubility", False), "Should NOT cap at solubility"
 
     rejected = [r for r in trace["rejected"] if "aquatic LC50" in r["endpoint"]]
-    assert len(rejected) > 0, "Should have rejected the original LC50"
+    assert len(rejected) > 0, "Should have rejection note"
 
 
-def test_ecosar_very_low_lc50_flagged():
-    """Extremely low predicted LC50 with high logKow is flagged as beyond solubility.
+def test_ecosar_lc50_below_solubility_is_valid(matrix):
+    """Predicted LC50 BELOW water solubility is valid - toxicity is achievable.
 
-    Cases like CAS 7235-40-7 (LC50 4.1e-12 mg/L, logKow 5.2) are physically impossible.
+    When LC50 < water_solubility, the chemical CAN dissolve to that toxic
+    concentration. This is a valid prediction that should be scored normally.
+    """
+    hd = _hd([], ghs={"h_codes": []})
+    hd["lc50_aquatic_mg_l"] = {"value": 0.01, "predicted": True}  # BELOW solubility
+    hd["water_solubility_mg_l"] = {"value": 0.1, "predicted": True}  # Solubility limit
+
+    _, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    aquatic_ev = trace["evidence"].get("aquatic_lc50")
+    assert aquatic_ev is not None
+    assert aquatic_ev.get("beyond_solubility") is False, "Should NOT flag - achievable concentration"
+    assert aquatic_ev["value"] == 0.01, "Should keep original value"
+
+
+def test_ecosar_very_low_lc50_with_high_logkow_flagged():
+    """Extremely low predicted LC50 with high logKow is flagged as low_confidence.
+
+    Cases like CAS 7235-40-7 (LC50 4.1e-12 mg/L, logKow 5.2) are likely beyond
+    achievable water concentration due to poor solubility. Flag but do NOT cap.
     """
     hd = _hd([], ghs={"h_codes": []})
     hd["lc50_aquatic_mg_l"] = {"value": 4.1e-12, "predicted": True}
     hd["log_kow"] = {"value": 5.2, "predicted": True}
-    hd["water_solubility_mg_l"] = {"value": 0.001, "predicted": True}
 
     _, trace = compute_p2oasys_scores_with_trace(hd, load_p2oasys_matrix(DEFAULT_MATRIX_PATH))
 
     aquatic_ev = trace["evidence"].get("aquatic_lc50")
     assert aquatic_ev is not None
-    assert aquatic_ev.get("beyond_solubility") is True
+    assert aquatic_ev.get("low_confidence") is True, "Should flag low_confidence"
+    # Value should NOT be capped
+    assert aquatic_ev["value"] == 4.1e-12, "Should NOT cap value"
 
 
-def test_measured_lc50_not_capped():
-    """Measured (non-predicted) LC50 values are not capped even if low.
+def test_measured_lc50_not_flagged_for_logkow():
+    """Measured (non-predicted) LC50 values are not flagged even with high logKow.
 
-    Only predicted values from ECOSAR/QSAR should be capped.
+    Only predicted values from ECOSAR/QSAR should be flagged for logKow heuristic.
     """
     hd = _hd([], ghs={"h_codes": []})
-    hd["lc50_aquatic_mg_l"] = {"value": 0.01, "predicted": False}  # Measured, not predicted
-    hd["water_solubility_mg_l"] = {"value": 0.1, "predicted": True}
+    hd["lc50_aquatic_mg_l"] = {"value": 0.0001, "predicted": False}  # Measured, not predicted
+    hd["log_kow"] = {"value": 6.0, "predicted": True}  # High logKow
 
     _, trace = compute_p2oasys_scores_with_trace(hd, load_p2oasys_matrix(DEFAULT_MATRIX_PATH))
 
     aquatic_ev = trace["evidence"].get("aquatic_lc50")
     assert aquatic_ev is not None
-    # Measured value should NOT be capped
-    assert aquatic_ev["value"] == 0.01
-    assert not aquatic_ev.get("capped_at_solubility", False)
+    # Measured value should NOT be flagged
+    assert aquatic_ev["value"] == 0.0001
+    assert not aquatic_ev.get("low_confidence", False), "Measured values not flagged"
 
 
 def test_predicted_flag_propagates_to_subcategory(matrix):
