@@ -426,83 +426,104 @@ def test_flash_point_threshold_boundaries(matrix, flash_c, expected_score):
     assert actual == expected_score, f"Flash {flash_c}°C: expected {expected_score}, got {actual}"
 
 
-def test_ecosar_lc50_above_solubility_flagged(matrix):
-    """Predicted LC50 ABOVE water solubility is flagged as implausible.
+def test_ecosar_lc50_above_solubility_excluded_from_score(matrix):
+    """Predicted LC50 ABOVE water solubility must NOT drive a high Eco score.
 
     ECOSAR/GHS rule: If LC50 > water_solubility, the chemical cannot dissolve
-    enough to reach the toxic concentration. Flag as beyond_solubility but
-    do NOT cap (capping would manufacture fake toxicity).
+    enough to reach the toxic concentration. "No effect at saturation" means
+    this value should NOT drive Eco scoring.
     """
     hd = _hd([], ghs={"h_codes": []})
-    hd["lc50_aquatic_mg_l"] = {"value": 1.0, "predicted": True}  # ABOVE solubility
-    hd["water_solubility_mg_l"] = {"value": 0.1, "predicted": True}  # Solubility limit
+    hd["lc50_aquatic_mg_l"] = {"value": 0.01, "predicted": True}  # Very low LC50
+    hd["water_solubility_mg_l"] = {"value": 1e-6, "predicted": True}  # LOWER solubility limit
 
     scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
 
     aquatic_ev = trace["evidence"].get("aquatic_lc50")
     assert aquatic_ev is not None
     assert aquatic_ev.get("beyond_solubility") is True, "Should flag beyond_solubility"
-    # Value should NOT be capped - keep original for trace
-    assert aquatic_ev["value"] == 1.0, f"Should NOT cap value, got {aquatic_ev['value']}"
-    assert not aquatic_ev.get("capped_at_solubility", False), "Should NOT cap at solubility"
+    # Value should be kept for trace but NOT scored
+    assert aquatic_ev["value"] == 0.01, f"Should keep original value for trace"
 
-    rejected = [r for r in trace["rejected"] if "aquatic LC50" in r["endpoint"]]
-    assert len(rejected) > 0, "Should have rejection note"
+    # Eco score should NOT be 10 from this implausible LC50
+    eco = scores.get("Ecological Hazards", {})
+    aquatic_sub = eco.get("Acute Aquatic Toxicity", {})
+    # The LC50 unit should NOT be scored (excluded)
+    assert "Acute Fish LC50 (mg/l)" not in aquatic_sub or aquatic_sub.get("Acute Fish LC50 (mg/l)") is None, \
+        "Beyond-solubility LC50 should NOT produce a score"
+
+    # Check that the missing list records the exclusion
+    missing = [m for m in trace["missing"] if "Aquatic" in m.get("subcategory", "")]
+    excluded = [m for m in missing if "excluded" in m.get("reason", "").lower()]
+    assert len(excluded) > 0, "Should record exclusion in missing list"
 
 
-def test_ecosar_lc50_below_solubility_is_valid(matrix):
-    """Predicted LC50 BELOW water solubility is valid - toxicity is achievable.
+def test_ecosar_lc50_below_solubility_is_scored(matrix):
+    """Predicted LC50 BELOW water solubility is valid and should be scored.
 
     When LC50 < water_solubility, the chemical CAN dissolve to that toxic
     concentration. This is a valid prediction that should be scored normally.
     """
     hd = _hd([], ghs={"h_codes": []})
     hd["lc50_aquatic_mg_l"] = {"value": 0.01, "predicted": True}  # BELOW solubility
-    hd["water_solubility_mg_l"] = {"value": 0.1, "predicted": True}  # Solubility limit
+    hd["water_solubility_mg_l"] = {"value": 0.1, "predicted": True}  # HIGHER solubility
 
-    _, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
 
     aquatic_ev = trace["evidence"].get("aquatic_lc50")
     assert aquatic_ev is not None
-    assert aquatic_ev.get("beyond_solubility") is False, "Should NOT flag - achievable concentration"
-    assert aquatic_ev["value"] == 0.01, "Should keep original value"
+    assert aquatic_ev.get("beyond_solubility") is False, "Should NOT flag"
+    assert aquatic_ev["value"] == 0.01
+
+    # Eco score SHOULD be driven by this valid LC50
+    eco = scores.get("Ecological Hazards", {})
+    aquatic_sub = eco.get("Acute Aquatic Toxicity", {})
+    assert aquatic_sub.get("_max") is not None, "Valid LC50 should produce a score"
 
 
-def test_ecosar_very_low_lc50_with_high_logkow_flagged():
-    """Extremely low predicted LC50 with high logKow is flagged as low_confidence.
+def test_ecosar_very_low_lc50_with_high_logkow_excluded():
+    """Extremely low predicted LC50 with high logKow must NOT drive Eco 10.
 
-    Cases like CAS 7235-40-7 (LC50 4.1e-12 mg/L, logKow 5.2) are likely beyond
-    achievable water concentration due to poor solubility. Flag but do NOT cap.
+    Cases like CAS 7235-40-7 (LC50 4.1e-12 mg/L, logKow 6.75) are beyond
+    achievable water concentration. These must NOT produce Eco 10.
     """
     hd = _hd([], ghs={"h_codes": []})
     hd["lc50_aquatic_mg_l"] = {"value": 4.1e-12, "predicted": True}
-    hd["log_kow"] = {"value": 5.2, "predicted": True}
+    hd["log_kow"] = {"value": 6.75, "predicted": True}  # High logKow like beta-carotene
 
-    _, trace = compute_p2oasys_scores_with_trace(hd, load_p2oasys_matrix(DEFAULT_MATRIX_PATH))
+    scores, trace = compute_p2oasys_scores_with_trace(hd, load_p2oasys_matrix(DEFAULT_MATRIX_PATH))
 
     aquatic_ev = trace["evidence"].get("aquatic_lc50")
     assert aquatic_ev is not None
     assert aquatic_ev.get("low_confidence") is True, "Should flag low_confidence"
-    # Value should NOT be capped
-    assert aquatic_ev["value"] == 4.1e-12, "Should NOT cap value"
+
+    # Eco score should NOT be 10 from this implausible LC50
+    eco = scores.get("Ecological Hazards", {})
+    cat_max = eco.get("_category_max")
+    # Either no score or not 10
+    assert cat_max is None or cat_max < 10, \
+        f"Low-confidence LC50 should NOT drive Eco 10, got {cat_max}"
 
 
-def test_measured_lc50_not_flagged_for_logkow():
-    """Measured (non-predicted) LC50 values are not flagged even with high logKow.
+def test_measured_lc50_is_scored_even_with_high_logkow():
+    """Measured (non-predicted) LC50 values should be scored even with high logKow.
 
-    Only predicted values from ECOSAR/QSAR should be flagged for logKow heuristic.
+    Only predicted values from ECOSAR/QSAR should be excluded for logKow heuristic.
     """
     hd = _hd([], ghs={"h_codes": []})
-    hd["lc50_aquatic_mg_l"] = {"value": 0.0001, "predicted": False}  # Measured, not predicted
+    hd["lc50_aquatic_mg_l"] = {"value": 0.001, "predicted": False}  # Measured
     hd["log_kow"] = {"value": 6.0, "predicted": True}  # High logKow
 
-    _, trace = compute_p2oasys_scores_with_trace(hd, load_p2oasys_matrix(DEFAULT_MATRIX_PATH))
+    scores, trace = compute_p2oasys_scores_with_trace(hd, load_p2oasys_matrix(DEFAULT_MATRIX_PATH))
 
     aquatic_ev = trace["evidence"].get("aquatic_lc50")
     assert aquatic_ev is not None
-    # Measured value should NOT be flagged
-    assert aquatic_ev["value"] == 0.0001
     assert not aquatic_ev.get("low_confidence", False), "Measured values not flagged"
+
+    # Measured value SHOULD be scored
+    eco = scores.get("Ecological Hazards", {})
+    aquatic_sub = eco.get("Acute Aquatic Toxicity", {})
+    assert aquatic_sub.get("_max") is not None, "Measured LC50 should be scored"
 
 
 def test_predicted_flag_propagates_to_subcategory(matrix):
