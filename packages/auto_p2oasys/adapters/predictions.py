@@ -214,14 +214,53 @@ def _call_ecosar_api(smiles: str) -> dict | None:
     return None
 
 
-def gather_flash_prediction(cas: str) -> list[Evidence]:
+def gather_flash_prediction(cas: str, measured_available: bool = False) -> list[Evidence]:
     """
     Gather flash point prediction from Maestri/Salierno model.
 
-    Status: TODO - model files not yet provided.
-    This is a placeholder for the flash point prediction capability.
+    Flash point routing: measured first, then Maestri model fallback.
+
+    Args:
+        cas: CAS registry number
+        measured_available: If True, skip prediction (measured data exists)
+
+    Returns:
+        Predicted flash point evidence, or empty if measured available or model unavailable
     """
-    return []
+    if measured_available:
+        return []
+
+    display_cas = format_cas_display(cas)
+    now = datetime.now(timezone.utc)
+
+    predictor = FlashPointPredictor.get_instance()
+    if not predictor.is_available():
+        return []
+
+    try:
+        smiles = _get_smiles_for_cas(cas)
+        if not smiles:
+            return []
+
+        result = predictor.predict(smiles)
+        if result is None:
+            return []
+
+        return [
+            Evidence(
+                cas=display_cas,
+                endpoint="flash_point",
+                value=result.get("flash_point_c"),
+                unit="°C",
+                source="Maestri/Salierno Model",
+                predicted=True,
+                reliability=f"R²={result.get('r_squared', 'N/A')}",
+                reference="Maestri/Salierno flash point prediction model",
+                retrieved_at=now,
+            )
+        ]
+    except Exception:
+        return []
 
 
 class FlashPointPredictor:
