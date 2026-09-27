@@ -216,7 +216,7 @@ class ScorerConfig:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class ExternalToolsConfig:
-    """External tool paths (ECOSAR, IUCLID)."""
+    """External tool paths (ECOSAR, IUCLID, CompTox, CPDB)."""
 
     @staticmethod
     def episuite_path() -> Path | None:
@@ -237,6 +237,21 @@ class ExternalToolsConfig:
     def iuclid_api_key() -> str | None:
         """IUCLID API key (PR #9)."""
         return os.environ.get("IUCLID_API_KEY", "").strip() or None
+
+    @staticmethod
+    def dsstox_cache_path() -> Path | None:
+        """Path to DSSTox parquet/sqlite cache."""
+        return _env_path("DSSTOX_CACHE_PATH")
+
+    @staticmethod
+    def epa_api_key() -> str | None:
+        """EPA API key for ToxValDB."""
+        return os.environ.get("EPA_API_KEY", "").strip() or None
+
+    @staticmethod
+    def cpdb_db_path() -> Path | None:
+        """Path to CPDB sqlite database."""
+        return _env_path("CPDB_DB_PATH")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
