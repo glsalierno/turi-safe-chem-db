@@ -46,6 +46,7 @@ class HazardDataBuilder:
         self.gwp100: list[float] = []
         self.odp: list[float] = []
         self.iarc: list[str] = []
+        self.epa_carcinogen: list[str] = []
         self.log_kow: float | None = None
         self.bcf_l_kg: float | None = None
         self.biodeg_half_life_days: float | None = None
@@ -54,6 +55,12 @@ class HazardDataBuilder:
         self.cid: int | None = None
         self.pka: float | None = None
         self.aquatic_lc50: list[dict] = []
+        self.chronic_aquatic_noec: list[dict] = []
+        self.genotoxicity: list[dict] = []
+        self.repeated_dose: list[dict] = []
+        self.odor_threshold: float | None = None
+        self.not_wired: dict[str, str] = {}
+        self.iuclid_sources: list[str] = []
 
     def add_evidence(self, ev: Evidence) -> None:
         """Add an Evidence record to the builder."""
@@ -83,6 +90,8 @@ class HazardDataBuilder:
             self._add_odp(ev)
         elif endpoint in ("iarc", "iarc_group", "iarc_classification"):
             self._add_iarc(ev)
+        elif endpoint in ("epa_carcinogen", "epa_class"):
+            self._add_epa_carcinogen(ev)
         elif endpoint in ("log_kow", "logkow", "log_p", "logp"):
             self._add_log_kow(ev)
         elif endpoint in ("bcf", "bcf_l_kg", "bioconcentration"):
@@ -100,6 +109,19 @@ class HazardDataBuilder:
         elif endpoint == "pka":
             if isinstance(ev.value, (int, float)):
                 self.pka = float(ev.value)
+        elif endpoint == "chronic_aquatic_noec":
+            self._add_chronic_aquatic(ev)
+        elif "genotoxicity" in endpoint:
+            self._add_genotoxicity(ev)
+        elif endpoint == "repeated_dose_toxicity":
+            self._add_repeated_dose(ev)
+        elif endpoint == "odor_threshold":
+            self._add_odor_threshold(ev)
+        elif ev.source == "NOT_WIRED":
+            self.not_wired[endpoint] = ev.reference or "Not yet implemented"
+
+        if ev.source and "ECHA" in ev.source:
+            self.iuclid_sources.append(ev.source)
 
     def _add_toxicity(self, ev: Evidence, route: str) -> None:
         """Add a toxicity record."""
@@ -212,6 +234,59 @@ class HazardDataBuilder:
         if ev.value is not None:
             self.iarc.append(str(ev.value))
 
+    def _add_epa_carcinogen(self, ev: Evidence) -> None:
+        """Add EPA carcinogen classification."""
+        if ev.value is not None:
+            self.epa_carcinogen.append(str(ev.value))
+
+    def _add_chronic_aquatic(self, ev: Evidence) -> None:
+        """Add chronic aquatic NOEC."""
+        if ev.value is not None:
+            try:
+                val = float(ev.value)
+                self.chronic_aquatic_noec.append(
+                    {
+                        "value": val,
+                        "unit": ev.unit or "mg/L",
+                        "source": ev.source,
+                        "predicted": ev.predicted,
+                    }
+                )
+            except (TypeError, ValueError):
+                pass
+
+    def _add_genotoxicity(self, ev: Evidence) -> None:
+        """Add genotoxicity data."""
+        self.genotoxicity.append(
+            {
+                "value": ev.value,
+                "endpoint": ev.endpoint,
+                "source": ev.source,
+                "predicted": ev.predicted,
+            }
+        )
+
+    def _add_repeated_dose(self, ev: Evidence) -> None:
+        """Add repeated dose toxicity."""
+        if ev.value is not None:
+            self.repeated_dose.append(
+                {
+                    "value": ev.value,
+                    "unit": ev.unit or "mg/kg/day",
+                    "source": ev.source,
+                    "qualifier": ev.qualifier,
+                    "predicted": ev.predicted,
+                }
+            )
+
+    def _add_odor_threshold(self, ev: Evidence) -> None:
+        """Add odor threshold."""
+        if ev.value is not None and self.odor_threshold is None:
+            try:
+                self.odor_threshold = float(ev.value)
+            except (TypeError, ValueError):
+                pass
+
     def _add_log_kow(self, ev: Evidence) -> None:
         """Add Log Kow."""
         if ev.value is not None and self.log_kow is None:
@@ -264,6 +339,42 @@ class HazardDataBuilder:
                 }
             )
 
+        for epa_val in self.epa_carcinogen:
+            self.toxicities.append(
+                {
+                    "value": f"EPA Carcinogen Category {epa_val}",
+                    "source": "EPA IRIS",
+                }
+            )
+
+        for noec in self.chronic_aquatic_noec:
+            self.toxicities.append(
+                {
+                    "value": f"Chronic NOEC {noec['value']} {noec['unit']}",
+                    "source": noec.get("source", "unknown"),
+                    "predicted": noec.get("predicted", False),
+                }
+            )
+
+        for geno in self.genotoxicity:
+            self.toxicities.append(
+                {
+                    "value": f"Genotoxicity: {geno['value']} ({geno['endpoint']})",
+                    "source": geno.get("source", "unknown"),
+                    "predicted": geno.get("predicted", False),
+                }
+            )
+
+        for rd in self.repeated_dose:
+            qual = f"{rd['qualifier']} " if rd.get("qualifier") else ""
+            self.toxicities.append(
+                {
+                    "value": f"Repeated dose: {qual}{rd['value']} {rd['unit']}",
+                    "source": rd.get("source", "unknown"),
+                    "predicted": rd.get("predicted", False),
+                }
+            )
+
         hazard_data = {
             "toxicities": self.toxicities,
             "ghs": {"h_codes": list(set(self.h_codes))},
@@ -298,5 +409,15 @@ class HazardDataBuilder:
 
         if self.pka is not None:
             hazard_data["pKa"] = self.pka
+
+        if self.odor_threshold is not None:
+            hazard_data["odor_threshold_ppm"] = self.odor_threshold
+            hazard_data["hazard_metrics"]["odor_threshold"] = self.odor_threshold
+
+        if self.not_wired:
+            hazard_data["not_wired_endpoints"] = self.not_wired
+
+        if self.iuclid_sources:
+            hazard_data["iuclid_attribution"] = list(set(self.iuclid_sources))
 
         return hazard_data

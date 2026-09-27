@@ -77,16 +77,40 @@ Clean automatic P2OASys scoring with expert-first routing and fast pipeline fall
 | **PubChem hazard** | ✅ active | GHS, NFPA, flash point, VP from PubChem |
 | **CAMEO NFPA** | ✅ active | NFPA 704 from bundled CAMEO sqlite |
 | **IARC table** | ✅ active | IARC carcinogen classification |
+| **EPA carcinogen** | ✅ active | EPA IRIS carcinogen classification |
 | **ODP/GWP tables** | ✅ active | ODP and GWP100 from bundled tables |
 | **CAA HAP list** | ✅ active | Clean Air Act §112(b) HAP list |
+| **Odor threshold** | ✅ active | Odor threshold lookup (flags MISSING if unavailable) |
 | **SDS parse** | ✅ active | Extract CAS, flash point from SDS PDFs |
 | **OPERA predictions** | 🔶 optional | Log Kow, BCF, biodeg from OPERA cache |
 | **ECOSAR predictions** | 🔶 optional | Aquatic LC50 via pyepisuite API |
 | **HSPiP VP** | 🔒 licensed | Vapor pressure from HSPiP (optional) |
-| **Flash point predict** | 📝 TODO | Maestri/Salierno model (interface ready, model pending) |
-| **IUCLID** | 🔶 optional | IUCLID dossier data (PR #9) |
+| **Flash point predict** | 📝 TODO | Maestri/Salierno model (measured first, then fallback) |
+| **IUCLID endpoints** | 🔶 optional | ECHA REACH study results (see attribution below) |
 | **ToxValDB** | 🔶 optional | CompTox ToxValDB (API key required) |
 | **CPDB** | 🔶 optional | Carcinogenic Potency DB (sqlite not bundled) |
+
+### IUCLID Endpoints (with ECHA Attribution)
+
+When IUCLID cache is available, these endpoints are wired:
+- Inhalation LC50
+- Repeated dose toxicity
+- Genotoxicity (in vitro and in vivo)
+- Biodegradation
+- Chronic aquatic NOEC
+
+**CRITICAL ATTRIBUTION REQUIREMENT:**
+Any result derived from IUCLID data **must** display:
+```
+Source: ECHA REACH Study Results (IUCLID), European Chemicals Agency
+```
+This attribution is automatically added to all IUCLID-sourced evidence.
+
+### NOT_WIRED Endpoints
+
+These endpoints are explicitly marked as not yet implemented:
+- **IDLH** (Immediately Dangerous to Life or Health)
+- **Reportable Quantity** (CERCLA/EPCRA)
 
 ### Gap-Fill Layer
 
