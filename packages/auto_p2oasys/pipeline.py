@@ -198,11 +198,49 @@ def gather_evidence(
     except Exception as e:
         report.add("ecosar", AdapterStatus.ERROR, str(e))
 
-    report.add(
-        "flash_predict",
-        AdapterStatus.SKIPPED,
-        reason="Maestri/Salierno model not yet provided (TODO)",
-    )
+    try:
+        from .adapters.predictions import get_flash_model_status, gather_flash_prediction
+        
+        flash_status = get_flash_model_status()
+        if flash_status.get("available"):
+            has_measured_flash = any(
+                ev.endpoint == "flash_point" and not ev.predicted
+                for ev in evidence
+            )
+            
+            if has_measured_flash:
+                report.add(
+                    "flash_predict",
+                    AdapterStatus.SKIPPED,
+                    reason="Measured flash point available (measured preferred)",
+                )
+            else:
+                start = time.monotonic()
+                flash_evidence = gather_flash_prediction(cas, measured_available=False)
+                duration = (time.monotonic() - start) * 1000
+                if flash_evidence:
+                    evidence.extend(flash_evidence)
+                    report.add(
+                        "flash_predict",
+                        AdapterStatus.RAN,
+                        evidence_count=len(flash_evidence),
+                        duration_ms=duration,
+                        reason="Maestri FPT model (Zenodo 10.5281/zenodo.20931012)",
+                    )
+                else:
+                    report.add(
+                        "flash_predict",
+                        AdapterStatus.NO_DATA,
+                        reason="Prediction failed (no SMILES or model error)",
+                    )
+        else:
+            report.add(
+                "flash_predict",
+                AdapterStatus.SKIPPED,
+                reason=f"NOT_CONFIGURED: {flash_status.get('reason', 'Model not available')}",
+            )
+    except Exception as e:
+        report.add("flash_predict", AdapterStatus.ERROR, str(e))
 
     report.add(
         "hspip_vp",

@@ -214,11 +214,21 @@ def _call_ecosar_api(smiles: str) -> dict | None:
     return None
 
 
+class FlashPredictError(Exception):
+    """Error from flash point prediction."""
+    pass
+
+
 def gather_flash_prediction(cas: str, measured_available: bool = False) -> list[Evidence]:
     """
     Gather flash point prediction from Maestri/Salierno model.
 
     Flash point routing: measured first, then Maestri model fallback.
+    
+    Model provenance:
+    - Code: Zenodo 10.5281/zenodo.20931012 (CC-BY-4.0)
+    - Training: DIPPR n=1248, R² 0.944, RMSE 14.81 K, MAE 8.01 K
+    - Models trained on licensed data (HSPiP/DIPPR/Yaws) - NOT in repo
 
     Args:
         cas: CAS registry number
@@ -234,7 +244,9 @@ def gather_flash_prediction(cas: str, measured_available: bool = False) -> list[
     now = datetime.now(timezone.utc)
 
     predictor = FlashPointPredictor.get_instance()
-    if not predictor.is_available():
+    status = predictor.get_status()
+    
+    if not status["available"]:
         return []
 
     try:
@@ -246,33 +258,50 @@ def gather_flash_prediction(cas: str, measured_available: bool = False) -> list[
         if result is None:
             return []
 
+        ad_label = ""
+        if not result.in_domain:
+            ad_label = " [OUT OF AD]"
+        
         return [
             Evidence(
                 cas=display_cas,
                 endpoint="flash_point",
-                value=result.get("flash_point_c"),
+                value=result.flash_point_c,
                 unit="°C",
-                source="Maestri/Salierno Model",
+                source="Predicted (Maestri FPT model)",
                 predicted=True,
-                reliability=f"R²={result.get('r_squared', 'N/A')}",
-                reference="Maestri/Salierno flash point prediction model",
+                reliability=f"AD: {'in-domain' if result.in_domain else 'OUT OF DOMAIN'}{ad_label}",
+                reference="Zenodo 10.5281/zenodo.20931012 (R² 0.944, RMSE 14.81 K)",
                 retrieved_at=now,
+                raw_text=f"AD distance: {result.ad_distance:.3f}, threshold: {result.ad_threshold:.3f}",
             )
         ]
-    except Exception:
-        return []
+    except Exception as e:
+        raise FlashPredictError(f"Flash point prediction failed: {e}") from e
+
+
+def get_flash_model_status() -> dict:
+    """Get detailed flash point model status for source report."""
+    predictor = FlashPointPredictor.get_instance()
+    return predictor.get_status()
 
 
 class FlashPointPredictor:
     """
-    Placeholder for Maestri/Salierno flash point prediction model.
-
-    This class will wrap the trained model once model files are provided.
-    Currently registered in capabilities with status TODO.
+    Wrapper for Maestri/Salierno flash point prediction model.
+    
+    Model provenance:
+    - Code: Zenodo 10.5281/zenodo.20931012 ("mlmaestri/VariablePrediction", CC-BY-4.0)
+    - Training data: DIPPR flash point n=1248 (licensed, not redistributable)
+    - Model metrics: R² 0.944, RMSE 14.81 K, MAE 8.01 K
+    
+    CRITICAL: Trained models (fpt_model_zenodo10.joblib etc.) are on licensed
+    HSPiP/DIPPR/Yaws data and MUST NOT be committed to public repo.
+    
+    Set TURI_FPT_MODEL_DIR to directory containing model files.
     """
 
     _instance: Optional["FlashPointPredictor"] = None
-    _model_loaded: bool = False
 
     @classmethod
     def get_instance(cls) -> "FlashPointPredictor":
@@ -281,20 +310,64 @@ class FlashPointPredictor:
         return cls._instance
 
     def __init__(self):
-        self._model = None
-        self._model_loaded = False
+        self._fpt_module = None
+        self._load_attempted = False
+        self._load_error: str | None = None
+
+    def _ensure_loaded(self) -> bool:
+        """Attempt to load fpt_predict module."""
+        if self._load_attempted:
+            return self._fpt_module is not None
+        
+        self._load_attempted = True
+        
+        try:
+            from packages import fpt_predict
+            if fpt_predict.is_available():
+                self._fpt_module = fpt_predict
+                return True
+            else:
+                status = fpt_predict.get_model_status()
+                self._load_error = status.get("reason", "Model not available")
+                return False
+        except ImportError as e:
+            self._load_error = f"fpt_predict module not available: {e}"
+            return False
+        except Exception as e:
+            self._load_error = f"Failed to load fpt_predict: {e}"
+            return False
 
     def is_available(self) -> bool:
         """Check if model is available and loaded."""
-        return self._model_loaded
+        return self._ensure_loaded()
 
-    def predict(self, smiles: str) -> dict | None:
+    def get_status(self) -> dict:
+        """Get detailed model status for reporting."""
+        if not self._load_attempted:
+            self._ensure_loaded()
+        
+        if self._fpt_module is not None:
+            try:
+                return self._fpt_module.get_model_status()
+            except Exception:
+                pass
+        
+        return {
+            "available": False,
+            "status": "NOT_CONFIGURED",
+            "reason": self._load_error or "Model not loaded",
+        }
+
+    def predict(self, smiles: str):
         """
         Predict flash point from SMILES.
-
-        Returns None until model files are provided.
+        
+        Returns FPTResult or None if prediction fails.
         """
         if not self.is_available():
             return None
-
-        return None
+        
+        try:
+            return self._fpt_module.predict(smiles)
+        except Exception:
+            return None

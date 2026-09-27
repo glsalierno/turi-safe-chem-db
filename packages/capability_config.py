@@ -216,7 +216,16 @@ class ScorerConfig:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class ExternalToolsConfig:
-    """External tool paths (ECOSAR, IUCLID, CompTox, CPDB)."""
+    """External tool paths (ECOSAR, IUCLID, CompTox, CPDB, Maestri FPT)."""
+
+    @staticmethod
+    def fpt_model_dir() -> Path | None:
+        """Directory containing Maestri flash point models.
+        
+        Models are NOT committed to repo (trained on licensed DIPPR/HSPiP/Yaws data).
+        Set TURI_FPT_MODEL_DIR to directory containing fpt_model_zenodo10.joblib etc.
+        """
+        return _env_path("TURI_FPT_MODEL_DIR")
 
     @staticmethod
     def episuite_path() -> Path | None:

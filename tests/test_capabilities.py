@@ -604,12 +604,23 @@ def test_gapfill_measured_preferred():
 
 
 def test_flash_predict_stub():
-    """Flash point predictor stub exists (TODO: model files)."""
-    from packages.auto_p2oasys.adapters.predictions import FlashPointPredictor
-
-    predictor = FlashPointPredictor.get_instance()
-    assert predictor.is_available() is False
-    pytest.skip("Flash point model files not yet provided (TODO)")
+    """Flash point predictor reports NOT_CONFIGURED when models not present."""
+    import os
+    
+    old_val = os.environ.pop("TURI_FPT_MODEL_DIR", None)
+    
+    try:
+        from packages.auto_p2oasys.adapters.predictions import FlashPointPredictor
+        
+        FlashPointPredictor._instance = None
+        predictor = FlashPointPredictor.get_instance()
+        
+        status = predictor.get_status()
+        assert status["available"] is False
+        assert status["status"] == "NOT_CONFIGURED"
+    finally:
+        if old_val is not None:
+            os.environ["TURI_FPT_MODEL_DIR"] = old_val
 
 
 def test_load_matrix_bundled():
@@ -696,3 +707,24 @@ def test_ph_cascade_experimental():
     assert result[0].endpoint == "ph_estimate"
     assert result[0].value == 5.5
     assert result[0].predicted is False
+
+
+def test_model_not_configured_status():
+    """Maestri FPT model reports NOT_CONFIGURED when TURI_FPT_MODEL_DIR not set."""
+    import os
+    
+    old_val = os.environ.pop("TURI_FPT_MODEL_DIR", None)
+    
+    try:
+        from packages.auto_p2oasys.adapters.predictions import FlashPointPredictor
+        
+        FlashPointPredictor._instance = None
+        predictor = FlashPointPredictor.get_instance()
+        
+        status = predictor.get_status()
+        assert status["available"] is False
+        assert status["status"] == "NOT_CONFIGURED"
+        assert "TURI_FPT_MODEL_DIR" in status.get("reason", "")
+    finally:
+        if old_val is not None:
+            os.environ["TURI_FPT_MODEL_DIR"] = old_val
