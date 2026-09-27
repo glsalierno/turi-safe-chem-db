@@ -216,7 +216,7 @@ def test_matrix_fingerprint():
 
 
 def test_scorer_version():
-    assert SCORER_VERSION == "p2oasys_scorer_v6.6_site_top2"
+    assert SCORER_VERSION == "p2oasys_scorer_v6.7_bug_fixes"
 
 
 # --------------------------------------------------------------------------- #
@@ -366,3 +366,196 @@ def test_end_to_end_scoring_with_trace(matrix):
     assert "scored" in trace
     assert "missing" in trace
     assert trace["evidence"]["oral_ld50"]["value"] == 120.0
+
+
+# --------------------------------------------------------------------------- #
+# Bug fixes - PR B
+# --------------------------------------------------------------------------- #
+
+def test_flash_point_high_value_is_safe(matrix):
+    """High flash point (345°C like propanediol 504-63-2) should score 2 (safest).
+
+    Bug: Previously, flash points above all thresholds scored 10 (most hazardous)
+    instead of 2 (safest). High flash point means harder to ignite → safer.
+    """
+    hd = _hd([], ghs={"h_codes": []})
+    hd["hazard_metrics"]["flash_point"] = ["345°C"]
+
+    scores = compute_p2oasys_scores(hd, matrix)
+    physical = scores.get("Physical Properties", {})
+    flammability = physical.get("Flammability: Liquid", {})
+
+    assert "Flash Point deg C" in flammability
+    assert flammability["Flash Point deg C"] == 2, \
+        f"High flash point 345°C should score 2 (safest), got {flammability['Flash Point deg C']}"
+
+
+def test_flash_point_low_value_is_hazardous(matrix):
+    """Low flash point (5°C) should score 10 (most hazardous)."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["hazard_metrics"]["flash_point"] = ["5°C"]
+
+    scores = compute_p2oasys_scores(hd, matrix)
+    physical = scores.get("Physical Properties", {})
+    flammability = physical.get("Flammability: Liquid", {})
+
+    assert flammability["Flash Point deg C"] == 10
+
+
+@pytest.mark.parametrize(
+    "flash_c, expected_score",
+    [
+        (5, 10),    # Below all thresholds
+        (10, 10),   # At threshold
+        (25, 8),
+        (45, 6),
+        (60, 4),
+        (93, 2),
+        (100, 2),   # Above highest threshold → safest
+        (345, 2),   # Propanediol case
+    ],
+)
+def test_flash_point_threshold_boundaries(matrix, flash_c, expected_score):
+    """Flash point scores correctly at and between thresholds."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["hazard_metrics"]["flash_point"] = [f"{flash_c}°C"]
+
+    scores = compute_p2oasys_scores(hd, matrix)
+    actual = scores.get("Physical Properties", {}).get("Flammability: Liquid", {}).get("Flash Point deg C")
+
+    assert actual == expected_score, f"Flash {flash_c}°C: expected {expected_score}, got {actual}"
+
+
+def test_ecosar_lc50_capped_at_water_solubility(matrix):
+    """Predicted LC50 below water solubility is capped at solubility per ECOSAR/GHS practice.
+
+    Bug: Previously, ECOSAR predictions below water solubility (physically impossible)
+    would score as extremely toxic (Eco 10). Now they are capped and flagged.
+    """
+    hd = _hd([], ghs={"h_codes": []})
+    hd["lc50_aquatic_mg_l"] = {"value": 0.013, "predicted": True}  # Below solubility
+    hd["water_solubility_mg_l"] = {"value": 0.1, "predicted": True}  # Solubility limit
+    hd["log_kow"] = {"value": 5.2, "predicted": True}
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    aquatic_ev = trace["evidence"].get("aquatic_lc50")
+    assert aquatic_ev is not None
+    assert aquatic_ev.get("beyond_solubility") is True, "Should flag beyond_solubility"
+    assert aquatic_ev.get("capped_at_solubility") is True, "Should cap at solubility"
+    assert aquatic_ev["value"] == 0.1, f"Should be capped at solubility 0.1, got {aquatic_ev['value']}"
+
+    rejected = [r for r in trace["rejected"] if "aquatic LC50" in r["endpoint"]]
+    assert len(rejected) > 0, "Should have rejected the original LC50"
+
+
+def test_ecosar_very_low_lc50_flagged():
+    """Extremely low predicted LC50 with high logKow is flagged as beyond solubility.
+
+    Cases like CAS 7235-40-7 (LC50 4.1e-12 mg/L, logKow 5.2) are physically impossible.
+    """
+    hd = _hd([], ghs={"h_codes": []})
+    hd["lc50_aquatic_mg_l"] = {"value": 4.1e-12, "predicted": True}
+    hd["log_kow"] = {"value": 5.2, "predicted": True}
+    hd["water_solubility_mg_l"] = {"value": 0.001, "predicted": True}
+
+    _, trace = compute_p2oasys_scores_with_trace(hd, load_p2oasys_matrix(DEFAULT_MATRIX_PATH))
+
+    aquatic_ev = trace["evidence"].get("aquatic_lc50")
+    assert aquatic_ev is not None
+    assert aquatic_ev.get("beyond_solubility") is True
+
+
+def test_measured_lc50_not_capped():
+    """Measured (non-predicted) LC50 values are not capped even if low.
+
+    Only predicted values from ECOSAR/QSAR should be capped.
+    """
+    hd = _hd([], ghs={"h_codes": []})
+    hd["lc50_aquatic_mg_l"] = {"value": 0.01, "predicted": False}  # Measured, not predicted
+    hd["water_solubility_mg_l"] = {"value": 0.1, "predicted": True}
+
+    _, trace = compute_p2oasys_scores_with_trace(hd, load_p2oasys_matrix(DEFAULT_MATRIX_PATH))
+
+    aquatic_ev = trace["evidence"].get("aquatic_lc50")
+    assert aquatic_ev is not None
+    # Measured value should NOT be capped
+    assert aquatic_ev["value"] == 0.01
+    assert not aquatic_ev.get("capped_at_solubility", False)
+
+
+def test_predicted_flag_propagates_to_subcategory(matrix):
+    """Predicted flag propagates from unit to subcategory level."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["hazard_metrics"]["flash_point"] = ["25°C"]  # Measured data
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    physical = scores.get("Physical Properties", {})
+    flammability = physical.get("Flammability: Liquid", {})
+    assert "_predicted" in flammability
+    assert flammability["_predicted"] is False, "Non-predicted data should have _predicted=False"
+
+
+def test_predicted_flag_propagates_to_category(matrix):
+    """Predicted flag propagates from subcategory to category level."""
+    hd = _hd(
+        [{"value": "LD50 100 mg/kg", "species_route": ["oral", "rat"], "predicted": True}],
+        ghs={"h_codes": []},
+    )
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    acute = scores.get("Acute Human Effects", {})
+    assert "_category_predicted" in acute
+    assert acute["_category_predicted"] is True, "All-predicted category should have _category_predicted=True"
+
+
+def test_overall_score_computed(matrix):
+    """Overall score is computed as MAX of Auto6 categories."""
+    hd = _hd(
+        [{"value": "LD50 100 mg/kg", "species_route": ["oral", "rat"]}],
+        ghs={"h_codes": ["H301"]},  # Acute tox category 3
+    )
+    hd["hazard_metrics"]["flash_point"] = ["25°C"]  # Physical score
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    assert "_overall" in scores
+    overall = scores["_overall"]
+    assert overall["score"] is not None
+    assert overall["auto6_count"] > 0
+    assert "categories_at_8_or_above" in overall
+    assert "measured_categories_at_8_or_above" in overall
+
+
+def test_overall_excludes_process_lifecycle(matrix):
+    """Process and Life Cycle categories are excluded from Auto6 overall."""
+    from packages.p2oasys_scorer.utils.p2oasys_scorer import AUTO6_CATEGORIES
+
+    assert "Process Factors" not in AUTO6_CATEGORIES
+    assert "Life Cycle Factors" not in AUTO6_CATEGORIES
+    assert "Acute Human Effects" in AUTO6_CATEGORIES
+    assert len(AUTO6_CATEGORIES) == 6
+
+
+def test_scores_rounded_to_2_significant_digits(matrix):
+    """Scores are rounded to 2 significant digits."""
+    hd = _hd(
+        [
+            {"value": "LD50 120 mg/kg", "species_route": ["oral", "rat"]},
+            {"value": "LD50 180 mg/kg", "species_route": ["oral", "rat"]},
+        ],
+        ghs={"h_codes": []},
+    )
+
+    scores, _ = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    acute = scores.get("Acute Human Effects", {})
+    oral_tox = acute.get("Oral Toxicity", {})
+    if "_max" in oral_tox:
+        max_val = oral_tox["_max"]
+        assert isinstance(max_val, float)
+        str_val = f"{max_val:.10g}"
+        non_zero_digits = len([c for c in str_val.replace(".", "") if c != "0" and c.isdigit()])
+        assert non_zero_digits <= 2, f"Score {max_val} has more than 2 significant digits"

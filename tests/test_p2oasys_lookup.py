@@ -77,3 +77,33 @@ def test_resolve_acetone_without_csv_finds_score():
     hit = resolve_p2oasys("67-64-1", expert_df=None)
     assert hit["source"] in ("expert", "auto")
     assert hit["overall"] != "-"
+
+
+# --------------------------------------------------------------------------- #
+# Bug fixes - PR B
+# --------------------------------------------------------------------------- #
+
+def test_xylenes_name_not_methanol():
+    """CAS 1330-20-7 (Xylenes) should NOT have name_auto='methanol'.
+
+    Data bug: The original harvest incorrectly assigned methanol's name/data
+    to the xylenes row. This test verifies the fix.
+    """
+    import sqlite3
+    from packages.p2oasys_core.lookup import default_lookup_db_path
+
+    conn = sqlite3.connect(str(default_lookup_db_path()))
+    conn.row_factory = sqlite3.Row
+    try:
+        row = conn.execute(
+            "SELECT name_expert, name_auto FROM by_cas WHERE cas = '1330-20-7'"
+        ).fetchone()
+        assert row is not None, "Xylenes (1330-20-7) not found in database"
+        assert row["name_expert"] == "Xylenes"
+        name_auto = row["name_auto"].lower() if row["name_auto"] else ""
+        assert "methanol" not in name_auto, \
+            f"Xylenes name_auto incorrectly contains 'methanol': {row['name_auto']}"
+        assert "xylene" in name_auto, \
+            f"Xylenes name_auto should contain 'xylene': {row['name_auto']}"
+    finally:
+        conn.close()
