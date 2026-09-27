@@ -159,15 +159,16 @@ capabilities:
     status: "active"
 
   auto_p2oasys_flash_predict:
-    name: "Auto P2OASys flash point predictor"
-    description: "Maestri/Salierno flash point prediction model"
-    module: "packages.auto_p2oasys.adapters.predictions"
+    name: "Auto P2OASys flash point predictor (Maestri FPT)"
+    description: "XGBoost flash point prediction with applicability domain (R² 0.944, RMSE 14.81 K)"
+    module: "packages.fpt_predict"
     required: false
     licensed: false
-    env_vars: []
-    test_id: "test_auto_p2oasys::test_flash_predict_stub"
-    status: "TODO"
-    note: "Interface ready, model files not yet provided"
+    env_vars:
+      - "TURI_FPT_MODEL_DIR"
+    test_id: "test_auto_p2oasys::TestFlashPointPredictor::test_model_not_configured_status"
+    status: "wired_local_models"
+    note: "Models trained on licensed DIPPR/HSPiP/Yaws data - NOT in repo. Code: Zenodo 10.5281/zenodo.20931012 (CC-BY-4.0)"
 
   auto_p2oasys_iuclid:
     name: "Auto P2OASys IUCLID adapter"

@@ -517,6 +517,103 @@ def test_flash_predict_stub():
     assert isinstance(result, list)
 
 
+class TestFlashPointPredictor:
+    """Tests for Maestri flash point predictor."""
+
+    def test_model_not_configured_status(self):
+        """When TURI_FPT_MODEL_DIR not set, status should be NOT_CONFIGURED."""
+        import os
+        
+        old_val = os.environ.pop("TURI_FPT_MODEL_DIR", None)
+        
+        try:
+            from packages.auto_p2oasys.adapters.predictions import FlashPointPredictor
+            
+            FlashPointPredictor._instance = None
+            predictor = FlashPointPredictor.get_instance()
+            
+            status = predictor.get_status()
+            assert status["available"] is False
+            assert status["status"] == "NOT_CONFIGURED"
+            assert "TURI_FPT_MODEL_DIR" in status.get("reason", "")
+        finally:
+            if old_val is not None:
+                os.environ["TURI_FPT_MODEL_DIR"] = old_val
+
+    def test_model_status_function(self):
+        """get_flash_model_status returns valid status dict."""
+        from packages.auto_p2oasys.adapters.predictions import get_flash_model_status
+        
+        status = get_flash_model_status()
+        assert isinstance(status, dict)
+        assert "available" in status
+        assert "status" in status
+
+    def test_flash_prediction_returns_list_when_unavailable(self):
+        """gather_flash_prediction returns empty list when model unavailable."""
+        import os
+        
+        old_val = os.environ.pop("TURI_FPT_MODEL_DIR", None)
+        
+        try:
+            from packages.auto_p2oasys.adapters.predictions import gather_flash_prediction, FlashPointPredictor
+            
+            FlashPointPredictor._instance = None
+            
+            result = gather_flash_prediction("67-64-1", measured_available=False)
+            assert result == []
+        finally:
+            if old_val is not None:
+                os.environ["TURI_FPT_MODEL_DIR"] = old_val
+
+
+class TestFPTPredict:
+    """Tests for fpt_predict package."""
+
+    def test_module_imports(self):
+        """fpt_predict module imports successfully."""
+        from packages import fpt_predict
+        
+        assert hasattr(fpt_predict, "predict")
+        assert hasattr(fpt_predict, "is_available")
+        assert hasattr(fpt_predict, "get_model_status")
+        assert hasattr(fpt_predict, "FPTModelNotConfiguredError")
+
+    def test_ad_module(self):
+        """Applicability domain module works."""
+        from packages.fpt_predict.ad import (
+            check_applicability_domain,
+            compute_ad_threshold,
+            ApplicabilityDomainResult,
+        )
+        import numpy as np
+        
+        training = np.array([[1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7]])
+        query = np.array([3.5, 4.5])
+        
+        threshold = compute_ad_threshold(training)
+        assert threshold > 0
+        
+        result = check_applicability_domain(query, training, threshold)
+        assert isinstance(result, ApplicabilityDomainResult)
+        assert isinstance(result.in_domain, bool)
+        assert result.distance >= 0
+
+    def test_ad_out_of_domain(self):
+        """Applicability domain correctly identifies out-of-domain points."""
+        from packages.fpt_predict.ad import check_applicability_domain
+        import numpy as np
+        
+        training = np.array([[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [5, 5]])
+        
+        far_point = np.array([100, 100])
+        threshold = 2.0
+        
+        result = check_applicability_domain(far_point, training, threshold)
+        assert result.in_domain is False
+        assert result.distance > threshold
+
+
 class TestCompToxAdapter:
     """Tests for CompTox DSSTox and ToxValDB adapters."""
 

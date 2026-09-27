@@ -85,7 +85,7 @@ Clean automatic P2OASys scoring with expert-first routing and fast pipeline fall
 | **OPERA predictions** | 🔶 optional | Log Kow, BCF, biodeg from OPERA cache |
 | **ECOSAR predictions** | 🔶 optional | Aquatic LC50 via pyepisuite API |
 | **HSPiP VP** | 🔒 licensed | Vapor pressure from HSPiP (optional) |
-| **Flash point predict** | 📝 TODO | Maestri/Salierno model (measured first, then fallback) |
+| **Flash point predict** | 🔶 wired_local | Maestri FPT model (measured first, then fallback) - see below |
 | **IUCLID endpoints** | 🔶 optional | ECHA REACH study results (see attribution below) |
 | **ToxValDB** | 🔶 optional | CompTox ToxValDB (API key required) |
 | **CPDB** | 🔶 optional | Carcinogenic Potency DB (sqlite not bundled) |
@@ -124,8 +124,30 @@ For each of the 34 auto subcategories (Acute 9, Chronic 7, Ecological 2, Fate 3,
 - Keep other evidence in trace
 - Predicted-only values labeled
 
+### Maestri Flash Point Model (wired_local_models)
+
+XGBoost-based flash point prediction with applicability domain checking.
+
+**Model Provenance:**
+- Code: [Zenodo 10.5281/zenodo.20931012](https://doi.org/10.5281/zenodo.20931012) ("mlmaestri/VariablePrediction: pre_release", CC-BY-4.0)
+- Training data: DIPPR flash point n=1248 (licensed, not redistributable)
+- Model metrics: R² = 0.944, RMSE = 14.81 K, MAE = 8.01 K
+
+**CRITICAL:** Trained models (`fpt_model_zenodo10.joblib` etc.) are trained on licensed
+HSPiP/DIPPR/Yaws data and **MUST NOT** be committed to public repo.
+
+**Gap-fill order for flash point:**
+1. Measured (PubChem/SDS/CAMEO/IUCLID) — preferred
+2. Maestri prediction — labeled "Predicted (Maestri FPT model)" with AD result
+
+**Applicability Domain:**
+- Features within training range
+- Mean 5-NN distance ≤ 95th percentile of training distances
+- Out-of-domain predictions are flagged and **must not drive overall on their own**
+
 ### Environment Variables
 - `AUTO_P2OASYS_OFFLINE` — Set `1` to disable network adapters (use fixtures)
+- `TURI_FPT_MODEL_DIR` — Directory containing Maestri FPT model files (local only)
 - `ECOSAR_API_URL` — pyepisuite API endpoint for ECOSAR
 - `OPERA_PRECOMPUTE_DB_PATH` — Path to OPERA precompute cache
 - `CAMEO_NFPA_DB` — Path to CAMEO NFPA SQLite
