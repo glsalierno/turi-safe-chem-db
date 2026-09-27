@@ -311,8 +311,8 @@ def test_cameo_nfpa_sqlite():
     """CAMEO NFPA sqlite is TODO."""
     registry = load_registry()
     cap = registry["capabilities"]["cameo_nfpa_sqlite"]
-    assert cap["status"] == "TODO", "cameo_nfpa_sqlite should be TODO until PR #8"
-    pytest.skip("cameo_nfpa_sqlite is TODO (PR #8)")
+    assert cap["status"] == "TODO", "cameo_nfpa_sqlite should be TODO until PR #1"
+    pytest.skip("cameo_nfpa_sqlite is TODO (PR #1)")
 
 
 def test_iarc_table():
@@ -428,3 +428,77 @@ def test_capability_report_runs():
     output = capability_report.format_report(results)
     assert "Capability Report" in output
     assert "ACTIVE" in output or "TODO" in output
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GHaz7/GHaz8 stack capabilities
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_comptox_dsstox_lookup():
+    """CompTox/DSSTox lookup is TODO."""
+    registry = load_registry()
+    cap = registry["capabilities"]["comptox_dsstox_lookup"]
+    assert cap["status"] == "TODO", "comptox_dsstox_lookup should be TODO until PR #8"
+    pytest.skip("comptox_dsstox_lookup is TODO (PR #8)")
+
+
+def test_toxval_lookup():
+    """ToxVal/ToxValDB lookup is TODO."""
+    registry = load_registry()
+    cap = registry["capabilities"]["toxval_lookup"]
+    assert cap["status"] == "TODO", "toxval_lookup should be TODO until PR #8"
+    pytest.skip("toxval_lookup is TODO (PR #8)")
+
+
+def test_opera_predictions():
+    """OPERA predictions is TODO."""
+    registry = load_registry()
+    cap = registry["capabilities"]["opera_predictions"]
+    assert cap["status"] == "TODO", "opera_predictions should be TODO until PR #8"
+    pytest.skip("opera_predictions is TODO (PR #8)")
+
+
+def test_ghaz7_headless_cli():
+    """GHaz7 headless CLI is MISSING (needs re-rooting)."""
+    registry = load_registry()
+    cap = registry["capabilities"]["ghaz7_headless_cli"]
+    assert cap["status"] == "MISSING", "ghaz7_headless_cli should be MISSING"
+    pytest.skip("ghaz7_headless_cli is MISSING (needs layout adaptation)")
+
+
+def test_fast_p2oasys_batch():
+    """fast P2OASys v2 batch is TODO."""
+    registry = load_registry()
+    cap = registry["capabilities"]["fast_p2oasys_batch"]
+    assert cap["status"] == "TODO", "fast_p2oasys_batch should be TODO until PR #8"
+    pytest.skip("fast_p2oasys_batch is TODO (PR #8)")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scorer fixes (PR #10)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_scorer_beyond_solubility():
+    """Scorer beyond-solubility checks is TODO."""
+    registry = load_registry()
+    cap = registry["capabilities"]["scorer_beyond_solubility"]
+    assert cap["status"] == "TODO", "scorer_beyond_solubility should be TODO until PR #10"
+    pytest.skip("scorer_beyond_solubility is TODO (PR #10)")
+
+
+def test_scorer_suspicious_input():
+    """Scorer suspicious input checks is TODO."""
+    registry = load_registry()
+    cap = registry["capabilities"]["scorer_suspicious_input"]
+    assert cap["status"] == "TODO", "scorer_suspicious_input should be TODO until PR #10"
+    pytest.skip("scorer_suspicious_input is TODO (PR #10)")
+
+
+def test_scorer_unit_conversion():
+    """Scorer unit conversion hardening is TODO."""
+    registry = load_registry()
+    cap = registry["capabilities"]["scorer_unit_conversion"]
+    assert cap["status"] == "TODO", "scorer_unit_conversion should be TODO until PR #10"
+    pytest.skip("scorer_unit_conversion is TODO (PR #10)")

@@ -91,7 +91,7 @@ The capability registry ensures:
 
 | Capability | Status | Description |
 |------------|--------|-------------|
-| **CAMEO NFPA sqlite** | 📝 TODO (#8) | CAMEO Chemicals NFPA 704 ratings |
+| **CAMEO NFPA sqlite** | 📝 TODO (#1) | CAMEO Chemicals NFPA 704 ratings |
 | **IARC table** | 📝 TODO (#8) | IARC carcinogen classification |
 | **ODP/GWP/IPCC atmo** | 📝 TODO (#8) | Ozone/GWP atmospheric tables |
 | **CAA HAP list** | 📝 TODO (#8) | Clean Air Act HAP list |
@@ -101,6 +101,30 @@ The capability registry ensures:
 - `IARC_TABLE_PATH` — Path to IARC CSV/table
 - `ODP_GWP_TABLE_PATH` — Path to ODP/GWP tables
 - `CAA_HAP_LIST_PATH` — Path to CAA HAP list
+
+---
+
+## GHaz7/GHaz8 Stack (from fast P2OASys)
+
+| Capability | Status | Description |
+|------------|--------|-------------|
+| **CompTox / DSSTox lookup** | 📝 TODO (#8) | EPA CompTox Dashboard DSSTox lookup |
+| **ToxVal / ToxValDB lookup** | 📝 TODO (#8) | EPA ToxValDB API for toxicity values |
+| **OPERA predictions** | 📝 TODO (#8) | NIEHS OPERA 2.9 QSAR predictions (licensed) |
+| **GHaz7 headless CLI** | ❓ MISSING | Headless auto-P2OASys CLI (needs re-rooting) |
+| **fast P2OASys v2 batch** | 📝 TODO (#8) | High-throughput batch scoring |
+
+### Environment Variables
+- `DSSTOX_CACHE_PATH` — DSSTox parquet cache path
+- `COMPTOX_API_KEY` — CompTox Dashboard API key
+- `EPA_API_KEY` — EPA API key for ToxValDB
+- `OPERA_EXE_PATH` — Path to OPERA 2.9 executable
+- `OPERA_CACHE_DB` — OPERA results cache SQLite
+- `P2OASYS_HARVEST_DB` — P2OASys harvest results database
+
+### Notes
+- OPERA requires the NIEHS OPERA 2.9 MATLAB-compiled executable (licensed)
+- GHaz7 headless CLI exists but needs layout adaptation for turi-safe-chem-db
 
 ---
 
@@ -116,6 +140,16 @@ The capability registry ensures:
 - `ECOSAR_DISABLE` — Set `1` to disable ECOSAR (PR #6)
 - `IUCLID_API_URL` — IUCLID API endpoint (PR #9)
 - `IUCLID_API_KEY` — IUCLID API key (PR #9)
+
+---
+
+## Scorer Fixes (PR #10)
+
+| Capability | Status | Description |
+|------------|--------|-------------|
+| **Beyond-solubility checks** | 📝 TODO (#10) | Handle values beyond solubility limits |
+| **Suspicious input checks** | 📝 TODO (#10) | Validation for malformed inputs |
+| **Unit conversion hardening** | 📝 TODO (#10) | Robust mg/m³→ppm conversion |
 
 ---
 

@@ -37,6 +37,7 @@ STATUS_MISSING_DATA = "MISSING_DATA"
 STATUS_TODO = "TODO"
 STATUS_STUB = "STUB"
 STATUS_OPTIONAL_SKIP = "OPTIONAL_SKIP"
+STATUS_MISSING = "MISSING"
 
 
 def load_registry() -> dict[str, Any]:
@@ -101,6 +102,12 @@ def check_capability_status(cap_id: str, cap: dict[str, Any]) -> dict[str, Any]:
     if yaml_status == "stub":
         result["status"] = STATUS_STUB
         result["reason"] = "Module exists but feature not functional"
+        return result
+
+    if yaml_status == "MISSING":
+        note = cap.get("note", "Module not yet ported")
+        result["status"] = STATUS_MISSING
+        result["reason"] = note
         return result
 
     module = cap.get("module")
@@ -301,10 +308,11 @@ def format_report(results: list[dict[str, Any]], *, verbose: bool = False) -> st
 
     active = [r for r in results if r["status"] == STATUS_ACTIVE]
     disabled = [r for r in results if r["status"] == STATUS_DISABLED]
-    missing = [r for r in results if r["status"] == STATUS_MISSING_DATA]
+    missing_data = [r for r in results if r["status"] == STATUS_MISSING_DATA]
     optional_skip = [r for r in results if r["status"] == STATUS_OPTIONAL_SKIP]
     todo = [r for r in results if r["status"] == STATUS_TODO]
     stub = [r for r in results if r["status"] == STATUS_STUB]
+    missing = [r for r in results if r["status"] == STATUS_MISSING]
 
     status_icon = {
         STATUS_ACTIVE: "✅",
@@ -313,6 +321,7 @@ def format_report(results: list[dict[str, Any]], *, verbose: bool = False) -> st
         STATUS_OPTIONAL_SKIP: "🔶",
         STATUS_TODO: "📝",
         STATUS_STUB: "⬜",
+        STATUS_MISSING: "❓",
     }
 
     for r in results:
@@ -333,12 +342,13 @@ def format_report(results: list[dict[str, Any]], *, verbose: bool = False) -> st
     lines.append(f"  ✅ ACTIVE:        {len(active)}")
     lines.append(f"  🔶 OPTIONAL_SKIP: {len(optional_skip)} (licensed/optional, not configured)")
     lines.append(f"  ⛔ DISABLED:      {len(disabled)}")
-    lines.append(f"  ❌ MISSING_DATA:  {len(missing)}")
+    lines.append(f"  ❌ MISSING_DATA:  {len(missing_data)}")
+    lines.append(f"  ❓ MISSING:       {len(missing)} (not yet ported)")
     lines.append(f"  📝 TODO:          {len(todo)}")
     lines.append(f"  ⬜ STUB:          {len(stub)}")
     lines.append("-" * 72)
 
-    if missing:
+    if missing_data:
         lines.append("")
         lines.append("⚠️  Missing data — set these env vars to enable:")
         for r in missing:
