@@ -42,7 +42,8 @@ DEFAULT_MATRIX_PATH = _default_matrix_path()
 SCORE_COLS = [2, 4, 6, 8, 10]  # P2OASys score levels
 
 # v6 hardening: bump when scoring semantics change so audit traces are comparable.
-SCORER_VERSION = "p2oasys_scorer_v6.6_site_top2"
+# v6.7: Flash point threshold direction fix, ECOSAR solubility bounds, predicted flag propagation
+SCORER_VERSION = "p2oasys_scorer_v6.7_bug_fixes"
 
 # Ideal-gas factor for mg/m³ → ppm at 25 °C, 1 atm (TURI / EPA convention).
 _MGM3_TO_PPM_FACTOR = 24.45
@@ -506,23 +507,40 @@ def _dump_matrix(matrix: dict[str, Any]) -> None:
 def _score_numeric(rule: dict, value: float, higher_is_safer: bool = True) -> Optional[int]:
     """
     Score numeric value against thresholds.
+
     higher_is_safer: True for LD50 (higher = less toxic), False for flash point (lower = less flammable).
+
+    For higher_is_safer=True (e.g., LD50):
+      - High value = safe → low score
+      - Low value = hazardous → high score
+      - Below lowest threshold → return most hazardous score
+
+    For higher_is_safer=False (e.g., flash point, vapor pressure):
+      - Low value = hazardous → high score
+      - High value = safe → low score
+      - Above highest threshold → return safest score (lowest score number)
     """
     thresh = rule.get("thresholds", [])
     if not thresh:
         return None
+
     if higher_is_safer:
         # LD50: find highest threshold where value >= threshold
-        for t, score in sorted(thresh, reverse=True):
+        sorted_desc = sorted(thresh, key=lambda x: x[0], reverse=True)
+        for t, score in sorted_desc:
             if value >= t:
                 return score
-        return thresh[-1][1]  # Most hazardous
+        # Value below all thresholds → most hazardous (highest score number)
+        return sorted_desc[-1][1]
     else:
-        # Flash point: find lowest threshold where value <= threshold
-        for t, score in sorted(thresh):
+        # Flash point / vapor pressure: find lowest threshold where value <= threshold
+        sorted_asc = sorted(thresh, key=lambda x: x[0])
+        for t, score in sorted_asc:
             if value <= t:
                 return score
-        return thresh[-1][1]
+        # Value above all thresholds → safest (lowest score number)
+        # The highest threshold has the lowest score for "lower is hazardous" endpoints
+        return sorted_asc[-1][1]
 
 
 def _score_ghs_h(rule: dict, h_codes: list[str]) -> Optional[int]:
@@ -976,16 +994,70 @@ def _extract_biodeg_half_life_days(hazard_data: dict) -> Optional[dict[str, Any]
     return None
 
 
-def _extract_lc50_aquatic(hazard_data: dict) -> Optional[float]:
-    """Extract most conservative acute aquatic LC50 / EC50 (lowest mg/L)."""
-    candidates: list[float] = []
+def _extract_water_solubility_mg_l(hazard_data: dict) -> Optional[dict[str, Any]]:
+    """Extract water solubility in mg/L from hazard_data.
+
+    Checks structured fields (water_solubility_mg_l), hazard_metrics, and toxicities.
+    Returns ``{"value": float, "predicted": bool, "source": str}`` or ``None``.
+    """
+    v, pred = _unpack_numeric_evidence(hazard_data.get("water_solubility_mg_l"))
+    if v is not None and v > 0:
+        return {"value": v, "predicted": pred, "source": "water_solubility_mg_l"}
+
+    hm = hazard_data.get("hazard_metrics") or {}
+    for item in hm.get("water_solubility") or []:
+        vv, pp = _unpack_numeric_evidence(item)
+        if vv is not None and vv > 0:
+            return {"value": vv, "predicted": pp or True, "source": "hazard_metrics.water_solubility"}
+
+    for t in hazard_data.get("toxicities") or []:
+        val = str(t.get("value") or "")
+        low = val.lower()
+        if "water solubility" in low or "solubility" in low and "mg/l" in low.replace(" ", ""):
+            m = re.search(r"(\d[\d,]*(?:\.\d+)?(?:[eE][-+]?\d+)?)\s*mg/L", val, re.I)
+            if m:
+                try:
+                    num = float(m.group(1).replace(",", ""))
+                    if num > 0:
+                        return {
+                            "value": num,
+                            "predicted": bool(t.get("predicted")),
+                            "source": str(t.get("source") or "toxicity"),
+                        }
+                except ValueError:
+                    pass
+    return None
+
+
+def _extract_lc50_aquatic(hazard_data: dict, rejections: Optional[list] = None) -> Optional[dict[str, Any]]:
+    """Extract most conservative acute aquatic LC50/EC50 (lowest mg/L) with solubility bounds.
+
+    Per ECOSAR/GHS practice, predicted LC50 values below water solubility are unrealistic
+    (the chemical cannot dissolve to that concentration). Such values are flagged as
+    ``beyond_solubility`` and either capped at water solubility or rejected.
+
+    Returns ``{"value", "predicted", "source", "beyond_solubility", "water_solubility"}``
+    or ``None``.
+    """
+    water_sol = _extract_water_solubility_mg_l(hazard_data)
+    log_kow = _extract_log_kow(hazard_data)
+
+    candidates: list[dict[str, Any]] = []
+
     for key in ("lc50_aquatic_mg_l", "aquatic_toxicity"):
         raw = hazard_data.get(key)
+        predicted = False
         if isinstance(raw, dict):
+            predicted = bool(raw.get("predicted"))
             raw = raw.get("value")
         v = _num(raw)
         if v is not None and v > 0:
-            candidates.append(float(v))
+            candidates.append({
+                "value": float(v),
+                "predicted": predicted,
+                "source": key,
+            })
+
     tox = hazard_data.get("toxicities", [])
     for t in tox:
         val = str(t.get("value", ""))
@@ -997,12 +1069,54 @@ def _extract_lc50_aquatic(hazard_data: dict) -> Optional[float]:
             or "daphn" in val.lower()
             or "algae" in val.lower()
         ):
-            m = re.search(r"(\d[\d,]*(?:\.\d+)?)\s*mg/L", val, re.I)
+            m = re.search(r"(\d[\d,]*(?:\.\d+)?(?:[eE][-+]?\d+)?)\s*mg/L", val, re.I)
             if m:
                 v = _num(m.group(1))
-                if v is not None:
-                    candidates.append(v)
-    return min(candidates) if candidates else None
+                if v is not None and v > 0:
+                    candidates.append({
+                        "value": float(v),
+                        "predicted": bool(t.get("predicted")),
+                        "source": str(t.get("source") or "toxicity"),
+                    })
+
+    if not candidates:
+        return None
+
+    best = min(candidates, key=lambda c: c["value"])
+
+    beyond_solubility = False
+    ws_val = water_sol["value"] if water_sol else None
+
+    if ws_val is not None and best["value"] < ws_val:
+        beyond_solubility = True
+        reason = f"LC50 {best['value']:.2e} mg/L below water solubility {ws_val:.2e} mg/L"
+        if best["predicted"]:
+            _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
+            best["value"] = ws_val
+            best["capped_at_solubility"] = True
+
+    if log_kow and log_kow.get("value") is not None:
+        kow = log_kow["value"]
+        if kow > 5 and best["value"] < 0.001:
+            beyond_solubility = True
+            if best["predicted"]:
+                reason = f"Predicted LC50 {best['value']:.2e} mg/L likely beyond solubility (logKow={kow:.1f})"
+                _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
+                if ws_val is not None:
+                    best["value"] = ws_val
+                    best["capped_at_solubility"] = True
+
+    best["beyond_solubility"] = beyond_solubility
+    if ws_val is not None:
+        best["water_solubility_mg_l"] = ws_val
+
+    return best
+
+
+def _extract_lc50_aquatic_value(hazard_data: dict, rejections: Optional[list] = None) -> Optional[float]:
+    """Extract aquatic LC50 value (float) for backward compatibility."""
+    result = _extract_lc50_aquatic(hazard_data, rejections)
+    return result["value"] if result else None
 
 
 
@@ -1077,6 +1191,31 @@ def _category_score_mean_top_two_subcategories(subcategory_maxima: list[float]) 
 
 # Back-compat alias (older form.py / callers).
 _category_score_mean_subcategories = _category_score_mean_top_two_subcategories
+
+
+def _round_score(value: float, sig_digits: int = 2) -> float:
+    """Round a score to the specified significant digits (default 2).
+
+    P2OASys practice: report scores to 2 significant digits for precision
+    without implying false accuracy.
+    """
+    if value == 0:
+        return 0.0
+    import math
+    magnitude = math.floor(math.log10(abs(value)))
+    factor = 10 ** (sig_digits - 1 - magnitude)
+    return round(value * factor) / factor
+
+
+# Auto6 categories used for overall scoring (excludes Process and Life Cycle).
+AUTO6_CATEGORIES = (
+    "Acute Human Effects",
+    "Chronic Human Effects",
+    "Ecological Hazards",
+    "Environmental Fate & Transport",
+    "Atmospheric Hazard",
+    "Physical Properties",
+)
 
 
 def _rule_summary(rule: dict) -> dict[str, Any]:
@@ -1155,7 +1294,7 @@ def compute_p2oasys_scores_with_trace(
     nfpa_fire = _extract_nfpa_fire(hazard_data)
     iarc = _extract_iarc(hazard_data, rejected)
     epa_carc = _extract_epa_carcinogen(hazard_data)
-    lc50_aq = _extract_lc50_aquatic(hazard_data)
+    lc50_aq = _extract_lc50_aquatic(hazard_data, rejected)
     gwp100 = _extract_gwp100(hazard_data)
     odp = _extract_odp(hazard_data)
     log_kow = _extract_log_kow(hazard_data)
@@ -1189,7 +1328,7 @@ def compute_p2oasys_scores_with_trace(
         "oral_ld50": ld50_oral,
         "dermal_ld50": ld50_dermal,
         "inhalation_lc50": lc50_inh,
-        "aquatic_lc50": ({"value": lc50_aq, "unit": "mg/L"} if lc50_aq is not None else None),
+        "aquatic_lc50": ({**lc50_aq, "unit": "mg/L"} if lc50_aq is not None else None),
         "flash_point_c": ({"value": flash_c, "unit": "degC"} if flash_c is not None else None),
         "vapor_pressure_mmhg": ({"value": vp, "unit": "mmHg"} if vp is not None else None),
         "nfpa_health": nfpa_health,
@@ -1332,8 +1471,12 @@ def compute_p2oasys_scores_with_trace(
                                 miss_reason = "no NFPA fire rating"
                     elif "LC50" in unit_name and ("Aquatic" in subcat or "Aquatic" in str(subcats)):
                         if lc50_aq is not None:
-                            input_value = lc50_aq
-                            score = _score_numeric(rule, lc50_aq, higher_is_safer=True)
+                            input_value = lc50_aq["value"]
+                            score = _score_numeric(rule, lc50_aq["value"], higher_is_safer=True)
+                            if lc50_aq.get("predicted"):
+                                predicted = True
+                            if lc50_aq.get("beyond_solubility"):
+                                qualifier = "beyond_solubility"
                         else:
                             miss_reason = "no aquatic LC50/EC50"
                     elif "GWP" in unit_name:
@@ -1454,27 +1597,43 @@ def compute_p2oasys_scores_with_trace(
             if sub_scores:
                 unit_vals = [float(v) for v in sub_scores.values() if isinstance(v, (int, float))]
                 sub_agg = mean_of_top_two_highest(unit_vals)
+                sub_max = sub_agg if sub_agg is not None else max(unit_vals)
+
+                subcat_units_scored = [
+                    s for s in scored
+                    if s["category"] == category and s["subcategory"] == subcat
+                ]
+                subcat_all_predicted = (
+                    subcat_units_scored and
+                    all(s.get("predicted") for s in subcat_units_scored)
+                )
+
                 results[category][subcat] = {
                     **sub_scores,
-                    "_max": sub_agg if sub_agg is not None else max(unit_vals),
+                    "_max": _round_score(sub_max),
+                    "_predicted": subcat_all_predicted,
                 }
 
         subcat_maxima: list[float] = []
+        subcat_predicted_flags: list[bool] = []
         for _sk, bundle in results[category].items():
             if _sk.startswith("_") or not isinstance(bundle, dict):
                 continue
             sm = bundle.get("_max")
             if isinstance(sm, (int, float)):
                 subcat_maxima.append(float(sm))
+                subcat_predicted_flags.append(bool(bundle.get("_predicted")))
+
         cat_agg = _category_score_mean_top_two_subcategories(subcat_maxima)
         if cat_agg is not None:
-            results[category]["_category_max"] = cat_agg
+            cat_all_predicted = subcat_predicted_flags and all(subcat_predicted_flags)
+            results[category]["_category_max"] = _round_score(cat_agg)
+            results[category]["_category_predicted"] = cat_all_predicted
 
     category_status: dict[str, str] = {}
     for category in matrix:
         data = results.get(category) or {}
         if data.get("_category_max") is not None:
-            # Predicted-only if every scored unit in this category is predicted.
             cat_scored = [s for s in scored if s["category"] == category]
             if cat_scored and all(s.get("predicted") for s in cat_scored):
                 category_status[category] = STATUS_PREDICTED_ONLY
@@ -1483,6 +1642,37 @@ def compute_p2oasys_scores_with_trace(
         else:
             category_status[category] = STATUS_NO_DATA
 
+    auto6_scores: list[float] = []
+    auto6_predicted: list[bool] = []
+    count_at_8_or_above = 0
+    count_measured_at_8_or_above = 0
+
+    for cat in AUTO6_CATEGORIES:
+        cat_data = results.get(cat, {})
+        cat_max = cat_data.get("_category_max")
+        cat_pred = cat_data.get("_category_predicted", False)
+        if cat_max is not None:
+            auto6_scores.append(float(cat_max))
+            auto6_predicted.append(cat_pred)
+            if cat_max >= 8:
+                count_at_8_or_above += 1
+                if not cat_pred:
+                    count_measured_at_8_or_above += 1
+
+    overall_score: Optional[float] = None
+    overall_predicted = False
+    if auto6_scores:
+        overall_score = _round_score(max(auto6_scores))
+        overall_predicted = auto6_predicted and all(auto6_predicted)
+
+    results["_overall"] = {
+        "score": overall_score,
+        "predicted": overall_predicted,
+        "auto6_count": len(auto6_scores),
+        "categories_at_8_or_above": count_at_8_or_above,
+        "measured_categories_at_8_or_above": count_measured_at_8_or_above,
+    }
+
     trace = {
         "scorer_version": SCORER_VERSION,
         "evidence": evidence,
@@ -1490,6 +1680,7 @@ def compute_p2oasys_scores_with_trace(
         "scored": scored,
         "missing": missing,
         "category_status": category_status,
+        "overall": results["_overall"],
     }
     return results, trace
 
