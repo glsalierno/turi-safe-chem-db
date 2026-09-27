@@ -58,34 +58,32 @@ STATUS_CONFLICTING = "Conflicting evidence"
 STATUS_SOURCE_UNAVAILABLE = "Source unavailable"
 
 # Routes that count as oral (or oral-equivalent) for Acute oral LD50.
-# TURI / P2OASys practice: intraperitoneal (i.p. / ip) is treated as oral.
-# Also accept common oral synonyms so true oral rows are not rejected.
+# Only true oral routes accepted - intraperitoneal (i.p.) is NOT oral-equivalent.
 _ORAL_ROUTE_RE = re.compile(
     r"(?:"
     r"\boral\b|\bperoral\b|per\s*os|\bp\.\s*o\.\b|\bpo\b|\bgavage\b|"
-    r"drinking\s*water|\bfeed\b|\bdietary\b|"
-    r"\bintraperitoneal\b|\bi\.\s*p\.\b|\bip\b"
+    r"drinking\s*water|\bfeed\b|\bdietary\b"
     r")",
     re.I,
 )
 
-# Routes that disqualify a record from oral LD50 when no oral-equivalent token is present.
-# Intraperitoneal / i.p. / ip are intentionally NOT listed (they are oral-equivalent).
+# Routes that disqualify a record from oral LD50 when no oral token is present.
+# Includes intraperitoneal (i.p.) - injection routes are not oral.
 # Word-bounded so short abbreviations (iv, sc, im) do not match inside other words.
 _NON_ORAL_ROUTE_RE = re.compile(
     r"\b(?:dermal|skin|inhalation|intravenous|subcutaneous|"
-    r"intramuscular|i\.?v\.?|s\.?c\.?|i\.?m\.?|parenteral)\b",
+    r"intramuscular|intraperitoneal|"
+    r"i\.?v\.?|s\.?c\.?|i\.?m\.?|i\.?p\.?|parenteral)\b",
     re.I,
 )
 
 
 def _has_oral_equivalent_route(combined_lower: str) -> bool:
-    """True when text/route mentions oral or oral-equivalent (incl. intraperitoneal)."""
+    """True when text/route mentions oral (injection routes like i.p. are NOT oral)."""
     if not combined_lower:
         return False
     # Normalize common punctuated forms before regex.
-    s = combined_lower.replace("i.p.", " ip ").replace("i.p", " ip ")
-    s = s.replace("p.o.", " po ").replace("p.o", " po ")
+    s = combined_lower.replace("p.o.", " po ").replace("p.o", " po ")
     return bool(_ORAL_ROUTE_RE.search(s))
 
 # Endpoints that are point-of-departure / repeated-dose values, NOT acute lethality.
@@ -630,13 +628,14 @@ def _extract_ld50_oral(
 ) -> Optional[dict[str, Any]]:
     """Extract most conservative oral LD50 (lowest mg/kg).
 
-    Accepts oral and oral-equivalent routes (gavage, p.o., intraperitoneal / i.p.).
-    Rejects dermal / inhalation / iv / sc / im when no oral-equivalent token is present,
-    and rejects non-acute POD endpoints (NOAEL/LOAEL/…). Returns
-    ``{"value", "route", "qualifier", "raw"}`` or ``None``.
+    Accepts only true oral routes (gavage, p.o., dietary, drinking water).
+    Rejects non-oral routes including intraperitoneal (i.p.), dermal, inhalation,
+    and other injection routes (iv, sc, im).
+    Also rejects non-acute POD endpoints (NOAEL/LOAEL/…). Returns
+    ``{"value", "route", "qualifier", "raw", "predicted"}`` or ``None``.
 
-    If both oral-equivalent and a non-oral token appear (e.g. "oral/dermal"), the
-    oral-equivalent wins so true oral rows are not falsely rejected.
+    If both oral and a non-oral token appear (e.g. "oral/dermal"), the
+    oral route wins so true oral rows are not falsely rejected.
     """
     tox = hazard_data.get("toxicities", [])
     best: Optional[dict[str, Any]] = None
@@ -652,7 +651,7 @@ def _extract_ld50_oral(
             continue
         combined = vl + " " + sp
         if _has_oral_equivalent_route(combined):
-            pass  # oral / IP / gavage / p.o. — keep
+            pass  # oral / gavage / p.o. / dietary — keep
         elif _NON_ORAL_ROUTE_RE.search(combined):
             _reject(rejections, "oral LD50", val, "route is not oral")
             continue
@@ -958,7 +957,7 @@ def _extract_log_kow(hazard_data: dict) -> Optional[dict[str, Any]]:
     for item in hm.get("log_kow") or []:
         vv, pp = _unpack_numeric_evidence(item)
         if vv is not None:
-            return {"value": vv, "predicted": pp or True, "source": "hazard_metrics.log_kow"}
+            return {"value": vv, "predicted": bool(pp), "source": "hazard_metrics.log_kow"}
     for t in hazard_data.get("toxicities") or []:
         val = str(t.get("value") or "")
         low = val.lower()
@@ -993,7 +992,7 @@ def _extract_bcf_l_kg(hazard_data: dict) -> Optional[dict[str, Any]]:
     for item in hm.get("bcf_l_kg") or []:
         vv, pp = _unpack_numeric_evidence(item)
         if vv is not None:
-            return {"value": vv, "predicted": pp or True, "source": "hazard_metrics.bcf_l_kg"}
+            return {"value": vv, "predicted": bool(pp), "source": "hazard_metrics.bcf_l_kg"}
     import re
     for t in hazard_data.get("toxicities") or []:
         val = str(t.get("value") or "")
@@ -1048,7 +1047,7 @@ def _extract_water_solubility_mg_l(hazard_data: dict) -> Optional[dict[str, Any]
     for item in hm.get("water_solubility") or []:
         vv, pp = _unpack_numeric_evidence(item)
         if vv is not None and vv > 0:
-            return {"value": vv, "predicted": pp or True, "source": "hazard_metrics.water_solubility"}
+            return {"value": vv, "predicted": bool(pp), "source": "hazard_metrics.water_solubility"}
 
     for t in hazard_data.get("toxicities") or []:
         val = str(t.get("value") or "")
@@ -1145,14 +1144,15 @@ def _extract_lc50_aquatic(hazard_data: dict, rejections: Optional[list] = None) 
         reason = f"LC50 {best['value']:.2e} mg/L above water solubility {ws_val:.2e} mg/L (implausible)"
         _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
 
-    # logKow heuristic: extremely low predicted LC50 with high logKow suggests
-    # the prediction exceeds achievable concentration (poorly water-soluble compound).
-    # Flag as low_confidence but do NOT cap - prefer measured/other evidence.
+    # logKow heuristic for lipophilic compounds (logKow > 5):
+    # High logKow means poor water solubility - predicted LC50 values are unreliable
+    # because ECOSAR/QSAR models may predict concentrations exceeding actual solubility.
+    # Rule: when solubility is missing AND logKow > 5 AND value is predicted → exclude.
     if log_kow and log_kow.get("value") is not None:
         kow = log_kow["value"]
-        if kow > 5 and best["value"] < 0.001 and best.get("predicted"):
+        if kow > 5 and best.get("predicted") and ws_val is None:
             low_confidence = True
-            reason = f"Predicted LC50 {best['value']:.2e} mg/L with logKow={kow:.1f} - may exceed solubility"
+            reason = f"Predicted LC50 {best['value']:.2e} mg/L with logKow={kow:.1f}, no solubility data - lipophilic exclusion"
             _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
 
     best["beyond_solubility"] = beyond_solubility
@@ -1176,9 +1176,13 @@ def _extract_chv_aquatic(hazard_data: dict, rejections: Optional[list] = None) -
     Looks for structured fields, hazard_metrics, and toxicities mentioning "ChV" or "chronic value".
 
     Measured values take precedence over predicted (ECOSAR) values.
+    Same solubility/lipophilicity rules as LC50 apply.
 
-    Returns ``{"value", "predicted", "source"}`` or ``None``.
+    Returns ``{"value", "predicted", "source", "low_confidence"}`` or ``None``.
     """
+    water_sol = _extract_water_solubility_mg_l(hazard_data)
+    log_kow = _extract_log_kow(hazard_data)
+
     candidates: list[dict[str, Any]] = []
 
     v, pred = _unpack_numeric_evidence(hazard_data.get("chv_aquatic_mg_l"))
@@ -1189,7 +1193,7 @@ def _extract_chv_aquatic(hazard_data: dict, rejections: Optional[list] = None) -
     for item in hm.get("chv_mg_l") or []:
         vv, pp = _unpack_numeric_evidence(item)
         if vv is not None and vv > 0:
-            candidates.append({"value": float(vv), "predicted": pp or True, "source": "hazard_metrics.chv_mg_l"})
+            candidates.append({"value": float(vv), "predicted": bool(pp), "source": "hazard_metrics.chv_mg_l"})
 
     tox = hazard_data.get("toxicities", [])
     for t in tox:
@@ -1211,11 +1215,33 @@ def _extract_chv_aquatic(hazard_data: dict, rejections: Optional[list] = None) -
 
     # Measured values take precedence over predicted (ECOSAR/QSAR).
     measured = [c for c in candidates if not c.get("predicted")]
-    predicted = [c for c in candidates if c.get("predicted")]
+    predicted_cands = [c for c in candidates if c.get("predicted")]
 
     if measured:
-        return min(measured, key=lambda c: c["value"])
-    return min(predicted, key=lambda c: c["value"])
+        best = min(measured, key=lambda c: c["value"])
+    else:
+        best = min(predicted_cands, key=lambda c: c["value"])
+
+    # Apply same solubility/lipophilicity rules as LC50
+    low_confidence = False
+    ws_val = water_sol["value"] if water_sol else None
+
+    # Beyond solubility check: ChV above water_solubility is implausible
+    if ws_val is not None and best["value"] > ws_val:
+        low_confidence = True
+        reason = f"ChV {best['value']:.2e} mg/L above water solubility {ws_val:.2e} mg/L (implausible)"
+        _reject(rejections, "aquatic ChV", f"{best['value']:.2e} mg/L", reason)
+
+    # logKow heuristic: when solubility is missing AND logKow > 5 AND predicted → exclude
+    if log_kow and log_kow.get("value") is not None:
+        kow = log_kow["value"]
+        if kow > 5 and best.get("predicted") and ws_val is None:
+            low_confidence = True
+            reason = f"Predicted ChV {best['value']:.2e} mg/L with logKow={kow:.1f}, no solubility data - lipophilic exclusion"
+            _reject(rejections, "aquatic ChV", f"{best['value']:.2e} mg/L", reason)
+
+    best["low_confidence"] = low_confidence
+    return best
 
 
 def _extract_gwp100(hazard_data: dict) -> Optional[float]:
@@ -1540,7 +1566,7 @@ def compute_p2oasys_scores_with_trace(
                             score = _score_numeric(rule, lc50_inh["value"], higher_is_safer=True)
                         else:
                             miss_reason = "no inhalation LC50 in ppm (or convertible mg/m³)"
-                    elif "Flash" in unit_name or "deg C" in unit_name:
+                    elif ("Flash" in unit_name or "Flash Point" in unit_name) and ("Flammability" in subcat or "Physical" in category):
                         if flash_c is not None:
                             input_value = flash_c
                             score = _score_numeric(rule, flash_c, higher_is_safer=False)
@@ -1600,11 +1626,18 @@ def compute_p2oasys_scores_with_trace(
                             miss_reason = "no aquatic LC50/EC50"
                     elif "ChV" in unit_name and ("Chronic" in subcat or "chronic" in subcat.lower()):
                         if chv_aq is not None:
-                            input_value = chv_aq["value"]
-                            # Lower ChV = more hazardous (like LC50)
-                            score = _score_numeric(rule, chv_aq["value"], higher_is_safer=True)
-                            if chv_aq.get("predicted"):
-                                predicted = True
+                            # Same exclusion rules as LC50: low_confidence → skip
+                            if chv_aq.get("low_confidence"):
+                                miss_reason = (
+                                    f"ChV {chv_aq['value']:.2e} mg/L excluded: lipophilic compound, no solubility data"
+                                )
+                                qualifier = "excluded_lipophilic"
+                            else:
+                                input_value = chv_aq["value"]
+                                # Lower ChV = more hazardous (like LC50)
+                                score = _score_numeric(rule, chv_aq["value"], higher_is_safer=True)
+                                if chv_aq.get("predicted"):
+                                    predicted = True
                         else:
                             miss_reason = "no aquatic ChV (chronic value)"
                     elif "GWP" in unit_name:

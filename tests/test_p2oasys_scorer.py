@@ -128,17 +128,17 @@ def test_oral_ld50_requires_oral_route():
     assert got["route"] == "oral"
 
 
-def test_oral_ld50_accepts_intraperitoneal_rejects_iv():
+def test_oral_ld50_rejects_intraperitoneal_and_iv():
+    """Intraperitoneal (i.p.) and IV routes are NOT oral - both rejected."""
     rej: list = []
     hd = _hd([
         {"value": "LD50 5 mg/kg", "species_route": ["ip", "mouse"]},
         {"value": "LD50 8 mg/kg", "species_route": ["iv", "rat"]},
     ])
     got = p2oasys_scorer._extract_ld50_oral(hd, rej)
-    assert got is not None
-    assert got["value"] == 5.0
-    assert got["route"] == "oral"
-    assert any("not oral" in str(r.get("reason", "")).lower() for r in rej)
+    assert got is None, "Neither i.p. nor i.v. should be accepted as oral"
+    assert len(rej) == 2, "Both routes should be rejected"
+    assert all("not oral" in str(r.get("reason", "")).lower() for r in rej)
 
 
 def test_oral_ld50_accepts_gavage_and_po():
@@ -695,3 +695,111 @@ def test_measured_lc50_takes_precedence_over_predicted(matrix):
     # LC50 10.0 mg/L should score lower than LC50 1.0 mg/L
     assert lc50_score is not None
     assert lc50_score < 10, "Measured 10.0 mg/L should not score the highest hazard level"
+
+
+# --------------------------------------------------------------------------- #
+# Gabriel's Round 3.2 requested tests
+# --------------------------------------------------------------------------- #
+
+@pytest.mark.parametrize(
+    "gwp_value,expected_score",
+    [
+        (50, 4),    # GWP 50 → band 30-200 → score 4
+        (250, 6),   # GWP 250 → band 200-300 → score 6
+        (500, 8),   # GWP 500 → band 300-1000 → score 8
+    ],
+)
+def test_gwp_range_scoring(matrix, gwp_value, expected_score):
+    """GWP range parsing: upper bound is used for threshold comparison."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["hazard_metrics"]["gwp100"] = [gwp_value]
+
+    scores, _ = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    atmo = scores.get("Atmospheric Hazard", {})
+    atmo_sub = atmo.get("Atmospheric Hazard", {})
+    gwp_score = atmo_sub.get("GWP Relative to CO2")
+    assert gwp_score == expected_score, f"GWP {gwp_value} should score {expected_score}, got {gwp_score}"
+
+
+@pytest.mark.parametrize(
+    "cas,name,lc50,logkow",
+    [
+        ("27841-04-9", "Neopentyl glycol diheptanoate", 0.013, 6.76),
+        ("31566-31-1", "Glyceryl stearate", 0.017, 5.18),
+        ("7235-40-7", "Beta-carotene", 4.1e-12, 6.75),
+    ],
+)
+def test_olaplex_lipophilic_exclusion(matrix, cas, name, lc50, logkow):
+    """Olaplex cases: predicted LC50 with high logKow and no solubility → excluded."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["lc50_aquatic_mg_l"] = {"value": lc50, "predicted": True}
+    hd["log_kow"] = {"value": logkow, "predicted": True}
+    # No solubility data provided
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    lc50_ev = evidence.get("aquatic_lc50", {})
+    assert lc50_ev.get("low_confidence") is True, f"{cas} ({name}): should be flagged low_confidence"
+
+    eco = scores.get("Ecological Hazards", {})
+    aquatic = eco.get("Acute Aquatic Toxicity", {})
+    assert aquatic.get("_max") is None, f"{cas} ({name}): should NOT score Eco 10"
+
+
+def test_intraperitoneal_ld50_not_oral(matrix):
+    """Intraperitoneal (i.p.) LD50 should NOT be scored as oral LD50."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["toxicities"] = [
+        {"value": "Intraperitoneal LD50 (mouse) = 200 mg/kg; [RTECS]", "species_route": ["mouse", "ip"]}
+    ]
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    assert evidence.get("oral_ld50") is None, "i.p. LD50 should not be used as oral LD50"
+
+    # Check rejections
+    rejected = trace.get("rejected", [])
+    ip_rejections = [r for r in rejected if "not oral" in str(r.get("reason", "")).lower()]
+    assert len(ip_rejections) > 0, "i.p. route should be rejected with 'not oral' reason"
+
+
+def test_process_factors_not_auto_scored(matrix):
+    """Process Factors should NOT receive auto-scored values from physical properties."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["hazard_metrics"]["flash_point"] = ["25°C"]  # Flash point data
+
+    scores, _ = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    process = scores.get("Process Factors", {})
+    heat = process.get("Heat", {})
+
+    # WBGT should NOT be scored with flash point
+    assert "WBGT, deg C" not in heat or heat.get("WBGT, deg C") is None, \
+        "Flash point should not auto-score WBGT in Process Factors"
+
+    # But Physical Properties > Flammability SHOULD have flash point
+    physical = scores.get("Physical Properties", {})
+    flammability = physical.get("Flammability: Liquid", {})
+    assert "Flash Point deg C" in flammability, "Flash point should score in Physical Properties"
+
+
+def test_predicted_only_status_label(matrix):
+    """Predicted-only evidence should have STATUS_PREDICTED_ONLY in trace."""
+    from packages.p2oasys_scorer.utils.p2oasys_scorer import STATUS_PREDICTED_ONLY
+
+    hd = _hd([], ghs={"h_codes": []})
+    hd["lc50_aquatic_mg_l"] = {"value": 10.0, "predicted": True}
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    scored = trace.get("scored", [])
+    lc50_scored = [s for s in scored if "LC50" in s.get("unit", "") and "Aquatic" in s.get("subcategory", "")]
+
+    assert len(lc50_scored) > 0, "LC50 should be scored"
+    for entry in lc50_scored:
+        assert entry.get("status") == STATUS_PREDICTED_ONLY, \
+            f"Predicted-only evidence should have status '{STATUS_PREDICTED_ONLY}', got '{entry.get('status')}'"
+        assert entry.get("predicted") is True
