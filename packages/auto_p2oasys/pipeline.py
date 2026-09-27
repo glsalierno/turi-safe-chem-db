@@ -211,6 +211,9 @@ def gather_evidence(
     )
 
     from .adapters import iuclid as iuclid_adapter
+    from .adapters import comptox as comptox_adapter
+    from .adapters import cpdb as cpdb_adapter
+    from .adapters import atmospheric as atmo_adapter
 
     try:
         if iuclid_adapter.is_iuclid_available():
@@ -237,17 +240,101 @@ def gather_evidence(
     except Exception as e:
         report.add("iuclid", AdapterStatus.ERROR, str(e))
 
-    report.add(
-        "toxvaldb",
-        AdapterStatus.SKIPPED,
-        reason="API key required for CompTox ToxValDB",
-    )
+    try:
+        if comptox_adapter.is_toxvaldb_available():
+            start = time.monotonic()
+            toxval_evidence = comptox_adapter.gather_toxvaldb(cas)
+            duration = (time.monotonic() - start) * 1000
+            if toxval_evidence:
+                evidence.extend(toxval_evidence)
+                report.add(
+                    "toxvaldb",
+                    AdapterStatus.RAN,
+                    evidence_count=len(toxval_evidence),
+                    duration_ms=duration,
+                )
+            else:
+                report.add("toxvaldb", AdapterStatus.NO_DATA, "CAS not in ToxValDB")
+        else:
+            report.add(
+                "toxvaldb",
+                AdapterStatus.SKIPPED,
+                reason="EPA_API_KEY not set for ToxValDB",
+            )
+    except Exception as e:
+        report.add("toxvaldb", AdapterStatus.ERROR, str(e))
 
-    report.add(
-        "cpdb",
-        AdapterStatus.SKIPPED,
-        reason="CPDB sqlite not bundled",
-    )
+    try:
+        if comptox_adapter.is_dsstox_available():
+            start = time.monotonic()
+            dsstox_evidence = comptox_adapter.gather_dsstox(cas)
+            duration = (time.monotonic() - start) * 1000
+            if dsstox_evidence:
+                evidence.extend(dsstox_evidence)
+                report.add(
+                    "dsstox",
+                    AdapterStatus.RAN,
+                    evidence_count=len(dsstox_evidence),
+                    duration_ms=duration,
+                )
+            else:
+                report.add("dsstox", AdapterStatus.NO_DATA, "CAS not in DSSTox cache")
+        else:
+            report.add(
+                "dsstox",
+                AdapterStatus.SKIPPED,
+                reason="DSSTox cache not available (set DSSTOX_CACHE_PATH)",
+            )
+    except Exception as e:
+        report.add("dsstox", AdapterStatus.ERROR, str(e))
+
+    try:
+        if cpdb_adapter.is_cpdb_available():
+            start = time.monotonic()
+            cpdb_evidence = cpdb_adapter.gather_cpdb(cas)
+            duration = (time.monotonic() - start) * 1000
+            if cpdb_evidence:
+                evidence.extend(cpdb_evidence)
+                report.add(
+                    "cpdb",
+                    AdapterStatus.RAN,
+                    evidence_count=len(cpdb_evidence),
+                    duration_ms=duration,
+                )
+            else:
+                report.add("cpdb", AdapterStatus.NO_DATA, "CAS not in CPDB")
+        else:
+            report.add(
+                "cpdb",
+                AdapterStatus.SKIPPED,
+                reason="CPDB sqlite not available (set CPDB_DB_PATH)",
+            )
+    except Exception as e:
+        report.add("cpdb", AdapterStatus.ERROR, str(e))
+
+    try:
+        if atmo_adapter.is_ipcc_available():
+            start = time.monotonic()
+            ipcc_evidence = atmo_adapter.gather_ipcc_gwp(cas)
+            duration = (time.monotonic() - start) * 1000
+            if ipcc_evidence:
+                evidence.extend(ipcc_evidence)
+                report.add(
+                    "ipcc_gwp",
+                    AdapterStatus.RAN,
+                    evidence_count=len(ipcc_evidence),
+                    duration_ms=duration,
+                )
+            else:
+                report.add("ipcc_gwp", AdapterStatus.NO_DATA, "CAS not in IPCC tables")
+        else:
+            report.add(
+                "ipcc_gwp",
+                AdapterStatus.SKIPPED,
+                reason="IPCC data not available",
+            )
+    except Exception as e:
+        report.add("ipcc_gwp", AdapterStatus.ERROR, str(e))
 
     return evidence
 
