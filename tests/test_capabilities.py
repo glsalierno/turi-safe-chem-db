@@ -436,27 +436,27 @@ def test_capability_report_runs():
 
 
 def test_comptox_dsstox_lookup():
-    """CompTox/DSSTox lookup is TODO."""
+    """CompTox/DSSTox lookup is MISSING (not yet ported)."""
     registry = load_registry()
     cap = registry["capabilities"]["comptox_dsstox_lookup"]
-    assert cap["status"] == "TODO", "comptox_dsstox_lookup should be TODO until PR #8"
-    pytest.skip("comptox_dsstox_lookup is TODO (PR #8)")
+    assert cap["status"] == "MISSING", "comptox_dsstox_lookup should be MISSING"
+    pytest.skip("comptox_dsstox_lookup is MISSING (not yet ported from GHaz7/GHaz8)")
 
 
 def test_toxval_lookup():
-    """ToxVal/ToxValDB lookup is TODO."""
+    """ToxVal/ToxValDB lookup is MISSING (not yet ported)."""
     registry = load_registry()
     cap = registry["capabilities"]["toxval_lookup"]
-    assert cap["status"] == "TODO", "toxval_lookup should be TODO until PR #8"
-    pytest.skip("toxval_lookup is TODO (PR #8)")
+    assert cap["status"] == "MISSING", "toxval_lookup should be MISSING"
+    pytest.skip("toxval_lookup is MISSING (not yet ported from GHaz7/GHaz8)")
 
 
 def test_opera_predictions():
-    """OPERA predictions is TODO."""
+    """OPERA predictions is MISSING (not yet ported)."""
     registry = load_registry()
     cap = registry["capabilities"]["opera_predictions"]
-    assert cap["status"] == "TODO", "opera_predictions should be TODO until PR #8"
-    pytest.skip("opera_predictions is TODO (PR #8)")
+    assert cap["status"] == "MISSING", "opera_predictions should be MISSING"
+    pytest.skip("opera_predictions is MISSING (not yet ported from GHaz7/GHaz8)")
 
 
 def test_ghaz7_headless_cli():
@@ -468,11 +468,11 @@ def test_ghaz7_headless_cli():
 
 
 def test_fast_p2oasys_batch():
-    """fast P2OASys v2 batch is TODO."""
+    """fast P2OASys v2 batch is MISSING (not yet ported)."""
     registry = load_registry()
     cap = registry["capabilities"]["fast_p2oasys_batch"]
-    assert cap["status"] == "TODO", "fast_p2oasys_batch should be TODO until PR #8"
-    pytest.skip("fast_p2oasys_batch is TODO (PR #8)")
+    assert cap["status"] == "MISSING", "fast_p2oasys_batch should be MISSING"
+    pytest.skip("fast_p2oasys_batch is MISSING (not yet ported from GHaz7/GHaz8)")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -486,14 +486,6 @@ def test_scorer_beyond_solubility():
     cap = registry["capabilities"]["scorer_beyond_solubility"]
     assert cap["status"] == "TODO", "scorer_beyond_solubility should be TODO until PR #10"
     pytest.skip("scorer_beyond_solubility is TODO (PR #10)")
-
-
-def test_scorer_suspicious_input():
-    """Scorer suspicious input checks is TODO."""
-    registry = load_registry()
-    cap = registry["capabilities"]["scorer_suspicious_input"]
-    assert cap["status"] == "TODO", "scorer_suspicious_input should be TODO until PR #10"
-    pytest.skip("scorer_suspicious_input is TODO (PR #10)")
 
 
 def test_scorer_unit_conversion():

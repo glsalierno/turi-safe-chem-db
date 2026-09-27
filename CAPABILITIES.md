@@ -19,6 +19,8 @@ The capability registry ensures:
 | 🔶 **optional** | Works when external data/license is configured; skip otherwise |
 | 📝 **TODO** | Planned; PR must fill this entry before merge |
 | ⬜ **stub** | Module exists but not yet functional |
+| ❓ **MISSING** | Module not yet ported; needs implementation |
+| 🔄 **superseded** | Replaced by another capability or approach |
 | 🔒 **licensed** | Requires proprietary software/data |
 
 ---
@@ -108,11 +110,11 @@ The capability registry ensures:
 
 | Capability | Status | Description |
 |------------|--------|-------------|
-| **CompTox / DSSTox lookup** | 📝 TODO (#8) | EPA CompTox Dashboard DSSTox lookup |
-| **ToxVal / ToxValDB lookup** | 📝 TODO (#8) | EPA ToxValDB API for toxicity values |
-| **OPERA predictions** | 📝 TODO (#8) | NIEHS OPERA 2.9 QSAR predictions (licensed) |
+| **CompTox / DSSTox lookup** | ❓ MISSING | EPA CompTox Dashboard DSSTox lookup |
+| **ToxVal / ToxValDB lookup** | ❓ MISSING | EPA ToxValDB API for toxicity values |
+| **OPERA predictions** | ❓ MISSING | NIEHS OPERA 2.9 QSAR predictions (free) |
 | **GHaz7 headless CLI** | ❓ MISSING | Headless auto-P2OASys CLI (needs re-rooting) |
-| **fast P2OASys v2 batch** | 📝 TODO (#8) | High-throughput batch scoring |
+| **fast P2OASys v2 batch** | ❓ MISSING | High-throughput batch scoring |
 
 ### Environment Variables
 - `DSSTOX_CACHE_PATH` — DSSTox parquet cache path
@@ -123,8 +125,9 @@ The capability registry ensures:
 - `P2OASYS_HARVEST_DB` — P2OASys harvest results database
 
 ### Notes
-- OPERA requires the NIEHS OPERA 2.9 MATLAB-compiled executable (licensed)
-- GHaz7 headless CLI exists but needs layout adaptation for turi-safe-chem-db
+- OPERA is **free** from NIEHS (not licensed); download from [niehs.nih.gov](https://www.niehs.nih.gov/research/resources/software/biostatistics/opera)
+- These capabilities exist in GHaz7/GHaz8 but are not yet ported to turi-safe-chem-db
+- GHaz7 headless CLI needs layout adaptation for this repo's structure
 
 ---
 
@@ -148,7 +151,6 @@ The capability registry ensures:
 | Capability | Status | Description |
 |------------|--------|-------------|
 | **Beyond-solubility checks** | 📝 TODO (#10) | Handle values beyond solubility limits |
-| **Suspicious input checks** | 📝 TODO (#10) | Validation for malformed inputs |
 | **Unit conversion hardening** | 📝 TODO (#10) | Robust mg/m³→ppm conversion |
 
 ---

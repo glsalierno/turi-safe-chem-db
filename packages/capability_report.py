@@ -38,6 +38,7 @@ STATUS_TODO = "TODO"
 STATUS_STUB = "STUB"
 STATUS_OPTIONAL_SKIP = "OPTIONAL_SKIP"
 STATUS_MISSING = "MISSING"
+STATUS_SUPERSEDED = "SUPERSEDED"
 
 
 def load_registry() -> dict[str, Any]:
@@ -107,6 +108,12 @@ def check_capability_status(cap_id: str, cap: dict[str, Any]) -> dict[str, Any]:
     if yaml_status == "MISSING":
         note = cap.get("note", "Module not yet ported")
         result["status"] = STATUS_MISSING
+        result["reason"] = note
+        return result
+
+    if yaml_status == "superseded":
+        note = cap.get("note", "Replaced by another capability")
+        result["status"] = STATUS_SUPERSEDED
         result["reason"] = note
         return result
 
@@ -313,6 +320,7 @@ def format_report(results: list[dict[str, Any]], *, verbose: bool = False) -> st
     todo = [r for r in results if r["status"] == STATUS_TODO]
     stub = [r for r in results if r["status"] == STATUS_STUB]
     missing = [r for r in results if r["status"] == STATUS_MISSING]
+    superseded = [r for r in results if r["status"] == STATUS_SUPERSEDED]
 
     status_icon = {
         STATUS_ACTIVE: "✅",
@@ -322,6 +330,7 @@ def format_report(results: list[dict[str, Any]], *, verbose: bool = False) -> st
         STATUS_TODO: "📝",
         STATUS_STUB: "⬜",
         STATUS_MISSING: "❓",
+        STATUS_SUPERSEDED: "🔄",
     }
 
     for r in results:
@@ -346,6 +355,7 @@ def format_report(results: list[dict[str, Any]], *, verbose: bool = False) -> st
     lines.append(f"  ❓ MISSING:       {len(missing)} (not yet ported)")
     lines.append(f"  📝 TODO:          {len(todo)}")
     lines.append(f"  ⬜ STUB:          {len(stub)}")
+    lines.append(f"  🔄 SUPERSEDED:    {len(superseded)}")
     lines.append("-" * 72)
 
     if missing_data:
