@@ -43,7 +43,8 @@ SCORE_COLS = [2, 4, 6, 8, 10]  # P2OASys score levels
 
 # v6 hardening: bump when scoring semantics change so audit traces are comparable.
 # v6.7: Flash point threshold direction fix, ECOSAR solubility bounds, predicted flag propagation
-SCORER_VERSION = "p2oasys_scorer_v6.7_bug_fixes"
+# v6.8: Range threshold parsing (upper bound), NFPA Reactivity, ChV scoring, measured priority
+SCORER_VERSION = "p2oasys_scorer_v6.8_bug_fixes"
 
 # Ideal-gas factor for mg/m³ → ppm at 25 °C, 1 atm (TURI / EPA convention).
 _MGM3_TO_PPM_FACTOR = 24.45
@@ -252,13 +253,27 @@ def matrix_fingerprint(excel_path: Path) -> dict[str, Any]:
 
 
 def _parse_numeric_threshold(val: Any) -> Optional[float]:
-    """Parse numeric threshold from cell (handles '>100', '<50', etc.)."""
+    """
+    Parse numeric threshold from cell (handles '>100', '<50', '30-200', etc.).
+    
+    For range cells like "30-200" or ">300-1000", returns the UPPER bound.
+    This ensures ranges define the ceiling for each score band.
+    """
     if val is None or (isinstance(val, float) and pd.isna(val)):
         return None
     s = str(val).strip()
     if not s or s.lower() == "nan" or s == ".":
         return None
-    # Extract number from patterns like ">100", "<50", "5,000", "0.05", "6-7".
+    
+    # Range cells like "30-200" or ">300-1000" - use upper bound as the threshold
+    # Matches: 30-200, >300-1000, 0.1-1.0, etc. (hyphen or en-dash)
+    range_match = re.search(r"(\d[\d,]*\.?\d*)\s*[-–]\s*(\d[\d,]*\.?\d*)", s)
+    if range_match:
+        upper = _num(range_match.group(2))
+        if upper is not None:
+            return upper
+    
+    # Extract number from patterns like ">100", "<50", "5,000", "0.05".
     # Allow thousands separators so ">1,000" parses as 1000, not 1.
     m = re.search(r"[<>]?\s*(\d[\d,]*\.?\d*|\d*\.\d+)", s)
     if m:
@@ -401,10 +416,19 @@ def _build_rule(unit_name: str, values: list) -> Optional[dict]:
         if mapping:
             return {"type": "ghs_h", "unit": unit_name, "mapping": mapping, "cell_labels": cell_labels}
     # Key phrases - substring match for hazard descriptions
+    # Must preserve column→score mapping (empty columns are NOT score 0)
     if "KEY PHRASE" in u or "KEY WORD" in u:
-        phrases = [str(v).strip() for v in values if v and not (isinstance(v, float) and pd.isna(v))]
-        if phrases:
-            return {"type": "phrase", "unit": unit_name, "phrases": list(zip(phrases, SCORE_COLS)), "cell_labels": cell_labels}
+        phrase_list: list[tuple[str, int]] = []
+        for i, v in enumerate(values):
+            if i >= len(SCORE_COLS):
+                break
+            if v is None or (isinstance(v, float) and pd.isna(v)):
+                continue
+            s = str(v).strip()
+            if s:
+                phrase_list.append((s, SCORE_COLS[i]))
+        if phrase_list:
+            return {"type": "phrase", "unit": unit_name, "phrases": phrase_list, "cell_labels": cell_labels}
     # IARC Category: "3", "2B", "1 or 2A" - split so 1 and 2A both map to same score
     if "IARC" in u:
         mapping = {}
@@ -682,7 +706,7 @@ def _extract_ld50_dermal(
         if parsed is None:
             continue
         if best is None or parsed["value"] < best["value"]:
-            best = {**parsed, "route": "dermal", "unit": "mg/kg"}
+            best = {**parsed, "route": "dermal", "unit": "mg/kg", "predicted": bool(t.get("predicted"))}
     return best
 
 
@@ -711,7 +735,7 @@ def _extract_lc50_inhalation(
         if m:
             parsed = parse_measured_value(m.group(1), higher_is_safer=True)
             if parsed is not None:
-                ppm_candidates.append({**parsed, "unit": "ppm", "source_unit": "ppm"})
+                ppm_candidates.append({**parsed, "unit": "ppm", "source_unit": "ppm", "predicted": bool(t.get("predicted"))})
             continue
         m_mg = re.search(r"([<>≤≥]?\s*\d[\d,]*(?:\.\d+)?(?:\s*[-–—]\s*\d[\d,]*(?:\.\d+)?)?)\s*mg/m[³3]", val, re.I)
         if m_mg:
@@ -738,6 +762,7 @@ def _extract_lc50_inhalation(
                 "source_unit": "mg/m3",
                 "molecular_weight": mw,
                 "mg_m3": parsed["value"],
+                "predicted": bool(t.get("predicted")),
             })
     if not ppm_candidates:
         return None
@@ -790,6 +815,8 @@ def _extract_nfpa_digit(text: str, *, kind: str) -> Optional[int]:
         return None
     if kind == "fire" and not ("fire" in low or "ignit" in low or "flamm" in low):
         return None
+    if kind == "reactivity" and not ("react" in low or "instab" in low or "special" in low):
+        return None
     m = re.search(r"^(\d)\s*[-–]", s)
     if m:
         return int(m.group(1))
@@ -818,6 +845,19 @@ def _extract_nfpa_fire(hazard_data: dict) -> Optional[int]:
     best: Optional[int] = None
     for n in hm.get("nfpa", []) or []:
         v = _extract_nfpa_digit(n, kind="fire")
+        if v is None:
+            continue
+        if best is None or v > best:
+            best = v
+    return best
+
+
+def _extract_nfpa_reactivity(hazard_data: dict) -> Optional[int]:
+    """Extract NFPA reactivity/instability rating (0-4); precautionary max across sources."""
+    hm = hazard_data.get("hazard_metrics", {})
+    best: Optional[int] = None
+    for n in hm.get("nfpa", []) or []:
+        v = _extract_nfpa_digit(n, kind="reactivity")
         if v is None:
             continue
         if best is None or v > best:
@@ -1082,7 +1122,15 @@ def _extract_lc50_aquatic(hazard_data: dict, rejections: Optional[list] = None) 
     if not candidates:
         return None
 
-    best = min(candidates, key=lambda c: c["value"])
+    # Measured values take precedence over predicted (ECOSAR/QSAR).
+    # Only use predicted if no measured data exists.
+    measured = [c for c in candidates if not c.get("predicted")]
+    predicted = [c for c in candidates if c.get("predicted")]
+
+    if measured:
+        best = min(measured, key=lambda c: c["value"])
+    else:
+        best = min(predicted, key=lambda c: c["value"])
 
     beyond_solubility = False
     low_confidence = False
@@ -1120,6 +1168,54 @@ def _extract_lc50_aquatic_value(hazard_data: dict, rejections: Optional[list] = 
     result = _extract_lc50_aquatic(hazard_data, rejections)
     return result["value"] if result else None
 
+
+def _extract_chv_aquatic(hazard_data: dict, rejections: Optional[list] = None) -> Optional[dict[str, Any]]:
+    """Extract aquatic Chronic Value (ChV) in mg/L for Chronic Aquatic Toxicity scoring.
+
+    ChV is typically the geometric mean of NOEC and LOEC, used in ECOSAR and risk assessment.
+    Looks for structured fields, hazard_metrics, and toxicities mentioning "ChV" or "chronic value".
+
+    Measured values take precedence over predicted (ECOSAR) values.
+
+    Returns ``{"value", "predicted", "source"}`` or ``None``.
+    """
+    candidates: list[dict[str, Any]] = []
+
+    v, pred = _unpack_numeric_evidence(hazard_data.get("chv_aquatic_mg_l"))
+    if v is not None and v > 0:
+        candidates.append({"value": float(v), "predicted": pred, "source": "chv_aquatic_mg_l"})
+
+    hm = hazard_data.get("hazard_metrics") or {}
+    for item in hm.get("chv_mg_l") or []:
+        vv, pp = _unpack_numeric_evidence(item)
+        if vv is not None and vv > 0:
+            candidates.append({"value": float(vv), "predicted": pp or True, "source": "hazard_metrics.chv_mg_l"})
+
+    tox = hazard_data.get("toxicities", [])
+    for t in tox:
+        val = str(t.get("value", ""))
+        low = val.lower()
+        if "chv" in low or "chronic value" in low or ("chronic" in low and "mg/l" in low.replace(" ", "")):
+            m = re.search(r"(\d[\d,]*(?:\.\d+)?(?:[eE][-+]?\d+)?)\s*mg/L", val, re.I)
+            if m:
+                v_parsed = _num(m.group(1))
+                if v_parsed is not None and v_parsed > 0:
+                    candidates.append({
+                        "value": float(v_parsed),
+                        "predicted": bool(t.get("predicted")),
+                        "source": str(t.get("source") or "toxicity"),
+                    })
+
+    if not candidates:
+        return None
+
+    # Measured values take precedence over predicted (ECOSAR/QSAR).
+    measured = [c for c in candidates if not c.get("predicted")]
+    predicted = [c for c in candidates if c.get("predicted")]
+
+    if measured:
+        return min(measured, key=lambda c: c["value"])
+    return min(predicted, key=lambda c: c["value"])
 
 
 def _extract_gwp100(hazard_data: dict) -> Optional[float]:
@@ -1294,9 +1390,11 @@ def compute_p2oasys_scores_with_trace(
     vp = _extract_vapor_pressure_mmhg(hazard_data)
     nfpa_health = _extract_nfpa_health(hazard_data)
     nfpa_fire = _extract_nfpa_fire(hazard_data)
+    nfpa_reactivity = _extract_nfpa_reactivity(hazard_data)
     iarc = _extract_iarc(hazard_data, rejected)
     epa_carc = _extract_epa_carcinogen(hazard_data)
     lc50_aq = _extract_lc50_aquatic(hazard_data, rejected)
+    chv_aq = _extract_chv_aquatic(hazard_data, rejected)
     gwp100 = _extract_gwp100(hazard_data)
     odp = _extract_odp(hazard_data)
     log_kow = _extract_log_kow(hazard_data)
@@ -1331,10 +1429,12 @@ def compute_p2oasys_scores_with_trace(
         "dermal_ld50": ld50_dermal,
         "inhalation_lc50": lc50_inh,
         "aquatic_lc50": ({**lc50_aq, "unit": "mg/L"} if lc50_aq is not None else None),
+        "aquatic_chv": ({**chv_aq, "unit": "mg/L"} if chv_aq is not None else None),
         "flash_point_c": ({"value": flash_c, "unit": "degC"} if flash_c is not None else None),
         "vapor_pressure_mmhg": ({"value": vp, "unit": "mmHg"} if vp is not None else None),
         "nfpa_health": nfpa_health,
         "nfpa_fire": nfpa_fire,
+        "nfpa_reactivity": nfpa_reactivity,
         "iarc": iarc,
         "epa_carcinogen": epa_carc,
         "gwp100": ({"value": gwp100, "unit": "CO2e"} if gwp100 is not None else None),
@@ -1471,6 +1571,15 @@ def compute_p2oasys_scores_with_trace(
                                         break
                             else:
                                 miss_reason = "no NFPA fire rating"
+                        elif "Reactivity" in subcat or "react" in unit_name.lower() or "instab" in unit_name.lower():
+                            if nfpa_reactivity is not None:
+                                input_value = nfpa_reactivity
+                                for t, s in rule.get("thresholds", []):
+                                    if t == nfpa_reactivity:
+                                        score = s
+                                        break
+                            else:
+                                miss_reason = "no NFPA reactivity/instability rating"
                     elif "LC50" in unit_name and ("Aquatic" in subcat or "Aquatic" in str(subcats)):
                         if lc50_aq is not None:
                             # Beyond-solubility or low-confidence predictions must NOT drive high Eco scores.
@@ -1489,6 +1598,15 @@ def compute_p2oasys_scores_with_trace(
                                     predicted = True
                         else:
                             miss_reason = "no aquatic LC50/EC50"
+                    elif "ChV" in unit_name and ("Chronic" in subcat or "chronic" in subcat.lower()):
+                        if chv_aq is not None:
+                            input_value = chv_aq["value"]
+                            # Lower ChV = more hazardous (like LC50)
+                            score = _score_numeric(rule, chv_aq["value"], higher_is_safer=True)
+                            if chv_aq.get("predicted"):
+                                predicted = True
+                        else:
+                            miss_reason = "no aquatic ChV (chronic value)"
                     elif "GWP" in unit_name:
                         if gwp100 is not None:
                             input_value = gwp100
@@ -1582,6 +1700,12 @@ def compute_p2oasys_scores_with_trace(
                     if isinstance(input_value, dict) and input_value.get("predicted"):
                         predicted = True
                     if ld50_oral and input_value == ld50_oral.get("value") and ld50_oral.get("predicted"):
+                        predicted = True
+                    if ld50_dermal and input_value == ld50_dermal.get("value") and ld50_dermal.get("predicted"):
+                        predicted = True
+                    if lc50_inh and input_value == lc50_inh.get("value") and lc50_inh.get("predicted"):
+                        predicted = True
+                    if chv_aq and input_value == chv_aq.get("value") and chv_aq.get("predicted"):
                         predicted = True
                     if log_kow and input_value is log_kow and log_kow.get("predicted"):
                         predicted = True

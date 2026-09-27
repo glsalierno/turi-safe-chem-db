@@ -71,6 +71,21 @@ def test_numeric_threshold_thousands_separator():
     assert p2oasys_scorer._parse_numeric_threshold(">1,000") == 1000.0
 
 
+@pytest.mark.parametrize(
+    "cell_value,expected",
+    [
+        ("30-200", 200.0),       # Range: use upper bound
+        (">300-1000", 1000.0),   # Range with prefix: use upper bound
+        ("0.1-1.0", 1.0),        # Decimal range: use upper bound
+        ("<30", 30.0),           # Non-range: use the number
+        (">1000", 1000.0),       # Non-range: use the number
+    ],
+)
+def test_numeric_threshold_range_uses_upper_bound(cell_value, expected):
+    """Range cells like '30-200' return upper bound (200), not lower (30)."""
+    assert p2oasys_scorer._parse_numeric_threshold(cell_value) == expected
+
+
 # --------------------------------------------------------------------------- #
 # Site-style aggregation (top-two mean)
 # --------------------------------------------------------------------------- #
@@ -216,7 +231,7 @@ def test_matrix_fingerprint():
 
 
 def test_scorer_version():
-    assert SCORER_VERSION == "p2oasys_scorer_v6.7_bug_fixes"
+    assert SCORER_VERSION == "p2oasys_scorer_v6.8_bug_fixes"
 
 
 # --------------------------------------------------------------------------- #
@@ -601,3 +616,82 @@ def test_scores_rounded_to_2_significant_digits(matrix):
         str_val = f"{max_val:.10g}"
         non_zero_digits = len([c for c in str_val.replace(".", "") if c != "0" and c.isdigit()])
         assert non_zero_digits <= 2, f"Score {max_val} has more than 2 significant digits"
+
+
+@pytest.mark.parametrize(
+    "reactivity_rating,expected_score",
+    [
+        (0, 2),
+        (1, 4),
+        (2, 6),
+        (3, 8),
+        (4, 10),
+    ],
+)
+def test_nfpa_reactivity_scored(matrix, reactivity_rating, expected_score):
+    """NFPA Reactivity rating is extracted and scored correctly."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["hazard_metrics"]["nfpa"] = [f"Reactivity {reactivity_rating}"]
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    assert evidence.get("nfpa_reactivity") == reactivity_rating
+
+    physical = scores.get("Physical Properties", {})
+    reactivity_sub = physical.get("Reactivity", {})
+    nfpa_score = reactivity_sub.get("NFPA/HMIS 0,1,2,3,4")
+    assert nfpa_score == expected_score, f"NFPA Reactivity {reactivity_rating} → score {expected_score}"
+
+
+@pytest.mark.parametrize(
+    "chv_value,expected_score",
+    [
+        (20.0, 2),    # ChV >= 10 → score 2
+        (5.0, 4),     # ChV >= 5 → score 4
+        (1.0, 6),     # ChV >= 1 → score 6
+        (0.5, 8),     # ChV >= 0.1 → score 8
+        (0.05, 10),   # ChV < 0.1 → score 10
+    ],
+)
+def test_chv_aquatic_scored(matrix, chv_value, expected_score):
+    """ECOSAR Chronic Value (ChV) is extracted and scored correctly."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["chv_aquatic_mg_l"] = {"value": chv_value, "predicted": False}
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    assert evidence.get("aquatic_chv") is not None
+    assert evidence["aquatic_chv"]["value"] == chv_value
+
+    eco = scores.get("Ecological Hazards", {})
+    chronic_sub = eco.get("Chronic Aquatic Toxicity (fish, crustacea or algae)", {})
+    chv_score = chronic_sub.get("ChV mg/l")
+    assert chv_score == expected_score, f"ChV {chv_value} mg/L → score {expected_score}"
+
+
+def test_measured_lc50_takes_precedence_over_predicted(matrix):
+    """Measured aquatic LC50 values take precedence over lower predicted (ECOSAR) values."""
+    hd = _hd([], ghs={"h_codes": []})
+    # Predicted value is lower (more hazardous) but measured should win
+    hd["lc50_aquatic_mg_l"] = {"value": 1.0, "predicted": True}  # ECOSAR prediction
+    hd["toxicities"] = [
+        {"value": "LC50 10.0 mg/L fish", "predicted": False}  # Measured
+    ]
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    lc50_ev = evidence.get("aquatic_lc50")
+    assert lc50_ev is not None
+    assert lc50_ev["value"] == 10.0, "Measured value (10.0) should be used, not predicted (1.0)"
+    assert lc50_ev["predicted"] is False, "Evidence should be marked as measured (not predicted)"
+
+    # The less hazardous measured value means a lower Eco score
+    eco = scores.get("Ecological Hazards", {})
+    aquatic_sub = eco.get("Acute Aquatic Toxicity", {})
+    lc50_score = aquatic_sub.get("Acute Fish LC50 (mg/l)")
+    # LC50 10.0 mg/L should score lower than LC50 1.0 mg/L
+    assert lc50_score is not None
+    assert lc50_score < 10, "Measured 10.0 mg/L should not score the highest hazard level"
