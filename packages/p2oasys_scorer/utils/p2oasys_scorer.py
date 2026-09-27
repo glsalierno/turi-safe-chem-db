@@ -1473,12 +1473,20 @@ def compute_p2oasys_scores_with_trace(
                                 miss_reason = "no NFPA fire rating"
                     elif "LC50" in unit_name and ("Aquatic" in subcat or "Aquatic" in str(subcats)):
                         if lc50_aq is not None:
-                            input_value = lc50_aq["value"]
-                            score = _score_numeric(rule, lc50_aq["value"], higher_is_safer=True)
-                            if lc50_aq.get("predicted"):
-                                predicted = True
-                            if lc50_aq.get("beyond_solubility"):
-                                qualifier = "beyond_solubility"
+                            # Beyond-solubility or low-confidence predictions must NOT drive high Eco scores.
+                            # "No effect at saturation" → skip this value entirely for scoring.
+                            if lc50_aq.get("beyond_solubility") or lc50_aq.get("low_confidence"):
+                                miss_reason = (
+                                    f"LC50 {lc50_aq['value']:.2e} mg/L excluded: "
+                                    f"{'beyond solubility' if lc50_aq.get('beyond_solubility') else 'low confidence (logKow>5, predicted)'}"
+                                )
+                                # Still record in trace for transparency
+                                qualifier = "excluded_beyond_solubility"
+                            else:
+                                input_value = lc50_aq["value"]
+                                score = _score_numeric(rule, lc50_aq["value"], higher_is_safer=True)
+                                if lc50_aq.get("predicted"):
+                                    predicted = True
                         else:
                             miss_reason = "no aquatic LC50/EC50"
                     elif "GWP" in unit_name:
