@@ -1,5 +1,6 @@
 # Capability Registry — TURI Safe Chem DB
 # Machine-readable registry of all features/capabilities with status, tests, and env vars.
+# See CAPABILITIES.md for human-readable documentation.
 #
 # Status values:
 #   active      — Implemented and tested on main
@@ -28,6 +29,31 @@ capabilities:
     test_id: "test_capabilities::test_pubchem_pug_rest"
     status: "active"
 
+  pubchem_pug_view_ghs:
+    name: "PubChem PUG-View GHS/NFPA"
+    description: "Extended hazard data (GHS codes, NFPA ratings) via PUG View API"
+    module: "packages.doss_core.pubchem"
+    required: true
+    licensed: false
+    env_vars:
+      - "PUBCHEM_MIN_INTERVAL_S"
+      - "PUBCHEM_CACHE_DIR"
+    test_id: "test_capabilities::test_pubchem_pug_view_ghs"
+    status: "active"
+
+  pubchem_ftp_bulk:
+    name: "PubChem FTP bulk index"
+    description: "Bulk compound index via PubChem FTP for offline lookups"
+    module: "packages.doss_core.pubchem_bulk"
+    required: false
+    licensed: false
+    env_vars:
+      - "PUBCHEM_BULK_DIR"
+      - "PUBCHEM_DISABLE_BULK"
+    test_id: "test_capabilities::test_pubchem_ftp_bulk"
+    pr: "#7"
+    status: "TODO"
+
   # ─────────────────────────────────────────────────────────────────────────────
   # P2OASys scoring capabilities
   # ─────────────────────────────────────────────────────────────────────────────
@@ -44,15 +70,201 @@ capabilities:
     test_id: "test_capabilities::test_p2oasys_score_lookup"
     status: "active"
 
+  p2oasys_matrix_scorer:
+    name: "P2OASys matrix + scorer"
+    description: "Full P2OASys hazard matrix computation and scoring (v6.7)"
+    module: "packages.p2oasys_scorer.utils.p2oasys_scorer"
+    required: false
+    licensed: false
+    env_vars:
+      - "P2OASYS_DATA_DIR"
+    test_id: "test_p2oasys_scorer::test_load_matrix_bundled"
+    status: "active"
+
   p2oasys_user_survey:
     name: "P2OASys user survey (Process/Life Cycle)"
-    description: "User survey form for non-auto-scored Process Factors and Life Cycle Factors categories"
+    description: "User survey form for non-auto-scored Process Factors (10 subcategories) and Life Cycle Factors (5 subcategories) from TURI matrix xlsx"
     module: "packages.p2oasys_core.survey"
     required: false
     licensed: false
     env_vars:
       - "SURVEY_ANSWERS_DIR"
     test_id: "test_survey::test_survey_data_model"
+    status: "active"
+
+  doss_survey_page:
+    name: "DoSS Survey page"
+    description: "Streamlit page component for Process Factors and Life Cycle Factors user survey, integrated into main DoSS app"
+    module: "apps.doss_ondemand.survey_page"
+    required: false
+    licensed: false
+    env_vars:
+      - "SURVEY_ANSWERS_DIR"
+    test_id: "test_survey::test_streamlit_survey_imports"
+    status: "active"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Auto P2OASys (PR F) — expert-first routing with fast pipeline fallback
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  auto_p2oasys_entry:
+    name: "auto_p2oasys() entry point"
+    description: "Main entry point with expert-first routing and fast pipeline fallback"
+    module: "packages.auto_p2oasys.core"
+    required: true
+    licensed: false
+    env_vars:
+      - "AUTO_P2OASYS_OFFLINE"
+    test_id: "test_auto_p2oasys::TestExpertLookup::test_expert_lookup_acetone"
+    status: "active"
+
+  auto_p2oasys_expert_lookup:
+    name: "Auto P2OASys expert lookup"
+    description: "Returns expert scores from SQLite when available (mode=expert)"
+    module: "packages.auto_p2oasys.core"
+    required: true
+    licensed: false
+    env_vars:
+      - "P2OASYS_SCORE_LOOKUP_DB"
+    test_id: "test_auto_p2oasys::TestExpertLookup::test_expert_lookup_acetone"
+    status: "active"
+
+  auto_p2oasys_fast_pipeline:
+    name: "Auto P2OASys fast pipeline"
+    description: "Runs adapters when expert missing or force_fast=True"
+    module: "packages.auto_p2oasys.pipeline"
+    required: true
+    licensed: false
+    env_vars:
+      - "AUTO_P2OASYS_OFFLINE"
+    test_id: "test_auto_p2oasys::TestForceFast::test_force_fast_returns_expert_plus_fast"
+    status: "active"
+
+  auto_p2oasys_evidence:
+    name: "Auto P2OASys evidence records"
+    description: "Traceable evidence from each data source"
+    module: "packages.auto_p2oasys.evidence"
+    required: true
+    licensed: false
+    env_vars: []
+    test_id: "test_auto_p2oasys::TestEvidence::test_evidence_creation"
+    status: "active"
+
+  auto_p2oasys_source_report:
+    name: "Auto P2OASys source report"
+    description: "Shows which adapters ran/skipped/disabled"
+    module: "packages.auto_p2oasys.source_report"
+    required: true
+    licensed: false
+    env_vars: []
+    test_id: "test_auto_p2oasys::TestSourceReport::test_source_report_add"
+    status: "active"
+
+  auto_p2oasys_cli:
+    name: "Auto P2OASys CLI"
+    description: "Command-line interface for auto_p2oasys"
+    module: "packages.auto_p2oasys.__main__"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_auto_p2oasys::TestCLI::test_cli_version"
+    status: "active"
+
+  auto_p2oasys_gapfill:
+    name: "Auto P2OASys gap-fill layer"
+    description: "Gap-fill strategies for 34 auto subcategories"
+    module: "packages.auto_p2oasys.gapfill.layer"
+    required: true
+    licensed: false
+    env_vars: []
+    test_id: "test_auto_p2oasys::TestGapFillLayer::test_gapfill_measured_preferred"
+    status: "active"
+
+  auto_p2oasys_flash_predict:
+    name: "Auto P2OASys flash point predictor"
+    description: "Maestri/Salierno flash point prediction model"
+    module: "packages.auto_p2oasys.adapters.predictions"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_auto_p2oasys::test_flash_predict_stub"
+    status: "TODO"
+    note: "Interface ready, model files not yet provided"
+
+  auto_p2oasys_iuclid:
+    name: "Auto P2OASys IUCLID adapter"
+    description: "ECHA REACH study results (inhalation LC50, repeated dose, genotoxicity, biodegradation, chronic NOEC)"
+    module: "packages.auto_p2oasys.adapters.iuclid"
+    required: false
+    licensed: false
+    env_vars:
+      - "IUCLID_CACHE_DB"
+    test_id: "test_auto_p2oasys::TestIUCLIDAdapter::test_echa_attribution_constant"
+    status: "optional"
+    note: "ECHA attribution required for all IUCLID-sourced evidence"
+
+  auto_p2oasys_dsstox:
+    name: "Auto P2OASys DSSTox adapter"
+    description: "EPA CompTox DSSTox chemical identifiers (DTXSID, SMILES)"
+    module: "packages.auto_p2oasys.adapters.comptox"
+    required: false
+    licensed: false
+    env_vars:
+      - "DSSTOX_CACHE_PATH"
+    test_id: "test_auto_p2oasys::TestCompToxAdapter::test_dsstox_availability_check"
+    status: "optional"
+
+  auto_p2oasys_toxvaldb:
+    name: "Auto P2OASys ToxValDB adapter"
+    description: "EPA ToxValDB toxicity values (oral LD50, dermal LD50, inhalation LC50)"
+    module: "packages.auto_p2oasys.adapters.comptox"
+    required: false
+    licensed: false
+    env_vars:
+      - "EPA_API_KEY"
+    test_id: "test_auto_p2oasys::TestCompToxAdapter::test_toxvaldb_availability_check"
+    status: "optional"
+
+  auto_p2oasys_cpdb:
+    name: "Auto P2OASys CPDB adapter"
+    description: "Carcinogenic Potency Database TD50 values"
+    module: "packages.auto_p2oasys.adapters.cpdb"
+    required: false
+    licensed: false
+    env_vars:
+      - "CPDB_DB_PATH"
+    test_id: "test_auto_p2oasys::TestCPDBAdapter::test_cpdb_availability_check"
+    status: "optional"
+
+  auto_p2oasys_ipcc_gwp:
+    name: "Auto P2OASys IPCC GWP adapter"
+    description: "IPCC AR4-AR6 Global Warming Potential lookup"
+    module: "packages.auto_p2oasys.adapters.atmospheric"
+    required: false
+    licensed: false
+    env_vars:
+      - "ATMO_DIR"
+    test_id: "test_auto_p2oasys::TestAtmosphericAdapter::test_ipcc_availability_check"
+    status: "optional"
+
+  auto_p2oasys_atmospheric_rules:
+    name: "Auto P2OASys atmospheric rules"
+    description: "Atmospheric hazard rules (acid rain precursor, default GWP/ODP)"
+    module: "packages.auto_p2oasys.adapters.atmospheric"
+    required: true
+    licensed: false
+    env_vars: []
+    test_id: "test_auto_p2oasys::TestAtmosphericAdapter::test_atmospheric_rules_defaults"
+    status: "active"
+
+  auto_p2oasys_ph_cascade:
+    name: "Auto P2OASys pH cascade"
+    description: "pH estimation cascade (experimental, pKa, SMARTS heuristic)"
+    module: "packages.auto_p2oasys.adapters.atmospheric"
+    required: true
+    licensed: false
+    env_vars: []
+    test_id: "test_auto_p2oasys::TestAtmosphericAdapter::test_ph_cascade_experimental"
     status: "active"
 
   # ─────────────────────────────────────────────────────────────────────────────
@@ -79,6 +291,16 @@ capabilities:
     env_vars: []
     test_id: "test_capabilities::test_tci_sds_enrich"
     status: "active"
+
+  sigma_sds_enrich:
+    name: "Sigma-Aldrich SDS enrich"
+    description: "Sigma-Aldrich/MilliporeSigma SDS enrichment (STUB — access pending)"
+    module: "packages.doss_core.sigma"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_capabilities::test_sigma_sds_enrich"
+    status: "stub"
 
   # ─────────────────────────────────────────────────────────────────────────────
   # HSPiP Hansen Solubility Parameters
@@ -119,26 +341,247 @@ capabilities:
     status: "active"
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # DoSS on-demand application
+  # Hazard reference tables (scorer)
   # ─────────────────────────────────────────────────────────────────────────────
 
-  doss_streamlit_app:
-    name: "DoSS Streamlit app"
-    description: "Interactive DoSS row generator web interface (Streamlit)"
-    module: "apps.doss_ondemand.app"
-    required: false
-    licensed: false
-    env_vars: []
-    test_id: "test_capabilities::test_doss_streamlit_imports"
-    status: "active"
-
-  doss_survey_page:
-    name: "DoSS Survey page"
-    description: "Streamlit page for Process Factors and Life Cycle Factors user survey"
-    module: "apps.doss_ondemand.survey_page"
+  cameo_nfpa_sqlite:
+    name: "CAMEO NFPA sqlite"
+    description: "CAMEO Chemicals NFPA 704 ratings from local SQLite database"
+    module: "packages.scorer.cameo_nfpa"
     required: false
     licensed: false
     env_vars:
-      - "SURVEY_ANSWERS_DIR"
-    test_id: "test_survey::test_streamlit_survey_imports"
+      - "CAMEO_NFPA_DB"
+    test_id: "test_capabilities::test_cameo_nfpa_sqlite"
+    pr: "#1"
+    status: "TODO"
+
+  iarc_table:
+    name: "IARC carcinogen table"
+    description: "IARC carcinogen classification lookup"
+    module: "packages.scorer.iarc"
+    required: false
+    licensed: false
+    env_vars:
+      - "IARC_TABLE_PATH"
+    test_id: "test_capabilities::test_iarc_table"
+    pr: "#8"
+    status: "TODO"
+
+  odp_gwp_ipcc:
+    name: "ODP/GWP/IPCC atmo tables"
+    description: "Ozone Depletion Potential and Global Warming Potential tables"
+    module: "packages.scorer.atmo_tables"
+    required: false
+    licensed: false
+    env_vars:
+      - "ODP_GWP_TABLE_PATH"
+    test_id: "test_capabilities::test_odp_gwp_ipcc"
+    pr: "#8"
+    status: "TODO"
+
+  caa_hap_list:
+    name: "CAA HAP list"
+    description: "Clean Air Act Hazardous Air Pollutants list lookup"
+    module: "packages.scorer.caa_hap"
+    required: false
+    licensed: false
+    env_vars:
+      - "CAA_HAP_LIST_PATH"
+    test_id: "test_capabilities::test_caa_hap_list"
+    pr: "#8"
+    status: "TODO"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # External tools (optional, licensed)
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  ecosar_pyepisuite:
+    name: "ECOSAR/pyepisuite (optional)"
+    description: "ECOSAR aquatic toxicity and EPI Suite property estimation"
+    module: "packages.ecosar.pyepisuite"
+    required: false
+    licensed: true
+    env_vars:
+      - "EPISUITE_PATH"
+      - "ECOSAR_DISABLE"
+    test_id: "test_capabilities::test_ecosar_pyepisuite"
+    pr: "#6"
+    status: "TODO"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # IUCLID dossier access
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  iuclid_dossiers:
+    name: "IUCLID dossiers"
+    description: "IUCLID 6 dossier access for regulatory data"
+    module: "packages.iuclid.access"
+    required: false
+    licensed: false
+    env_vars:
+      - "IUCLID_API_URL"
+      - "IUCLID_API_KEY"
+    test_id: "test_capabilities::test_iuclid_dossiers"
+    pr: "#9"
+    status: "TODO"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Core application
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  doss_app:
+    name: "DoSS on-demand app"
+    description: "Streamlit DoSS row generator application"
+    module: "apps.doss_ondemand.app"
+    required: true
+    licensed: false
+    env_vars:
+      - "DOSS_ENABLE_FISHER"
+      - "PYTHONPATH"
+    test_id: "test_capabilities::test_doss_app"
     status: "active"
+
+  assess_spine:
+    name: "assess() spine"
+    description: "Core assessment orchestration function (superseded by auto_p2oasys PR F)"
+    module: "packages.assess"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_capabilities::test_assess_spine"
+    pr: "#5"
+    status: "superseded"
+    note: "Superseded by auto_p2oasys (PR F); PR #5 to be closed"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # GHaz7/GHaz8 stack capabilities (ported from fast P2OASys)
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  comptox_dsstox_lookup:
+    name: "CompTox / DSSTox lookup"
+    description: "EPA CompTox Dashboard DSSTox database lookup for chemical identifiers"
+    module: "packages.ghaz7_engine.utils.dsstox_local"
+    required: false
+    licensed: false
+    env_vars:
+      - "DSSTOX_CACHE_PATH"
+      - "COMPTOX_API_KEY"
+    test_id: "test_capabilities::test_comptox_dsstox_lookup"
+    pr: "#8"
+    status: "TODO"
+
+  toxval_lookup:
+    name: "ToxVal / ToxValDB lookup"
+    description: "EPA ToxValDB API client for toxicity values"
+    module: "packages.ghaz7_engine.utils.toxvaldb_client"
+    required: false
+    licensed: false
+    env_vars:
+      - "EPA_API_KEY"
+    test_id: "test_capabilities::test_toxval_lookup"
+    pr: "#8"
+    status: "TODO"
+
+  opera_predictions:
+    name: "OPERA predictions"
+    description: "NIEHS OPERA 2.9 QSAR property predictions (local CLI or cache)"
+    module: "packages.ghaz7_engine.utils.opera_client"
+    required: false
+    licensed: true
+    env_vars:
+      - "OPERA_EXE_PATH"
+      - "OPERA_CACHE_DB"
+    test_id: "test_capabilities::test_opera_predictions"
+    pr: "#8"
+    status: "TODO"
+
+  ghaz7_headless_cli:
+    name: "GHaz7 headless auto-P2OASys CLI"
+    description: "Headless CLI for batch auto-P2OASys draft scoring (no Streamlit)"
+    module: "packages.ghaz7_engine.tools.ghaz7_draft_cli"
+    required: false
+    licensed: false
+    env_vars:
+      - "P2OASYS_MATRIX_PATH"
+    test_id: "test_capabilities::test_ghaz7_headless_cli"
+    status: "MISSING"
+    note: "Exists in GHaz7 outputs/tools/; needs re-rooting for turi-safe-chem-db layout"
+
+  fast_p2oasys_batch:
+    name: "fast P2OASys v2 batch"
+    description: "High-throughput batch P2OASys scoring with disk caching"
+    module: "packages.ghaz7_engine.utils.p2oasys_score_lookup"
+    required: false
+    licensed: false
+    env_vars:
+      - "P2OASYS_SCORE_LOOKUP_DB"
+      - "P2OASYS_HARVEST_DB"
+    test_id: "test_capabilities::test_fast_p2oasys_batch"
+    pr: "#8"
+    status: "TODO"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Scorer fixes (PR #10)
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  scorer_beyond_solubility:
+    name: "Scorer beyond-solubility checks"
+    description: "P2OASys scorer handling for values beyond solubility limits"
+    module: "packages.ghaz7_engine.utils.p2oasys_scorer"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_capabilities::test_scorer_beyond_solubility"
+    pr: "#10"
+    status: "TODO"
+
+  scorer_suspicious_input:
+    name: "Scorer suspicious input checks"
+    description: "P2OASys scorer validation for suspicious/malformed inputs"
+    module: "packages.ghaz7_engine.utils.p2oasys_scorer"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_capabilities::test_scorer_suspicious_input"
+    pr: "#10"
+    status: "TODO"
+
+  scorer_unit_conversion:
+    name: "Scorer unit conversion hardening"
+    description: "P2OASys scorer robust unit conversion (mg/m³→ppm, etc.)"
+    module: "packages.ghaz7_engine.utils.p2oasys_scorer"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_capabilities::test_scorer_unit_conversion"
+    pr: "#10"
+    status: "TODO"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PR responsibility map — which PRs must fill in their TODO entries
+# ─────────────────────────────────────────────────────────────────────────────
+pr_responsibility:
+  "#1":
+    - cameo_nfpa_sqlite
+  "#5":
+    - assess_spine
+  "#6":
+    - ecosar_pyepisuite
+  "#7":
+    - pubchem_ftp_bulk
+  "#8":
+    - p2oasys_matrix_scorer
+    - iarc_table
+    - odp_gwp_ipcc
+    - caa_hap_list
+    - comptox_dsstox_lookup
+    - toxval_lookup
+    - opera_predictions
+    - fast_p2oasys_batch
+  "#9":
+    - iuclid_dossiers
+  "#10":
+    - scorer_beyond_solubility
+    - scorer_suspicious_input
+    - scorer_unit_conversion
