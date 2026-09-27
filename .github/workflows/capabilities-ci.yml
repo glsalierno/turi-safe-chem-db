@@ -114,7 +114,7 @@ jobs:
                   if not cap.get(field):
                       errors.append(f'{cap_id}: missing required field \"{field}\"')
               
-              valid_statuses = ['active', 'TODO', 'stub', 'optional', 'MISSING']
+              valid_statuses = ['active', 'TODO', 'stub', 'optional', 'MISSING', 'superseded']
               if cap.get('status') not in valid_statuses:
                   errors.append(f'{cap_id}: invalid status \"{cap.get(\"status\")}\"')
           
