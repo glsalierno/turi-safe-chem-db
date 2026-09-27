@@ -113,8 +113,10 @@ def gather_evidence(
     try:
         start = time.monotonic()
         lookup_evidence = lookup_adapter.gather_iarc(cas)
+        lookup_evidence.extend(lookup_adapter.gather_epa_carcinogen(cas))
         lookup_evidence.extend(lookup_adapter.gather_odp_gwp(cas))
         lookup_evidence.extend(lookup_adapter.gather_hap(cas))
+        lookup_evidence.extend(lookup_adapter.gather_odor_threshold(cas))
         duration = (time.monotonic() - start) * 1000
         if lookup_evidence:
             evidence.extend(lookup_evidence)
@@ -130,6 +132,19 @@ def gather_evidence(
             )
     except Exception as e:
         report.add("lookup_tables", AdapterStatus.ERROR, str(e))
+
+    try:
+        not_wired_evidence = lookup_adapter.gather_idlh(cas)
+        not_wired_evidence.extend(lookup_adapter.gather_reportable_quantity(cas))
+        evidence.extend(not_wired_evidence)
+        report.add(
+            "not_wired_endpoints",
+            AdapterStatus.SKIPPED,
+            reason="IDLH and Reportable Quantity NOT_WIRED",
+            evidence_count=len(not_wired_evidence),
+        )
+    except Exception as e:
+        report.add("not_wired_endpoints", AdapterStatus.ERROR, str(e))
 
     if sds_pdf is not None:
         try:
@@ -195,11 +210,32 @@ def gather_evidence(
         reason="HSPiP licensed, optional",
     )
 
-    report.add(
-        "iuclid",
-        AdapterStatus.SKIPPED,
-        reason="Requires offline dossier dump (PR #9)",
-    )
+    from .adapters import iuclid as iuclid_adapter
+
+    try:
+        if iuclid_adapter.is_iuclid_available():
+            start = time.monotonic()
+            iuclid_evidence = iuclid_adapter.gather_iuclid(cas)
+            duration = (time.monotonic() - start) * 1000
+            if iuclid_evidence:
+                evidence.extend(iuclid_evidence)
+                report.add(
+                    "iuclid",
+                    AdapterStatus.RAN,
+                    evidence_count=len(iuclid_evidence),
+                    duration_ms=duration,
+                    reason="ECHA REACH Study Results",
+                )
+            else:
+                report.add("iuclid", AdapterStatus.NO_DATA, "CAS not in IUCLID cache")
+        else:
+            report.add(
+                "iuclid",
+                AdapterStatus.SKIPPED,
+                reason="IUCLID cache not available (set IUCLID_CACHE_DB)",
+            )
+    except Exception as e:
+        report.add("iuclid", AdapterStatus.ERROR, str(e))
 
     report.add(
         "toxvaldb",
