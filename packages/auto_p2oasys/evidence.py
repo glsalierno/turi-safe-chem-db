@@ -38,6 +38,7 @@ class Evidence:
     unit: str | None = None
     qualifier: str | None = None
     source: str = "unknown"
+    source_type: str | None = None  # "SDS", "PubChem", "OPERA", etc.
     predicted: bool = False
     reliability: str | None = None
     reference: str | None = None
@@ -54,6 +55,7 @@ class Evidence:
             "unit": self.unit,
             "qualifier": self.qualifier,
             "source": self.source,
+            "source_type": self.source_type,
             "predicted": self.predicted,
             "reliability": self.reliability,
             "reference": self.reference,
@@ -77,6 +79,7 @@ class Evidence:
             unit=d.get("unit"),
             qualifier=d.get("qualifier"),
             source=d.get("source", "unknown"),
+            source_type=d.get("source_type"),
             predicted=d.get("predicted", False),
             reliability=d.get("reliability"),
             reference=d.get("reference"),

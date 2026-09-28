@@ -3,12 +3,14 @@ CLI entry point for auto_p2oasys.
 
 Usage:
     python -m packages.auto_p2oasys --cas 67-64-1 [--fast] [--sds file.pdf] [--json out.json]
+    python -m packages.auto_p2oasys --cas 67-64-1 --sds-cache /path/to/cache
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -32,7 +34,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--sds",
         type=Path,
-        help="Path to SDS PDF file",
+        help="Path to SDS PDF file (explicit upload, takes precedence over cache)",
+    )
+    parser.add_argument(
+        "--sds-cache",
+        type=Path,
+        dest="sds_cache",
+        default=Path(os.environ.get("TSCD_SDS_CACHE_DIR", "")) if os.environ.get("TSCD_SDS_CACHE_DIR") else None,
+        metavar="DIR",
+        help="Offline SDS cache root (<DIR>/<cas>/<vendor>/**/original.pdf); env: TSCD_SDS_CACHE_DIR",
+    )
+    parser.add_argument(
+        "--sds-allow-mixture",
+        action="store_true",
+        dest="sds_allow_mixture",
+        default=os.environ.get("TSCD_SDS_ALLOW_MIXTURE", "").lower() in ("1", "true", "yes"),
+        help="Include values from mixture/solution SDS in scoring; env: TSCD_SDS_ALLOW_MIXTURE",
     )
     parser.add_argument(
         "--json",
@@ -67,6 +84,8 @@ def main(argv: list[str] | None = None) -> int:
     result = auto_p2oasys(
         cas=args.cas,
         sds_pdf=args.sds,
+        sds_cache_dir=args.sds_cache,
+        sds_allow_mixture=args.sds_allow_mixture,
         force_fast=args.fast,
     )
 

@@ -81,7 +81,7 @@ Clean automatic P2OASys scoring with expert-first routing and fast pipeline fall
 | **ODP/GWP tables** | ✅ active | ODP and GWP100 from bundled tables |
 | **CAA HAP list** | ✅ active | Clean Air Act §112(b) HAP list |
 | **Odor threshold** | ✅ active | Odor threshold lookup (flags MISSING if unavailable) |
-| **SDS parse** | ✅ active | Extract CAS, flash point from SDS PDFs |
+| **SDS offline parse** | ✅ active | Structured SDS PDF parse (upload or cache) with 20+ fields |
 | **OPERA predictions** | 🔶 optional | Log Kow, BCF, biodeg from OPERA cache |
 | **ECOSAR predictions** | 🔶 optional | Aquatic LC50 via pyepisuite API |
 | **HSPiP VP** | 🔒 licensed | Vapor pressure from HSPiP (optional) |
@@ -206,9 +206,81 @@ python -m packages.auto_p2oasys --cas 67-64-1 --json result.json
 | **Fisher SDS enrich** | ✅ active | Fisher Scientific SDS/catalog (NFPA, pricing, physchem) |
 | **TCI SDS enrich** | ✅ active | TCI SDS/catalog enrichment |
 | **Sigma SDS enrich** | ⬜ stub | MilliporeSigma access pending |
+| **SDS offline parse** | ✅ active | Structured offline parse from upload or cache |
 
 ### Environment Variables
 - `DOSS_ENABLE_FISHER` — Default for Fisher toggle (`1`/`0`; default on)
+
+---
+
+## SDS Offline Parse (PR #12)
+
+Full structured SDS parsing from sections 2/8/9/10/11/12/14 plus NFPA. **Offline only** - no network, no OCR, no LLM.
+
+### CLI Options
+```bash
+# Explicit PDF upload (takes precedence over cache)
+python -m packages.auto_p2oasys --cas 67-64-1 --sds myfile.pdf
+
+# Use offline cache directory
+python -m packages.auto_p2oasys --cas 67-64-1 --sds-cache /path/to/cache
+
+# Include mixture/solution SDS values in scoring
+python -m packages.auto_p2oasys --cas 67-64-1 --sds-cache /path/to/cache --sds-allow-mixture
+```
+
+### Environment Variables
+- `TSCD_SDS_CACHE_DIR` — Offline SDS cache root directory
+- `TSCD_SDS_ALLOW_MIXTURE` — Include mixture SDS values (`1`/`true`/`yes`; default off)
+
+### Cache Layout
+```
+<DIR>/<cas>/<vendor>/<revision>/<sha256[:12]>/original.pdf
+           optional: metadata.json (with "revision", "manufacturer", "stored_at")
+```
+CAS folders may use dashes (`67-64-1`) or digits-only (`67641`). Both are searched.
+
+### Parsed Fields → P2OASys Subcategories
+
+| Parsed Field | Endpoint | P2OASys Subcategory |
+|--------------|----------|---------------------|
+| Section 2 H-codes | `h_codes` | Oral/Dermal/Inhalation, Irritation, Carcinogen, Aquatic, etc. |
+| NFPA Health/Fire/Instability | `nfpa_*` | Health, Flammability, Reactivity |
+| Section 9 flash point (°C) | `flash_point` | Flammability: Liquid |
+| Section 9 vapor pressure (mmHg) | `vapor_pressure` | Vapor Pressure |
+| Section 9 pH | `ph` | pH |
+| Section 9 odor | `sds_phrase` (normalized) | Odor |
+| Section 11 oral/dermal LD50 | `oral_ld50`, `dermal_ld50` | Oral/Dermal Toxicity |
+| Section 11 inhalation LC50 | `inhalation_lc50` | Inhalation Toxicity |
+| Section 12 aquatic LC50/EC50 | `aquatic_lc50_*` | Acute Aquatic Toxicity |
+| Section 12 NOEC | `chronic_aquatic_noec` | Chronic Aquatic Toxicity |
+| Section 12 BCF | `bcf` | Bioaccumulation |
+| Section 12 log Kow | `log_kow` | Bioconcentration |
+| Section 12 phrase cues | `sds_phrase` | Rapid Degradability, Persistence |
+
+### Unmapped Fields (logged but not scored)
+- Exposure limits (PEL/TLV/REL/STEL) — scorer unit not mapped
+- Persistence/biodegradation half-life text — scorer unit not mapped
+- Boiling point — no scorer unit
+- Section 10 incompatible materials text
+- Section 14 UN number/class (except Class 8 → Corrosivity cue)
+
+### Mixture/Solution Detection
+A mixture flag is set when:
+- ≥2 valid CAS numbers in section 3 with concentration ≥1%
+- Target CAS concentration <90%
+- Target CAS absent while other CAS present
+- Product name matches pattern (e.g., "37% solution")
+
+By default, mixture SDS values are held out of scoring. Use `--sds-allow-mixture` to include them with a reliability label.
+
+### Source Labeling
+All SDS evidence carries:
+- `source = "SDS (Vendor, filename.pdf)"`
+- `source_type = "SDS"`
+- `section = "Section N"`
+- `reliability = "measured"` or `"classification"`
+- `predicted = False` (except for estimated/QSAR values in section 12)
 
 ---
 

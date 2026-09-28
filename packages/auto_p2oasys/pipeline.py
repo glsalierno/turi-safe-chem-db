@@ -47,6 +47,8 @@ AUTO6_CATEGORIES = [
 def gather_evidence(
     cas: str,
     sds_pdf: Path | None = None,
+    sds_cache_dir: Path | None = None,
+    sds_allow_mixture: bool = False,
     report: SourceReport | None = None,
 ) -> list[Evidence]:
     """
@@ -58,7 +60,9 @@ def gather_evidence(
 
     Args:
         cas: CAS registry number (normalized)
-        sds_pdf: Optional SDS PDF path
+        sds_pdf: Optional SDS PDF path (explicit upload, takes precedence)
+        sds_cache_dir: Optional SDS cache directory for offline lookup
+        sds_allow_mixture: If True, include values from mixture/solution SDS
         report: Source report to record adapter status
 
     Returns:
@@ -146,23 +150,87 @@ def gather_evidence(
     except Exception as e:
         report.add("not_wired_endpoints", AdapterStatus.ERROR, str(e))
 
+    resolved_sds = None
+    sds_meta = None
+    
     if sds_pdf is not None:
+        resolved_sds = sds_pdf
+        if sds_cache_dir is not None:
+            report.add(
+                "sds_cache",
+                AdapterStatus.SKIPPED,
+                reason="explicit --sds given",
+            )
+    elif sds_cache_dir is not None:
+        try:
+            from .adapters import sds_cache
+            cache_result = sds_cache.lookup_sds_in_cache(cas, sds_cache_dir)
+            if cache_result:
+                resolved_sds = cache_result["path"]
+                sds_meta = cache_result
+                report.add(
+                    "sds_cache",
+                    AdapterStatus.RAN,
+                    reason=f"found {cache_result['vendor']}/{cache_result['revision']}",
+                    evidence_count=1,
+                )
+            else:
+                report.add(
+                    "sds_cache",
+                    AdapterStatus.NO_DATA,
+                    reason=f"SDS: none found in {sds_cache_dir} for CAS {cas}",
+                )
+        except Exception as e:
+            report.add("sds_cache", AdapterStatus.ERROR, str(e))
+
+    if resolved_sds is not None:
         try:
             start = time.monotonic()
-            sds_evidence = sds_adapter.parse_sds(sds_pdf, cas)
+            sds_evidence = sds_adapter.parse_sds(
+                resolved_sds, cas,
+                vendor=sds_meta.get("vendor") if sds_meta else None,
+            )
             duration = (time.monotonic() - start) * 1000
+            
+            mixture_holdout = []
             if sds_evidence:
-                evidence.extend(sds_evidence)
-                report.add(
-                    "sds_parse",
-                    AdapterStatus.RAN,
-                    evidence_count=len(sds_evidence),
-                    duration_ms=duration,
-                )
+                if hasattr(sds_adapter, "is_mixture_sds"):
+                    is_mixture = sds_adapter.is_mixture_sds(resolved_sds, cas)
+                    if is_mixture and not sds_allow_mixture:
+                        mixture_holdout = sds_evidence
+                        sds_evidence = []
+                        report.add(
+                            "sds_parse",
+                            AdapterStatus.RAN,
+                            reason=f"mixture/solution SDS: {len(mixture_holdout)} values held out of pure-substance scoring",
+                            evidence_count=0,
+                        )
+                    else:
+                        evidence.extend(sds_evidence)
+                        report.add(
+                            "sds_parse",
+                            AdapterStatus.RAN,
+                            evidence_count=len(sds_evidence),
+                            duration_ms=duration,
+                        )
+                else:
+                    evidence.extend(sds_evidence)
+                    report.add(
+                        "sds_parse",
+                        AdapterStatus.RAN,
+                        evidence_count=len(sds_evidence),
+                        duration_ms=duration,
+                    )
             else:
                 report.add("sds_parse", AdapterStatus.NO_DATA, "No data extracted")
         except Exception as e:
             report.add("sds_parse", AdapterStatus.ERROR, str(e))
+    else:
+        report.add(
+            "sds_parse",
+            AdapterStatus.SKIPPED,
+            reason="SDS: none supplied",
+        )
 
     try:
         start = time.monotonic()
