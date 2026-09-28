@@ -231,7 +231,7 @@ def test_matrix_fingerprint():
 
 
 def test_scorer_version():
-    assert SCORER_VERSION == "p2oasys_scorer_v6.8_bug_fixes"
+    assert SCORER_VERSION == "p2oasys_scorer_v6.9_ecosar_gapfill"
 
 
 # --------------------------------------------------------------------------- #
@@ -695,3 +695,124 @@ def test_measured_lc50_takes_precedence_over_predicted(matrix):
     # LC50 10.0 mg/L should score lower than LC50 1.0 mg/L
     assert lc50_score is not None
     assert lc50_score < 10, "Measured 10.0 mg/L should not score the highest hazard level"
+
+
+# --------------------------------------------------------------------------- #
+# ECOSAR Gap-Fill Rule (Gabriel decision 2026-09-28)
+# --------------------------------------------------------------------------- #
+
+def test_measured_wins_over_ecosar(matrix):
+    """ECOSAR gap-fill: when measured LC50 exists, ECOSAR is not used.
+
+    Gabriel decision: ECOSAR may fill Ecological subcategories ONLY when no
+    measured data exists. Measured data = measured LC50/EC50/NOEC OR GHS aquatic
+    H-phrases (H400/H410/H411/H412/H413).
+
+    Test verifies that:
+    1. When GHS H410 (aquatic H-phrase) is present, it indicates measured data
+    2. The measured LC50 value is used instead of the ECOSAR prediction
+    3. The evidence is marked as NOT predicted
+    """
+    hd = _hd([], ghs={"h_codes": ["H410"]})  # H410 = measured aquatic data exists
+    # ECOSAR prediction (lower = more hazardous)
+    hd["lc50_aquatic_mg_l"] = {"value": 0.001, "predicted": True}
+    # Measured value (less hazardous)
+    hd["toxicities"] = [
+        {"value": "LC50 fish 5.0 mg/L", "predicted": False}  # Measured
+    ]
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    lc50_ev = evidence.get("aquatic_lc50")
+    assert lc50_ev is not None, "Should have aquatic LC50 evidence"
+    assert lc50_ev["value"] == 5.0, "Measured value (5.0) should be used, not ECOSAR (0.001)"
+    assert lc50_ev["predicted"] is False, "Evidence should be marked as measured"
+
+    # ECOSAR prediction should be completely ignored when measured exists
+    eco = scores.get("Ecological Hazards", {})
+    aquatic_sub = eco.get("Acute Aquatic Toxicity", {})
+    # LC50 5.0 mg/L scores lower than 0.001 mg/L would
+    if aquatic_sub.get("Acute Fish LC50 (mg/l)") is not None:
+        assert aquatic_sub["Acute Fish LC50 (mg/l)"] < 10, \
+            "Measured 5.0 mg/L should not score 10 (which 0.001 would)"
+
+
+def test_ecosar_fills_gap(matrix):
+    """ECOSAR gap-fill: when no measured data, ECOSAR fills with predicted label.
+
+    Gabriel decision: ECOSAR may fill Ecological subcategories ONLY when no
+    measured data exists. Every ECOSAR-derived unit is labelled predicted=true.
+
+    Test verifies that:
+    1. When NO measured LC50/EC50/NOEC and NO GHS aquatic H-phrases exist
+    2. ECOSAR prediction is used to fill the gap
+    3. The result is labelled as predicted=true
+    """
+    hd = _hd([], ghs={"h_codes": ["H301"]})  # H301 = oral toxicity, NOT aquatic
+    # ECOSAR prediction fills the gap
+    hd["lc50_aquatic_mg_l"] = {"value": 0.5, "predicted": True}
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    lc50_ev = evidence.get("aquatic_lc50")
+    assert lc50_ev is not None, "Should have aquatic LC50 from ECOSAR"
+    assert lc50_ev["value"] == 0.5, "ECOSAR value should be used"
+    assert lc50_ev["predicted"] is True, "ECOSAR value should be marked as predicted"
+
+    # Ecological subcategory should be scored with predicted flag
+    eco = scores.get("Ecological Hazards", {})
+    aquatic_sub = eco.get("Acute Aquatic Toxicity", {})
+    assert aquatic_sub.get("_predicted") is True, \
+        "Subcategory should be marked as predicted-only when only ECOSAR data used"
+
+
+def test_ghs_aquatic_h_phrases_indicate_measured_data():
+    """GHS aquatic H-phrases (H400/H410/H411/H412/H413) indicate measured data exists.
+
+    These H-phrases are assigned based on measured LC50/EC50/NOEC data:
+    - H400/H410: LC50 ≤ 1 mg/L (very toxic)
+    - H411: 1 < LC50 ≤ 10 mg/L
+    - H412: 10 < LC50 ≤ 100 mg/L
+    - H413: Rapid degradation but NOEC > 1 mg/L
+    """
+    # Each GHS aquatic H-phrase should indicate measured data exists
+    for h_code in ["H400", "H410", "H411", "H412", "H413"]:
+        hd = _hd([], ghs={"h_codes": [h_code]})
+        assert p2oasys_scorer._has_measured_aquatic_data(hd) is True, \
+            f"{h_code} should indicate measured aquatic data exists"
+
+    # Non-aquatic H-phrases should NOT indicate measured aquatic data
+    for h_code in ["H301", "H315", "H225", "H330"]:
+        hd = _hd([], ghs={"h_codes": [h_code]})
+        assert p2oasys_scorer._has_measured_aquatic_data(hd) is False, \
+            f"{h_code} should NOT indicate measured aquatic data"
+
+    # No H-codes should NOT indicate measured aquatic data
+    hd = _hd([], ghs={"h_codes": []})
+    assert p2oasys_scorer._has_measured_aquatic_data(hd) is False
+
+
+def test_has_measured_aquatic_data_from_toxicities():
+    """_has_measured_aquatic_data detects measured LC50 in toxicities list."""
+    # Measured LC50 should be detected
+    hd = _hd([], ghs={"h_codes": []})
+    hd["toxicities"] = [
+        {"value": "LC50 fish 10.0 mg/L", "predicted": False}
+    ]
+    assert p2oasys_scorer._has_measured_aquatic_data(hd) is True
+
+    # Predicted LC50 should NOT count as measured
+    hd2 = _hd([], ghs={"h_codes": []})
+    hd2["toxicities"] = [
+        {"value": "LC50 fish 10.0 mg/L", "predicted": True}
+    ]
+    assert p2oasys_scorer._has_measured_aquatic_data(hd2) is False
+
+    # Measured NOEC should be detected
+    hd3 = _hd([], ghs={"h_codes": []})
+    hd3["toxicities"] = [
+        {"value": "NOEC 1.0 mg/L", "predicted": False}
+    ]
+    assert p2oasys_scorer._has_measured_aquatic_data(hd3) is True

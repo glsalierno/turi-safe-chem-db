@@ -44,7 +44,9 @@ SCORE_COLS = [2, 4, 6, 8, 10]  # P2OASys score levels
 # v6 hardening: bump when scoring semantics change so audit traces are comparable.
 # v6.7: Flash point threshold direction fix, ECOSAR solubility bounds, predicted flag propagation
 # v6.8: Range threshold parsing (upper bound), NFPA Reactivity, ChV scoring, measured priority
-SCORER_VERSION = "p2oasys_scorer_v6.8_bug_fixes"
+# v6.9: ECOSAR gap-fill rule: ECOSAR fills Ecological ONLY when no measured data exists;
+#       measured data = measured LC50/EC50/NOEC OR GHS aquatic H-phrases (H400/H410/H411/H412/H413)
+SCORER_VERSION = "p2oasys_scorer_v6.9_ecosar_gapfill"
 
 # Ideal-gas factor for mg/m³ → ppm at 25 °C, 1 atm (TURI / EPA convention).
 _MGM3_TO_PPM_FACTOR = 24.45
@@ -56,6 +58,15 @@ STATUS_NOT_ASSESSED = "Not assessed"
 STATUS_PREDICTED_ONLY = "Predicted only"
 STATUS_CONFLICTING = "Conflicting evidence"
 STATUS_SOURCE_UNAVAILABLE = "Source unavailable"
+
+# GHS aquatic H-phrases: assigned based on MEASURED aquatic toxicity data.
+# When present, they indicate measured LC50/EC50/NOEC data exists; ECOSAR should NOT fill gaps.
+# H400: Very toxic to aquatic life (acute LC50 ≤ 1 mg/L)
+# H410: Very toxic with long lasting effects (LC50 ≤ 1 AND NOEC ≤ 0.1)
+# H411: Toxic with long lasting effects (1 < LC50 ≤ 10 AND NOEC ≤ 1)
+# H412: Harmful with long lasting effects (10 < LC50 ≤ 100, no adequate chronic data or NOEC > 1)
+# H413: May cause long lasting harmful effects (rapid degradation but NOEC > 1)
+GHS_AQUATIC_H_PHRASES = frozenset({"H400", "H410", "H411", "H412", "H413"})
 
 # Routes that count as oral (or oral-equivalent) for Acute oral LD50.
 # TURI / P2OASys practice: intraperitoneal (i.p. / ip) is treated as oral.
@@ -1069,8 +1080,72 @@ def _extract_water_solubility_mg_l(hazard_data: dict) -> Optional[dict[str, Any]
     return None
 
 
+def _has_measured_aquatic_data(hazard_data: dict) -> bool:
+    """Check if measured aquatic toxicity data exists.
+
+    **ECOSAR Gap-Fill Rule (Gabriel decision 2026-09-28):**
+    ECOSAR may fill Ecological subcategories ONLY when no measured data exists.
+    Measured data = measured LC50/EC50/NOEC OR GHS aquatic H-phrases (H400/H410/H411/H412/H413).
+
+    The GHS aquatic H-phrases are assigned based on measured LC50/EC50/NOEC data:
+    - H400/H410: LC50 ≤ 1 mg/L (very toxic)
+    - H411: 1 < LC50 ≤ 10 mg/L (toxic with long lasting effects)
+    - H412: 10 < LC50 ≤ 100 mg/L (harmful with long lasting effects)
+    - H413: Rapid degradation but NOEC > 1 mg/L (may cause long lasting effects)
+
+    When any of these are present, it indicates measured aquatic data exists.
+
+    Returns:
+        True if measured aquatic data (LC50/EC50/NOEC or GHS aquatic H-phrases) is present.
+    """
+    # Check GHS H-codes for aquatic H-phrases
+    ghs = hazard_data.get("ghs", {})
+    h_codes = ghs.get("h_codes", [])
+    for h in h_codes:
+        base = re.sub(r"\s*\([^)]+\)", "", str(h)).strip()
+        if base in GHS_AQUATIC_H_PHRASES:
+            return True
+
+    # Check for measured LC50/EC50 in toxicities
+    for t in hazard_data.get("toxicities") or []:
+        if t.get("predicted"):
+            continue
+        val = str(t.get("value", "")).lower()
+        if ("lc50" in val or "ec50" in val) and (
+            "mg/l" in val
+            or "fish" in val
+            or "trout" in val
+            or "aquatic" in val
+            or "daphn" in val
+            or "algae" in val
+        ):
+            return True
+        if "noec" in val or "chronic" in val:
+            return True
+
+    # Check structured fields for measured aquatic data
+    for key in ("lc50_aquatic_mg_l", "aquatic_toxicity", "chv_aquatic_mg_l"):
+        raw = hazard_data.get(key)
+        if isinstance(raw, dict):
+            if not raw.get("predicted") and raw.get("value") is not None:
+                return True
+        elif raw is not None:
+            return True
+
+    return False
+
+
 def _extract_lc50_aquatic(hazard_data: dict, rejections: Optional[list] = None) -> Optional[dict[str, Any]]:
     """Extract most conservative acute aquatic LC50/EC50 (lowest mg/L) with solubility bounds.
+
+    **ECOSAR Gap-Fill Rule (Gabriel decision 2026-09-28):**
+    ECOSAR may fill Ecological subcategories ONLY when no measured data exists.
+    Measured data ALWAYS wins over ECOSAR — never averaged together.
+    Every ECOSAR-derived unit is labelled ``predicted=true`` and counted in ``predicted_only_categories``.
+
+    **Fix 4 caps remain in effect:** Exclude ECOSAR predictions for:
+    - Inorganics, polymers, siloxanes (ECOSAR not applicable)
+    - Predictions far below water solubility (implausible "no effect at saturation")
 
     Per ECOSAR/GHS practice, predicted LC50 values below water solubility are unrealistic
     (the chemical cannot dissolve to that concentration). Such values are flagged as
@@ -1122,8 +1197,10 @@ def _extract_lc50_aquatic(hazard_data: dict, rejections: Optional[list] = None) 
     if not candidates:
         return None
 
-    # Measured values take precedence over predicted (ECOSAR/QSAR).
-    # Only use predicted if no measured data exists.
+    # ECOSAR Gap-Fill Rule (Gabriel decision 2026-09-28):
+    # Measured data ALWAYS wins over ECOSAR — never averaged together.
+    # ECOSAR fills Ecological ONLY when no measured LC50/EC50/NOEC or GHS aquatic
+    # H-phrases (H400/H410/H411/H412/H413) exist.
     measured = [c for c in candidates if not c.get("predicted")]
     predicted = [c for c in candidates if c.get("predicted")]
 
@@ -1175,7 +1252,10 @@ def _extract_chv_aquatic(hazard_data: dict, rejections: Optional[list] = None) -
     ChV is typically the geometric mean of NOEC and LOEC, used in ECOSAR and risk assessment.
     Looks for structured fields, hazard_metrics, and toxicities mentioning "ChV" or "chronic value".
 
-    Measured values take precedence over predicted (ECOSAR) values.
+    **ECOSAR Gap-Fill Rule (Gabriel decision 2026-09-28):**
+    ECOSAR may fill Ecological subcategories ONLY when no measured data exists.
+    Measured data ALWAYS wins over ECOSAR — never averaged together.
+    Every ECOSAR-derived unit is labelled ``predicted=true`` and counted in ``predicted_only_categories``.
 
     Returns ``{"value", "predicted", "source"}`` or ``None``.
     """

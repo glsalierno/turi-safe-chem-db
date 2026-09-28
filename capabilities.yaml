@@ -72,7 +72,7 @@ capabilities:
 
   p2oasys_matrix_scorer:
     name: "P2OASys matrix + scorer"
-    description: "Full P2OASys hazard matrix computation and scoring (v6.7)"
+    description: "Full P2OASys hazard matrix computation and scoring (v6.9 - ECOSAR gap-fill rule)"
     module: "packages.p2oasys_scorer.utils.p2oasys_scorer"
     required: false
     licensed: false
@@ -387,6 +387,20 @@ capabilities:
     test_id: "test_capabilities::test_ecosar_pyepisuite"
     pr: "#6"
     status: "TODO"
+
+  ecosar_gapfill_rule:
+    name: "ECOSAR Gap-Fill Rule"
+    description: >
+      ECOSAR fills Ecological subcategories ONLY when no measured data exists.
+      Measured data = measured LC50/EC50/NOEC or GHS aquatic H-phrases (H400/H410/H411/H412/H413).
+      Measured ALWAYS wins over ECOSAR - never averaged. Fix 4 caps remain in effect.
+    module: "packages.p2oasys_scorer.utils.p2oasys_scorer"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_p2oasys_scorer::test_measured_wins_over_ecosar"
+    pr: "#12"
+    status: "active"
 
   # ─────────────────────────────────────────────────────────────────────────────
   # IUCLID dossier access

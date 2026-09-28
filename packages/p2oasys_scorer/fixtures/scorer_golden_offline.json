@@ -1,6 +1,6 @@
 {
  "generated_on": "box (not Fierro22), 2026-09-27, network black-holed via proxy",
- "scorer_version": "p2oasys_scorer_v6.8_bug_fixes",
+ "scorer_version": "p2oasys_scorer_v6.9_ecosar_gapfill",
  "matrix_fingerprint": {
   "filename": "Hazard Matrix Group Review 9-19-23.xlsx",
   "exists": true,
@@ -162,7 +162,7 @@
     "Life Cycle Factors": {}
    },
    "trace": {
-    "scorer_version": "p2oasys_scorer_v6.8_bug_fixes",
+    "scorer_version": "p2oasys_scorer_v6.9_ecosar_gapfill",
     "evidence": {
      "oral_ld50": {
       "value": 930.0,
@@ -2167,7 +2167,7 @@
     "Life Cycle Factors": {}
    },
    "trace": {
-    "scorer_version": "p2oasys_scorer_v6.8_bug_fixes",
+    "scorer_version": "p2oasys_scorer_v6.9_ecosar_gapfill",
     "evidence": {
      "oral_ld50": {
       "value": 5800.0,
@@ -3872,7 +3872,7 @@
     "Life Cycle Factors": {}
    },
    "trace": {
-    "scorer_version": "p2oasys_scorer_v6.8_bug_fixes",
+    "scorer_version": "p2oasys_scorer_v6.9_ecosar_gapfill",
     "evidence": {
      "oral_ld50": {
       "value": 3900.0,
@@ -5200,7 +5200,7 @@
     "Life Cycle Factors": {}
    },
    "trace": {
-    "scorer_version": "p2oasys_scorer_v6.8_bug_fixes",
+    "scorer_version": "p2oasys_scorer_v6.9_ecosar_gapfill",
     "evidence": {
      "oral_ld50": null,
      "dermal_ld50": null,
