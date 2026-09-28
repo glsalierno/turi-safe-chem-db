@@ -1,0 +1,128 @@
+# Capability Registry CI — runs offline, no network required
+# Ensures dropped capabilities fail CI
+
+name: Capabilities CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'capabilities.yaml'
+      - 'CAPABILITIES.md'
+      - 'packages/**'
+      - 'tests/test_capabilities.py'
+      - '.github/workflows/capabilities-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'capabilities.yaml'
+      - 'CAPABILITIES.md'
+      - 'packages/**'
+      - 'tests/test_capabilities.py'
+      - '.github/workflows/capabilities-ci.yml'
+
+jobs:
+  capability-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pyyaml pandas requests pypdf openpyxl
+
+      - name: Run capability tests
+        run: |
+          PYTHONPATH=. pytest tests/test_capabilities.py -v --tb=short
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Run capability report
+        run: |
+          PYTHONPATH=. python -m packages.capability_report
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Check for MISSING_DATA in required capabilities
+        run: |
+          PYTHONPATH=. python -c "
+          from packages.capability_report import capability_report, STATUS_MISSING_DATA
+          results = capability_report()
+          required_missing = [
+              r for r in results
+              if r.get('required') and r['status'] == STATUS_MISSING_DATA
+          ]
+          if required_missing:
+              print('ERROR: Required capabilities have MISSING_DATA status:')
+              for r in required_missing:
+                  print(f\"  - {r['name']}: {r['reason']}\")
+              exit(1)
+          print('All required capabilities are available.')
+          "
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+  registry-integrity:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pyyaml pandas requests pypdf openpyxl
+
+      - name: Verify registry integrity
+        run: |
+          PYTHONPATH=. pytest tests/test_capabilities.py -v -k "test_every" --tb=short
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Validate capabilities.yaml syntax
+        run: |
+          python -c "
+          import yaml
+          from pathlib import Path
+          
+          registry_path = Path('capabilities.yaml')
+          with open(registry_path, encoding='utf-8') as f:
+              registry = yaml.safe_load(f)
+          
+          capabilities = registry.get('capabilities', {})
+          errors = []
+          
+          required_fields = ['name', 'module', 'status', 'test_id']
+          for cap_id, cap in capabilities.items():
+              for field in required_fields:
+                  if not cap.get(field):
+                      errors.append(f'{cap_id}: missing required field \"{field}\"')
+              
+              valid_statuses = ['active', 'TODO', 'stub', 'optional', 'licensed', 'MISSING']
+              if cap.get('status') not in valid_statuses:
+                  errors.append(f'{cap_id}: invalid status \"{cap.get(\"status\")}\"')
+          
+          if errors:
+              print('Registry validation errors:')
+              for e in errors:
+                  print(f'  - {e}')
+              exit(1)
+          
+          print(f'Registry valid: {len(capabilities)} capabilities')
+          "

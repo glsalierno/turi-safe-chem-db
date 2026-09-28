@@ -64,17 +64,50 @@ With `PYTHONPATH` set to the repo root (or after `pip install -e .`), imports re
 ```
 apps/doss_ondemand/     # Streamlit UI (DoSS on-demand)
 packages/doss_core/     # PubChem, Fisher, TCI, HSPiP, schema, glove HSP
-packages/p2oasys_core/  # Expert/auto P2OASys lookup
-data/                   # Seed CSVs + bundled P2OASys sqlite lookup/harvest
-vendors/cas_to_hspip/   # Open HSPiP CLI / PubChem / MATLAB glue (no binary)
-scripts/                # Batch + Streamlit launcher
-docs/                   # INSTALL, HSPiP_CLI, TEAMS_DEPLOY
+packages/p2oasys_core/    # Expert/auto P2OASys lookup
+packages/p2oasys_scorer/  # P2OASys hazard scoring engine (v6.6_site_top2)
+data/                     # Seed CSVs + bundled P2OASys sqlite lookup/harvest
+vendors/cas_to_hspip/     # Open HSPiP CLI / PubChem / MATLAB glue (no binary)
+scripts/                  # Batch + Streamlit launcher
+docs/                     # INSTALL, HSPiP_CLI, TEAMS_DEPLOY
 ```
+
+## P2OASys Scorer Package
+
+The `packages/p2oasys_scorer/` package provides the TURI P2OASys hazard scoring engine (version `p2oasys_scorer_v6.6_site_top2`), ported from GHaz7/GHaz8.
+
+```python
+from packages.p2oasys_scorer import (
+    load_p2oasys_matrix,
+    compute_p2oasys_scores,
+    compute_p2oasys_scores_with_trace,
+    SCORER_VERSION,
+)
+
+# Load the bundled scoring matrix
+matrix = load_p2oasys_matrix(DEFAULT_MATRIX_PATH)
+
+# Score hazard data
+scores = compute_p2oasys_scores(hazard_data, matrix)
+
+# With decision trace for audit/debug
+scores, trace = compute_p2oasys_scores_with_trace(hazard_data, matrix)
+```
+
+**Key features:**
+- **Site-style aggregation:** Subcategory and category scores use mean-of-top-2-highest (not max)
+- **34 auto subcategories:** Acute 9, Chronic 7, Ecological 2, Fate 3, Atmospheric 4, Physical 9
+- **Decision trace:** Full audit trail of evidence, rejected candidates, and matrix rules
+- **pH heuristic:** U-shaped pH scoring via experimental/OPERA pKa or functional-group SMARTS
+
+**Bundled data:** The scoring matrix (`Hazard Matrix Group Review 9-19-23.xlsx`), IARC/ODP/GWP/HAP lookup CSVs, CAMEO NFPA sqlite, and IPCC GWP files are included under `packages/p2oasys_scorer/data/`.
 
 ## Environment variables
 
 | Variable | Purpose |
 |----------|---------|
+| `P2OASYS_MATRIX_PATH` | Override path to P2OASys scoring matrix Excel. Default is bundled in `packages/p2oasys_scorer/data/`. |
+| `P2OASYS_DATA_DIR` | Override data directory for scorer lookups (IARC, ODP/GWP, HAP CSVs). |
 | `P2OASYS_SCORE_LOOKUP_DB` | Override path to P2OASys score lookup SQLite. Default is bundled `data/p2oasys_score_lookup.sqlite` (~1,250 CAS with expert harvest + auto scores). |
 | `EXPERT_P2OASYS_CSV` | Path to optional expert P2OASys scores CSV overlay. Not loaded by default; enable via sidebar checkbox or upload. |
 | `HSPIP_PATH` / `HSPIP_EXE` | HSPiP install dir or `HSPiP.exe` (sidebar prompt + CLI scripts). Placeholder: `<YOUR_HSPIP_INSTALL>` |
@@ -184,9 +217,31 @@ If you use this tooling in publications or internal reports, please acknowledge:
 
 Author / maintainer GitHub: [glsalierno](https://github.com/glsalierno).
 
+## Capability Registry
+
+Every feature is tracked in the **capability registry** to prevent silent feature loss:
+
+```bash
+# Show status of all capabilities
+python -m packages.capability_report
+```
+
+Output shows ACTIVE, DISABLED, MISSING_DATA, or TODO for each capability, with env vars to configure.
+
+| File | Purpose |
+|------|---------|
+| `capabilities.yaml` | Machine-readable registry with modules, tests, env vars |
+| `CAPABILITIES.md` | Human-readable capability documentation |
+| `tests/test_capabilities.py` | One test per capability |
+| `packages/capability_config.py` | Centralized config (no hard-coded paths) |
+| `docs/PORTING_CHECKLIST.md` | Version/release guidelines |
+
+See [CAPABILITIES.md](CAPABILITIES.md) for the full capability list.
+
 ## Docs
 
 - [docs/INSTALL.md](docs/INSTALL.md)
 - [docs/HSPiP_CLI.md](docs/HSPiP_CLI.md)
 - [docs/TEAMS_DEPLOY.md](docs/TEAMS_DEPLOY.md)
+- [docs/PORTING_CHECKLIST.md](docs/PORTING_CHECKLIST.md)
 - [PACKAGING_NOTES.md](PACKAGING_NOTES.md)

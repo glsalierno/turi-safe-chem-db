@@ -1,0 +1,6438 @@
+{
+ "generated_on": "box (not Fierro22), 2026-09-27, network black-holed via proxy",
+ "scorer_version": "p2oasys_scorer_v6.9_ecosar_gapfill",
+ "matrix_fingerprint": {
+  "filename": "Hazard Matrix Group Review 9-19-23.xlsx",
+  "exists": true,
+  "sha256": "ab0ea28a8b4da02431ed5f5d73d8c0d37f8ac349a41c3e8546004efb08f539ac",
+  "size_bytes": 110632
+ },
+ "auto_subcategories_total": 34,
+ "auto_subcategories_by_category": {
+  "Acute Human Effects": 9,
+  "Chronic Human Effects": 7,
+  "Ecological Hazards": 2,
+  "Environmental Fate & Transport": 3,
+  "Atmospheric Hazard": 4,
+  "Physical Properties": 9
+ },
+ "cases": {
+  "benzene_like": {
+   "hazard_data": {
+    "toxicities": [
+     {
+      "value": "LD50 Rat oral 930 mg/kg",
+      "source": "PubChem"
+     },
+     {
+      "value": "LC50 Rat inhalation 10,000 ppm/7H"
+     },
+     {
+      "value": "IARC Group 1: Carcinogenic to humans"
+     },
+     {
+      "value": "LC50 fish 5.3 mg/L (trout, 96 h)"
+     },
+     {
+      "value": "XLogP3 2.1"
+     }
+    ],
+    "ghs": {
+     "h_codes": [
+      "H225",
+      "H304",
+      "H315",
+      "H319",
+      "H340",
+      "H350",
+      "H372",
+      "H412"
+     ]
+    },
+    "hazard_metrics": {
+     "flash_point": [
+      "-11 \u00b0C"
+     ],
+     "vapor_pressure_mmhg": [
+      94.8
+     ],
+     "nfpa": [
+      "2 - Health",
+      "3 - Fire"
+     ],
+     "gwp100": [
+      0.0
+     ],
+     "odp": [
+      0.0
+     ]
+    },
+    "molecular_weight": 78.11
+   },
+   "scores": {
+    "Acute Human Effects": {
+     "Inhalation Toxicity": {
+      "LC50 ppm": 2,
+      "GHS H Phrases": 8,
+      "_max": 5.0
+     },
+     "Oral Toxicity": {
+      "LD50 mg/kg": 6,
+      "_max": 6.0
+     },
+     "Dermal Irritation": {
+      "GHS H Phrases": 8,
+      "_max": 8.0
+     },
+     "Eye Irritation": {
+      "GHS H Phrases": 8,
+      "_max": 8.0
+     },
+     "Health": {
+      "NFPA/HMIS 0,1,2,3,4": 6,
+      "_max": 6.0
+     },
+     "_category_max": 8.0
+    },
+    "Chronic Human Effects": {
+     "Carcinogen": {
+      "IARC Category": 10,
+      "GHS H Phrases": 8,
+      "_max": 9.0
+     },
+     "Mutagen/ Teratogen": {
+      "GHS H Phrase": 8,
+      "_max": 8.0
+     },
+     "Other Chronic Organ Effects": {
+      "GHS H-Phrase - Repeated Exposure": 10,
+      "_max": 10.0
+     },
+     "_category_max": 9.5
+    },
+    "Ecological Hazards": {
+     "Acute Aquatic Toxicity": {
+      "Acute Fish LC50 (mg/l)": 6,
+      "_max": 6.0
+     },
+     "Chronic Aquatic Toxicity (fish, crustacea or algae)": {
+      "GHS H Phrases": 6,
+      "_max": 6.0
+     },
+     "_category_max": 6.0
+    },
+    "Environmental Fate & Transport": {
+     "Bioconcentration/ Bioaccumulation": {
+      "Log Kow / Pow": 4,
+      "_max": 4.0
+     },
+     "_category_max": 4.0
+    },
+    "Atmospheric Hazard": {
+     "Atmospheric Hazard": {
+      "GWP Relative to CO2": 2,
+      "_max": 2.0
+     },
+     "Ozone Depletor": {
+      "ODP Units": 2,
+      "_max": 2.0
+     },
+     "_category_max": 2.0
+    },
+    "Physical Properties": {
+     "Vapor Pressure": {
+      "mm Hg": 8,
+      "_max": 8.0
+     },
+     "Flammability: Liquid": {
+      "NFPA/HMIS 0,1,2,3,4": 8,
+      "GHS H Phrase": 8,
+      "Flash Point deg C": 10,
+      "_max": 9.0
+     },
+     "_category_max": 8.5
+    },
+    "Process Factors": {
+     "Heat": {
+      "WBGT, deg C": 2,
+      "_max": 2.0
+     },
+     "_category_max": 2.0
+    },
+    "Life Cycle Factors": {}
+   },
+   "trace": {
+    "scorer_version": "p2oasys_scorer_v6.9_ecosar_gapfill",
+    "evidence": {
+     "oral_ld50": {
+      "value": 930.0,
+      "qualifier": null,
+      "raw": "930",
+      "route": "oral",
+      "unit": "mg/kg",
+      "predicted": false
+     },
+     "dermal_ld50": null,
+     "inhalation_lc50": {
+      "value": 10000.0,
+      "qualifier": null,
+      "raw": "10,000",
+      "unit": "ppm",
+      "source_unit": "ppm"
+     },
+     "aquatic_lc50": {
+      "value": 5.3,
+      "unit": "mg/L"
+     },
+     "flash_point_c": {
+      "value": -11.0,
+      "unit": "degC"
+     },
+     "vapor_pressure_mmhg": {
+      "value": 94.8,
+      "unit": "mmHg"
+     },
+     "nfpa_health": 2,
+     "nfpa_fire": 3,
+     "iarc": "1",
+     "epa_carcinogen": null,
+     "gwp100": {
+      "value": 0.0,
+      "unit": "CO2e"
+     },
+     "odp": {
+      "value": 0.0,
+      "unit": "ODP"
+     },
+     "log_kow": {
+      "value": 3.0,
+      "predicted": false,
+      "source": "toxicity"
+     },
+     "bcf_l_kg": null,
+     "biodeg_half_life_days": null,
+     "molecular_weight": 78.11,
+     "ph_estimate": null,
+     "ph_heuristic": null
+    },
+    "rejected": [
+     {
+      "endpoint": "dermal LD50",
+      "value": "LD50 Rat oral 930 mg/kg",
+      "reason": "dermal route not confirmed"
+     }
+    ],
+    "scored": [
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "LC50 ppm",
+      "input_value": 10000.0,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "LC50 ppm",
+       "cell_labels": {
+        "2": "5000",
+        "4": "2000",
+        "6": "500",
+        "8": "100",
+        "10": "<100"
+       },
+       "thresholds": [
+        [
+         5000.0,
+         2
+        ],
+        [
+         2000.0,
+         4
+        ],
+        [
+         500.0,
+         6
+        ],
+        [
+         100.0,
+         8
+        ],
+        [
+         100.0,
+         10
+        ]
+       ]
+      },
+      "score": 2,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "GHS H Phrases",
+      "input_value": [
+       "H225",
+       "H304",
+       "H315",
+       "H319",
+       "H340",
+       "H350",
+       "H372",
+       "H412"
+      ],
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "ghs_h",
+       "unit": "GHS H Phrases",
+       "cell_labels": {
+        "4": "H333",
+        "6": "H332, H305",
+        "8": "H331, H304",
+        "10": "H330"
+       },
+       "mapping": {
+        "H333": 4,
+        "H332": 6,
+        "H305": 6,
+        "H331": 8,
+        "H304": 8,
+        "H330": 10
+       }
+      },
+      "score": 8,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "LD50 mg/kg",
+      "input_value": 930.0,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "LD50 mg/kg",
+       "cell_labels": {
+        "2": "5000",
+        "4": "2000",
+        "6": "300",
+        "8": "50",
+        "10": "5"
+       },
+       "thresholds": [
+        [
+         5000.0,
+         2
+        ],
+        [
+         2000.0,
+         4
+        ],
+        [
+         300.0,
+         6
+        ],
+        [
+         50.0,
+         8
+        ],
+        [
+         5.0,
+         10
+        ]
+       ]
+      },
+      "score": 6,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Irritation",
+      "unit": "GHS H Phrases",
+      "input_value": [
+       "H225",
+       "H304",
+       "H315",
+       "H319",
+       "H340",
+       "H350",
+       "H372",
+       "H412"
+      ],
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "ghs_h",
+       "unit": "GHS H Phrases",
+       "cell_labels": {
+        "6": "H316",
+        "8": "H315",
+        "10": "H314"
+       },
+       "mapping": {
+        "H316": 6,
+        "H315": 8,
+        "H314": 10
+       }
+      },
+      "score": 8,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Eye Irritation",
+      "unit": "GHS H Phrases",
+      "input_value": [
+       "H225",
+       "H304",
+       "H315",
+       "H319",
+       "H340",
+       "H350",
+       "H372",
+       "H412"
+      ],
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "ghs_h",
+       "unit": "GHS H Phrases",
+       "cell_labels": {
+        "6": "H320",
+        "8": "H319",
+        "10": "H318, H314"
+       },
+       "mapping": {
+        "H320": 6,
+        "H319": 8,
+        "H318": 10,
+        "H314": 10
+       }
+      },
+      "score": 8,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Health",
+      "unit": "NFPA/HMIS 0,1,2,3,4",
+      "input_value": 2,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "NFPA/HMIS 0,1,2,3,4",
+       "cell_labels": {
+        "2": "0",
+        "4": "1",
+        "6": "2",
+        "8": "3",
+        "10": "4"
+       },
+       "thresholds": [
+        [
+         0.0,
+         2
+        ],
+        [
+         1.0,
+         4
+        ],
+        [
+         2.0,
+         6
+        ],
+        [
+         3.0,
+         8
+        ],
+        [
+         4.0,
+         10
+        ]
+       ]
+      },
+      "score": 6,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "IARC Category",
+      "input_value": "1",
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "text",
+       "unit": "IARC Category",
+       "cell_labels": {
+        "4": "3",
+        "8": "2B",
+        "10": "1 or 2A"
+       },
+       "mapping": {
+        "3": 4,
+        "2B": 8,
+        "1": 10,
+        "2A": 10,
+        "1 OR 2A": 10
+       }
+      },
+      "score": 10,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "GHS H Phrases",
+      "input_value": [
+       "H225",
+       "H304",
+       "H315",
+       "H319",
+       "H340",
+       "H350",
+       "H372",
+       "H412"
+      ],
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "ghs_h",
+       "unit": "GHS H Phrases",
+       "cell_labels": {
+        "6": "H351",
+        "8": "H350"
+       },
+       "mapping": {
+        "H351": 6,
+        "H350": 8
+       }
+      },
+      "score": 8,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Mutagen/ Teratogen",
+      "unit": "GHS H Phrase",
+      "input_value": [
+       "H225",
+       "H304",
+       "H315",
+       "H319",
+       "H340",
+       "H350",
+       "H372",
+       "H412"
+      ],
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "ghs_h",
+       "unit": "GHS H Phrase",
+       "cell_labels": {
+        "6": "H341",
+        "8": "H340"
+       },
+       "mapping": {
+        "H341": 6,
+        "H340": 8
+       }
+      },
+      "score": 8,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS H-Phrase - Repeated Exposure",
+      "input_value": [
+       "H225",
+       "H304",
+       "H315",
+       "H319",
+       "H340",
+       "H350",
+       "H372",
+       "H412"
+      ],
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "ghs_h",
+       "unit": "GHS H-Phrase - Repeated Exposure",
+       "cell_labels": {
+        "8": "H373",
+        "10": "H372"
+       },
+       "mapping": {
+        "H373": 8,
+        "H372": 10
+       }
+      },
+      "score": 10,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "Acute Fish LC50 (mg/l)",
+      "input_value": 5.3,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "Acute Fish LC50 (mg/l)",
+       "cell_labels": {
+        "2": "100",
+        "4": "10",
+        "6": "1",
+        "8": "0.1",
+        "10": "<0.1"
+       },
+       "thresholds": [
+        [
+         100.0,
+         2
+        ],
+        [
+         10.0,
+         4
+        ],
+        [
+         1.0,
+         6
+        ],
+        [
+         0.1,
+         8
+        ],
+        [
+         0.1,
+         10
+        ]
+       ]
+      },
+      "score": 6,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "GHS H Phrases",
+      "input_value": [
+       "H225",
+       "H304",
+       "H315",
+       "H319",
+       "H340",
+       "H350",
+       "H372",
+       "H412"
+      ],
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "ghs_h",
+       "unit": "GHS H Phrases",
+       "cell_labels": {
+        "4": "H413",
+        "6": "H412",
+        "8": "H411",
+        "10": "H410"
+       },
+       "mapping": {
+        "H413": 4,
+        "H412": 6,
+        "H411": 8,
+        "H410": 10
+       }
+      },
+      "score": 6,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Bioconcentration/ Bioaccumulation",
+      "unit": "Log Kow / Pow",
+      "input_value": {
+       "value": 3.0,
+       "predicted": false,
+       "source": "toxicity"
+      },
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "Log Kow / Pow",
+       "cell_labels": {
+        "2": "2",
+        "4": "4",
+        "6": "5",
+        "8": "6",
+        "10": ">6"
+       },
+       "thresholds": [
+        [
+         2.0,
+         2
+        ],
+        [
+         4.0,
+         4
+        ],
+        [
+         5.0,
+         6
+        ],
+        [
+         6.0,
+         8
+        ],
+        [
+         6.0,
+         10
+        ]
+       ]
+      },
+      "score": 4,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Atmospheric Hazard",
+      "unit": "GWP Relative to CO2",
+      "input_value": 0.0,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "GWP Relative to CO2",
+       "cell_labels": {
+        "2": "<30",
+        "4": "30-200",
+        "6": "200-300",
+        "8": ">300-1000",
+        "10": ">1000"
+       },
+       "thresholds": [
+        [
+         30.0,
+         2
+        ],
+        [
+         30.0,
+         4
+        ],
+        [
+         200.0,
+         6
+        ],
+        [
+         300.0,
+         8
+        ],
+        [
+         1000.0,
+         10
+        ]
+       ]
+      },
+      "score": 2,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "ODP Units",
+      "input_value": 0.0,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "ODP Units",
+       "cell_labels": {
+        "2": "0",
+        "4": "0.001",
+        "6": "0.01",
+        "8": "0.1",
+        "10": ">0.1"
+       },
+       "thresholds": [
+        [
+         0.0,
+         2
+        ],
+        [
+         0.001,
+         4
+        ],
+        [
+         0.01,
+         6
+        ],
+        [
+         0.1,
+         8
+        ],
+        [
+         0.1,
+         10
+        ]
+       ]
+      },
+      "score": 2,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Vapor Pressure",
+      "unit": "mm Hg",
+      "input_value": 94.8,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "mm Hg",
+       "cell_labels": {
+        "2": "0.05",
+        "4": "1",
+        "6": "10",
+        "8": "200",
+        "10": ">200"
+       },
+       "thresholds": [
+        [
+         0.05,
+         2
+        ],
+        [
+         1.0,
+         4
+        ],
+        [
+         10.0,
+         6
+        ],
+        [
+         200.0,
+         8
+        ],
+        [
+         200.0,
+         10
+        ]
+       ]
+      },
+      "score": 8,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "NFPA/HMIS 0,1,2,3,4",
+      "input_value": 3,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "NFPA/HMIS 0,1,2,3,4",
+       "cell_labels": {
+        "2": "0",
+        "4": "1",
+        "6": "2",
+        "8": "3",
+        "10": "4"
+       },
+       "thresholds": [
+        [
+         0.0,
+         2
+        ],
+        [
+         1.0,
+         4
+        ],
+        [
+         2.0,
+         6
+        ],
+        [
+         3.0,
+         8
+        ],
+        [
+         4.0,
+         10
+        ]
+       ]
+      },
+      "score": 8,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "GHS H Phrase",
+      "input_value": [
+       "H225",
+       "H304",
+       "H315",
+       "H319",
+       "H340",
+       "H350",
+       "H372",
+       "H412"
+      ],
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "ghs_h",
+       "unit": "GHS H Phrase",
+       "cell_labels": {
+        "4": "H227",
+        "6": "H226",
+        "8": "H225",
+        "10": "H224"
+       },
+       "mapping": {
+        "H227": 4,
+        "H226": 6,
+        "H225": 8,
+        "H224": 10
+       }
+      },
+      "score": 8,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "Flash Point deg C",
+      "input_value": -11.0,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "Flash Point deg C",
+       "cell_labels": {
+        "2": "93",
+        "4": "60",
+        "6": "45",
+        "8": "25",
+        "10": "10"
+       },
+       "thresholds": [
+        [
+         93.0,
+         2
+        ],
+        [
+         60.0,
+         4
+        ],
+        [
+         45.0,
+         6
+        ],
+        [
+         25.0,
+         8
+        ],
+        [
+         10.0,
+         10
+        ]
+       ]
+      },
+      "score": 10,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Heat",
+      "unit": "WBGT, deg C",
+      "input_value": -11.0,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "WBGT, deg C",
+       "cell_labels": {
+        "2": "25",
+        "4": "27",
+        "6": "30",
+        "8": "32",
+        "10": ">32"
+       },
+       "thresholds": [
+        [
+         25.0,
+         2
+        ],
+        [
+         27.0,
+         4
+        ],
+        [
+         30.0,
+         6
+        ],
+        [
+         32.0,
+         8
+        ],
+        [
+         32.0,
+         10
+        ]
+       ]
+      },
+      "score": 2,
+      "status": "Scored",
+      "predicted": false
+     }
+    ],
+    "missing": [
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Acute Human Effects",
+      "unit": "Acute Human Effects",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "Vapor GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "mg/l gas/vapor",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "mg/l dust/mist/fume",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "Solid GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "LD50 mg/kg",
+      "status": "No data",
+      "reason": "no dermal LD50 (oral fallback disabled)"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Respiratory Irritation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Respiratory Irritation",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Respiratory Irritation",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Irritation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Irritation",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Eye Irritation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Eye Irritation",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "PEL/TLV ppm",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "PEL/TLV (dusts) mg/m3",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "PEL/TLV (particles) mg/m3",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "Key phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "IDLH",
+      "unit": "ppm",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "IDLH",
+      "unit": "NIOSH Bands",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Chronic Human Effects",
+      "unit": "Chronic Human Effects",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "EPA CLASS Category",
+      "status": "No data",
+      "reason": "no EPA carcinogen class"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "ACGIH Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "OSHA Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "Prop 65 Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Mutagen/ Teratogen",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Mutagen/ Teratogen",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "Prop 65 Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "GHS Category - STOT - Single Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "GHS Category - STOT - Repeated Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "Asthmagen Type (AOEC Database)",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "ECHA Endocrine Disruptor Assessment List",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "EU Endocrine Disruptor List",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "ChemSec - SIN",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "TEDX",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS H-Phrase - Single Exposure",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS Category - STOT -Single Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS Category - STOT - Repeated Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Ecological Hazards",
+      "unit": "Ecological Hazards",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "Acute Algae (or other aquatic plant) EC50 (mg/l)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "GHS Category level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "NOEC (NOAEC) or ECx (mg/l)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "ChV mg/l",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Environmental Fate & Transport",
+      "unit": "Environmental Fate & Transport",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Water t1/2 Days",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Water Signal Words",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Air t1/2 Days",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Air Signal Words",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Soil/Sediment t1/2 Days",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Soil/Sediment Signal Words",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "28-day Study: % Breakdown Dissolved Organic Carbon",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "28-day Study: % Based on O2 or CO2",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "BOD Half-life (days)",
+      "status": "No data",
+      "reason": "no BOD half-life (OPERA BioDeg optional)"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "Hydrolysis Half-life (days)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Bioconcentration/ Bioaccumulation",
+      "unit": "BAF/BCF (l/kg)",
+      "status": "No data",
+      "reason": "no BAF/BCF (L/kg)"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Bioconcentration/ Bioaccumulation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Atmospheric Hazard",
+      "unit": "Greenhouse Gas",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Atmospheric Hazard",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "Ozone Classification",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Acid Rain Formation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Acid Rain Formation",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "NESHAP",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "NESHAP",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Physical Properties",
+      "unit": "Physical Properties",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "GHS Category level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Gas",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Gas",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Gas",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "NFPA/HMIS 0,1,2,3,4",
+      "status": "No data",
+      "reason": "no applicable evidence"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "pH",
+      "unit": "pH Units",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "pH",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Corrosivity to Materials",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Corrosivity to Materials",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Corrosivity to Materials",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Odor",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Volatile Organic Compound",
+      "unit": "g/l",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Volatile Organic Compound",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reportable Quantity",
+      "unit": "Pounds",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Process Factors",
+      "unit": "Work Environment Process Factors",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Heat",
+      "unit": "Hot work condition",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Heat",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Cold",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Noise Generation",
+      "unit": "dBA/hr",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Noise Generation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 1 Small Machine (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 2 Medium Machine (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 3 Large Rigid Foundation (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 4 Large Soft Foundation (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Ergonomic Hazard",
+      "unit": "Occurence",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Ergonomic Hazard",
+      "unit": "Hazard Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Overload and Pace: Work Load",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Overload and Pace: Machine Pacing",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Overload and Pace: Time Constraints",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Schedule: Shift Work",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Schedule: Work Isolation",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Control",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Environment & Equipment: Equipment Stability",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Environment & Equipment: Work Space",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Pressure System",
+      "unit": "Pressure (Delta % Change From Ambient)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Pressure System",
+      "unit": "GHS Phrase",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Pressure System",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Temperature System",
+      "unit": "Temperature (Delta % Change From Ambient)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Temperature System",
+      "unit": "GHS Phrase",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Temperature System",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Water Use",
+      "unit": "% Water Change",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Water Use",
+      "unit": "Reuse",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Energy Use",
+      "unit": "% Energy Change",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Energy Use",
+      "unit": "% Renewable Energy",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Near Certain",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Highly Likely",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Likely",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Unlikely",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Remote",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Life Cycle Factors",
+      "unit": "Life Cycle Factors",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Upstream Effects",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Consumer Hazard",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Disposal Hazard (landfill, incineration)",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Recycling",
+      "unit": "% Recyclable at End of Life",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Recycling",
+      "unit": "Uses Products With % Recycled Material",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Renewable to Nonrenewable Resource",
+      "unit": "% Renewable Materials",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Renewable to Nonrenewable Resource",
+      "unit": "Key Words",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     }
+    ],
+    "category_status": {
+     "Acute Human Effects": "Scored",
+     "Chronic Human Effects": "Scored",
+     "Ecological Hazards": "Scored",
+     "Environmental Fate & Transport": "Scored",
+     "Atmospheric Hazard": "Scored",
+     "Physical Properties": "Scored",
+     "Process Factors": "Scored",
+     "Life Cycle Factors": "No data"
+    }
+   }
+  },
+  "acetone_like": {
+   "hazard_data": {
+    "toxicities": [
+     {
+      "value": "LD50 Rat oral 5,800 mg/kg"
+     },
+     {
+      "value": "LD50 Rabbit dermal 15,800 mg/kg"
+     },
+     {
+      "value": "LC50 Rat inhalation 76 mg/L/4H"
+     },
+     {
+      "value": "Log Kow -0.24"
+     }
+    ],
+    "ghs": {
+     "h_codes": [
+      "H225",
+      "H319",
+      "H336"
+     ]
+    },
+    "hazard_metrics": {
+     "flash_point": [
+      "-20 \u00b0C"
+     ],
+     "vapor_pressure_mmhg": [
+      231
+     ],
+     "nfpa": [
+      "1 - Health",
+      "3 - Fire"
+     ]
+    },
+    "molecular_weight": 58.08
+   },
+   "scores": {
+    "Acute Human Effects": {
+     "Oral Toxicity": {
+      "LD50 mg/kg": 2,
+      "_max": 2.0
+     },
+     "Dermal Toxicity": {
+      "LD50 mg/kg": 2,
+      "_max": 2.0
+     },
+     "Eye Irritation": {
+      "GHS H Phrases": 8,
+      "_max": 8.0
+     },
+     "Health": {
+      "NFPA/HMIS 0,1,2,3,4": 4,
+      "_max": 4.0
+     },
+     "_category_max": 6.0
+    },
+    "Chronic Human Effects": {
+     "Neurotoxicity": {
+      "GHS H Phrase": 6,
+      "_max": 6.0
+     },
+     "_category_max": 6.0
+    },
+    "Ecological Hazards": {
+     "Acute Aquatic Toxicity": {
+      "Acute Fish LC50 (mg/l)": 4,
+      "_max": 4.0
+     },
+     "_category_max": 4.0
+    },
+    "Environmental Fate & Transport": {
+     "Bioconcentration/ Bioaccumulation": {
+      "Log Kow / Pow": 2,
+      "_max": 2.0
+     },
+     "_category_max": 2.0
+    },
+    "Atmospheric Hazard": {},
+    "Physical Properties": {
+     "Vapor Pressure": {
+      "mm Hg": 10,
+      "_max": 10.0
+     },
+     "Flammability: Liquid": {
+      "NFPA/HMIS 0,1,2,3,4": 8,
+      "GHS H Phrase": 8,
+      "Flash Point deg C": 10,
+      "_max": 9.0
+     },
+     "_category_max": 9.5
+    },
+    "Process Factors": {
+     "Heat": {
+      "WBGT, deg C": 2,
+      "_max": 2.0
+     },
+     "_category_max": 2.0
+    },
+    "Life Cycle Factors": {}
+   },
+   "trace": {
+    "scorer_version": "p2oasys_scorer_v6.9_ecosar_gapfill",
+    "evidence": {
+     "oral_ld50": {
+      "value": 5800.0,
+      "qualifier": null,
+      "raw": "5,800",
+      "route": "oral",
+      "unit": "mg/kg",
+      "predicted": false
+     },
+     "dermal_ld50": {
+      "value": 15800.0,
+      "qualifier": null,
+      "raw": "15,800",
+      "route": "dermal",
+      "unit": "mg/kg"
+     },
+     "inhalation_lc50": null,
+     "aquatic_lc50": {
+      "value": 76.0,
+      "unit": "mg/L"
+     },
+     "flash_point_c": {
+      "value": -20.0,
+      "unit": "degC"
+     },
+     "vapor_pressure_mmhg": {
+      "value": 231.0,
+      "unit": "mmHg"
+     },
+     "nfpa_health": 1,
+     "nfpa_fire": 3,
+     "iarc": null,
+     "epa_carcinogen": null,
+     "gwp100": null,
+     "odp": null,
+     "log_kow": {
+      "value": -0.24,
+      "predicted": false,
+      "source": "toxicity"
+     },
+     "bcf_l_kg": null,
+     "biodeg_half_life_days": null,
+     "molecular_weight": 58.08,
+     "ph_estimate": null,
+     "ph_heuristic": null
+    },
+    "rejected": [
+     {
+      "endpoint": "oral LD50",
+      "value": "LD50 Rabbit dermal 15,800 mg/kg",
+      "reason": "route is not oral"
+     },
+     {
+      "endpoint": "dermal LD50",
+      "value": "LD50 Rat oral 5,800 mg/kg",
+      "reason": "dermal route not confirmed"
+     }
+    ],
+    "scored": [
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "LD50 mg/kg",
+      "input_value": 5800.0,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "LD50 mg/kg",
+       "cell_labels": {
+        "2": "5000",
+        "4": "2000",
+        "6": "300",
+        "8": "50",
+        "10": "5"
+       },
+       "thresholds": [
+        [
+         5000.0,
+         2
+        ],
+        [
+         2000.0,
+         4
+        ],
+        [
+         300.0,
+         6
+        ],
+        [
+         50.0,
+         8
+        ],
+        [
+         5.0,
+         10
+        ]
+       ]
+      },
+      "score": 2,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "LD50 mg/kg",
+      "input_value": 15800.0,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "LD50 mg/kg",
+       "cell_labels": {
+        "2": "5000",
+        "4": "2000",
+        "6": "1000",
+        "8": "200",
+        "10": "50"
+       },
+       "thresholds": [
+        [
+         5000.0,
+         2
+        ],
+        [
+         2000.0,
+         4
+        ],
+        [
+         1000.0,
+         6
+        ],
+        [
+         200.0,
+         8
+        ],
+        [
+         50.0,
+         10
+        ]
+       ]
+      },
+      "score": 2,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Eye Irritation",
+      "unit": "GHS H Phrases",
+      "input_value": [
+       "H225",
+       "H319",
+       "H336"
+      ],
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "ghs_h",
+       "unit": "GHS H Phrases",
+       "cell_labels": {
+        "6": "H320",
+        "8": "H319",
+        "10": "H318, H314"
+       },
+       "mapping": {
+        "H320": 6,
+        "H319": 8,
+        "H318": 10,
+        "H314": 10
+       }
+      },
+      "score": 8,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Health",
+      "unit": "NFPA/HMIS 0,1,2,3,4",
+      "input_value": 1,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "NFPA/HMIS 0,1,2,3,4",
+       "cell_labels": {
+        "2": "0",
+        "4": "1",
+        "6": "2",
+        "8": "3",
+        "10": "4"
+       },
+       "thresholds": [
+        [
+         0.0,
+         2
+        ],
+        [
+         1.0,
+         4
+        ],
+        [
+         2.0,
+         6
+        ],
+        [
+         3.0,
+         8
+        ],
+        [
+         4.0,
+         10
+        ]
+       ]
+      },
+      "score": 4,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "GHS H Phrase",
+      "input_value": [
+       "H225",
+       "H319",
+       "H336"
+      ],
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "ghs_h",
+       "unit": "GHS H Phrase",
+       "cell_labels": {
+        "6": "H336",
+        "8": "H373"
+       },
+       "mapping": {
+        "H336": 6,
+        "H373": 8
+       }
+      },
+      "score": 6,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "Acute Fish LC50 (mg/l)",
+      "input_value": 76.0,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "Acute Fish LC50 (mg/l)",
+       "cell_labels": {
+        "2": "100",
+        "4": "10",
+        "6": "1",
+        "8": "0.1",
+        "10": "<0.1"
+       },
+       "thresholds": [
+        [
+         100.0,
+         2
+        ],
+        [
+         10.0,
+         4
+        ],
+        [
+         1.0,
+         6
+        ],
+        [
+         0.1,
+         8
+        ],
+        [
+         0.1,
+         10
+        ]
+       ]
+      },
+      "score": 4,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Bioconcentration/ Bioaccumulation",
+      "unit": "Log Kow / Pow",
+      "input_value": {
+       "value": -0.24,
+       "predicted": false,
+       "source": "toxicity"
+      },
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "Log Kow / Pow",
+       "cell_labels": {
+        "2": "2",
+        "4": "4",
+        "6": "5",
+        "8": "6",
+        "10": ">6"
+       },
+       "thresholds": [
+        [
+         2.0,
+         2
+        ],
+        [
+         4.0,
+         4
+        ],
+        [
+         5.0,
+         6
+        ],
+        [
+         6.0,
+         8
+        ],
+        [
+         6.0,
+         10
+        ]
+       ]
+      },
+      "score": 2,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Vapor Pressure",
+      "unit": "mm Hg",
+      "input_value": 231.0,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "mm Hg",
+       "cell_labels": {
+        "2": "0.05",
+        "4": "1",
+        "6": "10",
+        "8": "200",
+        "10": ">200"
+       },
+       "thresholds": [
+        [
+         0.05,
+         2
+        ],
+        [
+         1.0,
+         4
+        ],
+        [
+         10.0,
+         6
+        ],
+        [
+         200.0,
+         8
+        ],
+        [
+         200.0,
+         10
+        ]
+       ]
+      },
+      "score": 10,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "NFPA/HMIS 0,1,2,3,4",
+      "input_value": 3,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "NFPA/HMIS 0,1,2,3,4",
+       "cell_labels": {
+        "2": "0",
+        "4": "1",
+        "6": "2",
+        "8": "3",
+        "10": "4"
+       },
+       "thresholds": [
+        [
+         0.0,
+         2
+        ],
+        [
+         1.0,
+         4
+        ],
+        [
+         2.0,
+         6
+        ],
+        [
+         3.0,
+         8
+        ],
+        [
+         4.0,
+         10
+        ]
+       ]
+      },
+      "score": 8,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "GHS H Phrase",
+      "input_value": [
+       "H225",
+       "H319",
+       "H336"
+      ],
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "ghs_h",
+       "unit": "GHS H Phrase",
+       "cell_labels": {
+        "4": "H227",
+        "6": "H226",
+        "8": "H225",
+        "10": "H224"
+       },
+       "mapping": {
+        "H227": 4,
+        "H226": 6,
+        "H225": 8,
+        "H224": 10
+       }
+      },
+      "score": 8,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "Flash Point deg C",
+      "input_value": -20.0,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "Flash Point deg C",
+       "cell_labels": {
+        "2": "93",
+        "4": "60",
+        "6": "45",
+        "8": "25",
+        "10": "10"
+       },
+       "thresholds": [
+        [
+         93.0,
+         2
+        ],
+        [
+         60.0,
+         4
+        ],
+        [
+         45.0,
+         6
+        ],
+        [
+         25.0,
+         8
+        ],
+        [
+         10.0,
+         10
+        ]
+       ]
+      },
+      "score": 10,
+      "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Heat",
+      "unit": "WBGT, deg C",
+      "input_value": -20.0,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "WBGT, deg C",
+       "cell_labels": {
+        "2": "25",
+        "4": "27",
+        "6": "30",
+        "8": "32",
+        "10": ">32"
+       },
+       "thresholds": [
+        [
+         25.0,
+         2
+        ],
+        [
+         27.0,
+         4
+        ],
+        [
+         30.0,
+         6
+        ],
+        [
+         32.0,
+         8
+        ],
+        [
+         32.0,
+         10
+        ]
+       ]
+      },
+      "score": 2,
+      "status": "Scored",
+      "predicted": false
+     }
+    ],
+    "missing": [
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Acute Human Effects",
+      "unit": "Acute Human Effects",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "LC50 ppm",
+      "status": "No data",
+      "reason": "no inhalation LC50 in ppm (or convertible mg/m\u00b3)"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "Vapor GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "mg/l gas/vapor",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "mg/l dust/mist/fume",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "Solid GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Respiratory Irritation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Respiratory Irritation",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Respiratory Irritation",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Irritation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Irritation",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Irritation",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Eye Irritation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Eye Irritation",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "PEL/TLV ppm",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "PEL/TLV (dusts) mg/m3",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "PEL/TLV (particles) mg/m3",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "Key phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "IDLH",
+      "unit": "ppm",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "IDLH",
+      "unit": "NIOSH Bands",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Chronic Human Effects",
+      "unit": "Chronic Human Effects",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "IARC Category",
+      "status": "No data",
+      "reason": "no IARC group for subject chemical"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "EPA CLASS Category",
+      "status": "No data",
+      "reason": "no EPA carcinogen class"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "ACGIH Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "OSHA Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "Prop 65 Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Mutagen/ Teratogen",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Mutagen/ Teratogen",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Mutagen/ Teratogen",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "Prop 65 Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "GHS Category - STOT - Single Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "GHS Category - STOT - Repeated Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "Asthmagen Type (AOEC Database)",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "ECHA Endocrine Disruptor Assessment List",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "EU Endocrine Disruptor List",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "ChemSec - SIN",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "TEDX",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS H-Phrase - Single Exposure",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS Category - STOT -Single Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS H-Phrase - Repeated Exposure",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS Category - STOT - Repeated Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Ecological Hazards",
+      "unit": "Ecological Hazards",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "Acute Algae (or other aquatic plant) EC50 (mg/l)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "GHS Category level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "NOEC (NOAEC) or ECx (mg/l)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "ChV mg/l",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Environmental Fate & Transport",
+      "unit": "Environmental Fate & Transport",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Water t1/2 Days",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Water Signal Words",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Air t1/2 Days",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Air Signal Words",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Soil/Sediment t1/2 Days",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Soil/Sediment Signal Words",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "28-day Study: % Breakdown Dissolved Organic Carbon",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "28-day Study: % Based on O2 or CO2",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "BOD Half-life (days)",
+      "status": "No data",
+      "reason": "no BOD half-life (OPERA BioDeg optional)"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "Hydrolysis Half-life (days)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Bioconcentration/ Bioaccumulation",
+      "unit": "BAF/BCF (l/kg)",
+      "status": "No data",
+      "reason": "no BAF/BCF (L/kg)"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Bioconcentration/ Bioaccumulation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Atmospheric Hazard",
+      "unit": "Greenhouse Gas",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Atmospheric Hazard",
+      "unit": "GWP Relative to CO2",
+      "status": "No data",
+      "reason": "no GWP100 (non-gas heuristic or ATMO/CSV lookup)"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Atmospheric Hazard",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "ODP Units",
+      "status": "No data",
+      "reason": "no ODP value"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "Ozone Classification",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Acid Rain Formation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Acid Rain Formation",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "NESHAP",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "NESHAP",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Physical Properties",
+      "unit": "Physical Properties",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "GHS Category level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Gas",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Gas",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Gas",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "NFPA/HMIS 0,1,2,3,4",
+      "status": "No data",
+      "reason": "no applicable evidence"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "pH",
+      "unit": "pH Units",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "pH",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Corrosivity to Materials",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Corrosivity to Materials",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Corrosivity to Materials",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no matching GHS H-codes for this subcategory"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Odor",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Volatile Organic Compound",
+      "unit": "g/l",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Volatile Organic Compound",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reportable Quantity",
+      "unit": "Pounds",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Process Factors",
+      "unit": "Work Environment Process Factors",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Heat",
+      "unit": "Hot work condition",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Heat",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Cold",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Noise Generation",
+      "unit": "dBA/hr",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Noise Generation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 1 Small Machine (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 2 Medium Machine (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 3 Large Rigid Foundation (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 4 Large Soft Foundation (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Ergonomic Hazard",
+      "unit": "Occurence",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Ergonomic Hazard",
+      "unit": "Hazard Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Overload and Pace: Work Load",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Overload and Pace: Machine Pacing",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Overload and Pace: Time Constraints",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Schedule: Shift Work",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Schedule: Work Isolation",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Control",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Environment & Equipment: Equipment Stability",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Environment & Equipment: Work Space",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Pressure System",
+      "unit": "Pressure (Delta % Change From Ambient)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Pressure System",
+      "unit": "GHS Phrase",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Pressure System",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Temperature System",
+      "unit": "Temperature (Delta % Change From Ambient)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Temperature System",
+      "unit": "GHS Phrase",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Temperature System",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Water Use",
+      "unit": "% Water Change",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Water Use",
+      "unit": "Reuse",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Energy Use",
+      "unit": "% Energy Change",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Energy Use",
+      "unit": "% Renewable Energy",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Near Certain",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Highly Likely",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Likely",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Unlikely",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Remote",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Life Cycle Factors",
+      "unit": "Life Cycle Factors",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Upstream Effects",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Consumer Hazard",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Disposal Hazard (landfill, incineration)",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Recycling",
+      "unit": "% Recyclable at End of Life",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Recycling",
+      "unit": "Uses Products With % Recycled Material",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Renewable to Nonrenewable Resource",
+      "unit": "% Renewable Materials",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Renewable to Nonrenewable Resource",
+      "unit": "Key Words",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     }
+    ],
+    "category_status": {
+     "Acute Human Effects": "Scored",
+     "Chronic Human Effects": "Scored",
+     "Ecological Hazards": "Scored",
+     "Environmental Fate & Transport": "Scored",
+     "Atmospheric Hazard": "No data",
+     "Physical Properties": "Scored",
+     "Process Factors": "Scored",
+     "Life Cycle Factors": "No data"
+    }
+   }
+  },
+  "rejections_demo": {
+   "hazard_data": {
+    "toxicities": [
+     {
+      "value": "LD50 Rat intravenous 50 mg/kg"
+     },
+     {
+      "value": "NOAEL rat oral 10 mg/kg/day"
+     },
+     {
+      "value": "LD50 Mouse intraperitoneal 3,900 mg/kg"
+     },
+     {
+      "value": "Not listed by IARC. Certain nitrosamines are IARC Groups 2A and 2B."
+     },
+     {
+      "value": "LC50 Rat inhalation 200 mg/m3"
+     }
+    ],
+    "ghs": {
+     "h_codes": []
+    },
+    "hazard_metrics": {}
+   },
+   "scores": {
+    "Acute Human Effects": {
+     "Oral Toxicity": {
+      "LD50 mg/kg": 4,
+      "_max": 4.0
+     },
+     "_category_max": 4.0
+    },
+    "Chronic Human Effects": {},
+    "Ecological Hazards": {},
+    "Environmental Fate & Transport": {},
+    "Atmospheric Hazard": {},
+    "Physical Properties": {},
+    "Process Factors": {},
+    "Life Cycle Factors": {}
+   },
+   "trace": {
+    "scorer_version": "p2oasys_scorer_v6.9_ecosar_gapfill",
+    "evidence": {
+     "oral_ld50": {
+      "value": 3900.0,
+      "qualifier": null,
+      "raw": "3,900",
+      "route": "oral",
+      "unit": "mg/kg",
+      "predicted": false
+     },
+     "dermal_ld50": null,
+     "inhalation_lc50": null,
+     "aquatic_lc50": null,
+     "flash_point_c": null,
+     "vapor_pressure_mmhg": null,
+     "nfpa_health": null,
+     "nfpa_fire": null,
+     "iarc": null,
+     "epa_carcinogen": null,
+     "gwp100": null,
+     "odp": null,
+     "log_kow": null,
+     "bcf_l_kg": null,
+     "biodeg_half_life_days": null,
+     "molecular_weight": null,
+     "ph_estimate": null,
+     "ph_heuristic": null
+    },
+    "rejected": [
+     {
+      "endpoint": "oral LD50",
+      "value": "LD50 Rat intravenous 50 mg/kg",
+      "reason": "route is not oral"
+     },
+     {
+      "endpoint": "dermal LD50",
+      "value": "LD50 Rat intravenous 50 mg/kg",
+      "reason": "dermal route not confirmed"
+     },
+     {
+      "endpoint": "dermal LD50",
+      "value": "LD50 Mouse intraperitoneal 3,900 mg/kg",
+      "reason": "dermal route not confirmed"
+     },
+     {
+      "endpoint": "inhalation LC50",
+      "value": "LC50 Rat inhalation 200 mg/m3",
+      "reason": "mg/m\u00b3 not converted to ppm (needs molecular weight); not scored"
+     },
+     {
+      "endpoint": "IARC",
+      "value": "Not listed by IARC.",
+      "reason": "explicitly not listed/classified"
+     },
+     {
+      "endpoint": "IARC",
+      "value": "Certain nitrosamines are IARC Groups 2A and 2B.",
+      "reason": "group attributed to another substance"
+     }
+    ],
+    "scored": [
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "LD50 mg/kg",
+      "input_value": 3900.0,
+      "qualifier": null,
+      "matrix_rule": {
+       "type": "numeric",
+       "unit": "LD50 mg/kg",
+       "cell_labels": {
+        "2": "5000",
+        "4": "2000",
+        "6": "300",
+        "8": "50",
+        "10": "5"
+       },
+       "thresholds": [
+        [
+         5000.0,
+         2
+        ],
+        [
+         2000.0,
+         4
+        ],
+        [
+         300.0,
+         6
+        ],
+        [
+         50.0,
+         8
+        ],
+        [
+         5.0,
+         10
+        ]
+       ]
+      },
+      "score": 4,
+      "status": "Scored",
+      "predicted": false
+     }
+    ],
+    "missing": [
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Acute Human Effects",
+      "unit": "Acute Human Effects",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "LC50 ppm",
+      "status": "No data",
+      "reason": "no inhalation LC50 in ppm (or convertible mg/m\u00b3)"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "Vapor GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "mg/l gas/vapor",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "mg/l dust/mist/fume",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "Solid GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "LD50 mg/kg",
+      "status": "No data",
+      "reason": "no dermal LD50 (oral fallback disabled)"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Respiratory Irritation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Respiratory Irritation",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Respiratory Irritation",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Irritation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Irritation",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Irritation",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Eye Irritation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Eye Irritation",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Eye Irritation",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "PEL/TLV ppm",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "PEL/TLV (dusts) mg/m3",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "PEL/TLV (particles) mg/m3",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "Key phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "IDLH",
+      "unit": "ppm",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "IDLH",
+      "unit": "NIOSH Bands",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Health",
+      "unit": "NFPA/HMIS 0,1,2,3,4",
+      "status": "No data",
+      "reason": "no NFPA health rating"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Chronic Human Effects",
+      "unit": "Chronic Human Effects",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "IARC Category",
+      "status": "No data",
+      "reason": "no IARC group for subject chemical"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "EPA CLASS Category",
+      "status": "No data",
+      "reason": "no EPA carcinogen class"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "ACGIH Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "OSHA Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "Prop 65 Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Mutagen/ Teratogen",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Mutagen/ Teratogen",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Mutagen/ Teratogen",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "Prop 65 Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "GHS Category - STOT - Single Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "GHS Category - STOT - Repeated Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "Asthmagen Type (AOEC Database)",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "ECHA Endocrine Disruptor Assessment List",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "EU Endocrine Disruptor List",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "ChemSec - SIN",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "TEDX",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS H-Phrase - Single Exposure",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS Category - STOT -Single Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS H-Phrase - Repeated Exposure",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS Category - STOT - Repeated Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Ecological Hazards",
+      "unit": "Ecological Hazards",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "Acute Fish LC50 (mg/l)",
+      "status": "No data",
+      "reason": "no aquatic LC50/EC50"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "Acute Algae (or other aquatic plant) EC50 (mg/l)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "GHS Category level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "NOEC (NOAEC) or ECx (mg/l)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "ChV mg/l",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Environmental Fate & Transport",
+      "unit": "Environmental Fate & Transport",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Water t1/2 Days",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Water Signal Words",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Air t1/2 Days",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Air Signal Words",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Soil/Sediment t1/2 Days",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Soil/Sediment Signal Words",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "28-day Study: % Breakdown Dissolved Organic Carbon",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "28-day Study: % Based on O2 or CO2",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "BOD Half-life (days)",
+      "status": "No data",
+      "reason": "no BOD half-life (OPERA BioDeg optional)"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "Hydrolysis Half-life (days)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Bioconcentration/ Bioaccumulation",
+      "unit": "Log Kow / Pow",
+      "status": "No data",
+      "reason": "no log Kow / Pow"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Bioconcentration/ Bioaccumulation",
+      "unit": "BAF/BCF (l/kg)",
+      "status": "No data",
+      "reason": "no BAF/BCF (L/kg)"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Bioconcentration/ Bioaccumulation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Atmospheric Hazard",
+      "unit": "Greenhouse Gas",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Atmospheric Hazard",
+      "unit": "GWP Relative to CO2",
+      "status": "No data",
+      "reason": "no GWP100 (non-gas heuristic or ATMO/CSV lookup)"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Atmospheric Hazard",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "ODP Units",
+      "status": "No data",
+      "reason": "no ODP value"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "Ozone Classification",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Acid Rain Formation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Acid Rain Formation",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "NESHAP",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "NESHAP",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Physical Properties",
+      "unit": "Physical Properties",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Vapor Pressure",
+      "unit": "mm Hg",
+      "status": "No data",
+      "reason": "no vapor pressure"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "NFPA/HMIS 0,1,2,3,4",
+      "status": "No data",
+      "reason": "no NFPA fire rating"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "GHS Category level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "Flash Point deg C",
+      "status": "No data",
+      "reason": "no flash point"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Gas",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Gas",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Gas",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "NFPA/HMIS 0,1,2,3,4",
+      "status": "No data",
+      "reason": "no applicable evidence"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "pH",
+      "unit": "pH Units",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "pH",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Corrosivity to Materials",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Corrosivity to Materials",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Corrosivity to Materials",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Odor",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Volatile Organic Compound",
+      "unit": "g/l",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Volatile Organic Compound",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reportable Quantity",
+      "unit": "Pounds",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Process Factors",
+      "unit": "Work Environment Process Factors",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Heat",
+      "unit": "WBGT, deg C",
+      "status": "No data",
+      "reason": "no flash point"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Heat",
+      "unit": "Hot work condition",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Heat",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Cold",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Noise Generation",
+      "unit": "dBA/hr",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Noise Generation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 1 Small Machine (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 2 Medium Machine (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 3 Large Rigid Foundation (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 4 Large Soft Foundation (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Ergonomic Hazard",
+      "unit": "Occurence",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Ergonomic Hazard",
+      "unit": "Hazard Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Overload and Pace: Work Load",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Overload and Pace: Machine Pacing",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Overload and Pace: Time Constraints",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Schedule: Shift Work",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Schedule: Work Isolation",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Control",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Environment & Equipment: Equipment Stability",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Environment & Equipment: Work Space",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Pressure System",
+      "unit": "Pressure (Delta % Change From Ambient)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Pressure System",
+      "unit": "GHS Phrase",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Pressure System",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Temperature System",
+      "unit": "Temperature (Delta % Change From Ambient)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Temperature System",
+      "unit": "GHS Phrase",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Temperature System",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Water Use",
+      "unit": "% Water Change",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Water Use",
+      "unit": "Reuse",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Energy Use",
+      "unit": "% Energy Change",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Energy Use",
+      "unit": "% Renewable Energy",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Near Certain",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Highly Likely",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Likely",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Unlikely",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Remote",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Life Cycle Factors",
+      "unit": "Life Cycle Factors",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Upstream Effects",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Consumer Hazard",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Disposal Hazard (landfill, incineration)",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Recycling",
+      "unit": "% Recyclable at End of Life",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Recycling",
+      "unit": "Uses Products With % Recycled Material",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Renewable to Nonrenewable Resource",
+      "unit": "% Renewable Materials",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Renewable to Nonrenewable Resource",
+      "unit": "Key Words",
+      "status": "No data",
+      "reason": "no matching key phrase"
+     }
+    ],
+    "category_status": {
+     "Acute Human Effects": "Scored",
+     "Chronic Human Effects": "No data",
+     "Ecological Hazards": "No data",
+     "Environmental Fate & Transport": "No data",
+     "Atmospheric Hazard": "No data",
+     "Physical Properties": "No data",
+     "Process Factors": "No data",
+     "Life Cycle Factors": "No data"
+    }
+   }
+  },
+  "empty": {
+   "hazard_data": {
+    "toxicities": [],
+    "ghs": {
+     "h_codes": []
+    },
+    "hazard_metrics": {}
+   },
+   "scores": {
+    "Acute Human Effects": {},
+    "Chronic Human Effects": {},
+    "Ecological Hazards": {},
+    "Environmental Fate & Transport": {},
+    "Atmospheric Hazard": {},
+    "Physical Properties": {},
+    "Process Factors": {},
+    "Life Cycle Factors": {}
+   },
+   "trace": {
+    "scorer_version": "p2oasys_scorer_v6.9_ecosar_gapfill",
+    "evidence": {
+     "oral_ld50": null,
+     "dermal_ld50": null,
+     "inhalation_lc50": null,
+     "aquatic_lc50": null,
+     "flash_point_c": null,
+     "vapor_pressure_mmhg": null,
+     "nfpa_health": null,
+     "nfpa_fire": null,
+     "iarc": null,
+     "epa_carcinogen": null,
+     "gwp100": null,
+     "odp": null,
+     "log_kow": null,
+     "bcf_l_kg": null,
+     "biodeg_half_life_days": null,
+     "molecular_weight": null,
+     "ph_estimate": null,
+     "ph_heuristic": null
+    },
+    "rejected": [],
+    "scored": [],
+    "missing": [
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Acute Human Effects",
+      "unit": "Acute Human Effects",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "LC50 ppm",
+      "status": "No data",
+      "reason": "no inhalation LC50 in ppm (or convertible mg/m\u00b3)"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "Vapor GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "mg/l gas/vapor",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "mg/l dust/mist/fume",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "Solid GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Inhalation Toxicity",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "LD50 mg/kg",
+      "status": "No data",
+      "reason": "no oral LD50 with confirmed oral route"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Oral Toxicity",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "LD50 mg/kg",
+      "status": "No data",
+      "reason": "no dermal LD50 (oral fallback disabled)"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Toxicity",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Respiratory Irritation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Respiratory Irritation",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Respiratory Irritation",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Irritation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Irritation",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Dermal Irritation",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Eye Irritation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Eye Irritation",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Eye Irritation",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "PEL/TLV ppm",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "PEL/TLV (dusts) mg/m3",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "PEL/TLV (particles) mg/m3",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Exposure Limits",
+      "unit": "Key phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "IDLH",
+      "unit": "ppm",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "IDLH",
+      "unit": "NIOSH Bands",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Acute Human Effects",
+      "subcategory": "Health",
+      "unit": "NFPA/HMIS 0,1,2,3,4",
+      "status": "No data",
+      "reason": "no NFPA health rating"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Chronic Human Effects",
+      "unit": "Chronic Human Effects",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "IARC Category",
+      "status": "No data",
+      "reason": "no IARC group for subject chemical"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "EPA CLASS Category",
+      "status": "No data",
+      "reason": "no EPA carcinogen class"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "ACGIH Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "OSHA Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "Prop 65 Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Mutagen/ Teratogen",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Mutagen/ Teratogen",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Mutagen/ Teratogen",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "Prop 65 Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "GHS Category - STOT - Single Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "GHS Category - STOT - Repeated Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Neurotoxicity",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "Asthmagen Type (AOEC Database)",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Respiratory Sensitivity/ Disease",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "ECHA Endocrine Disruptor Assessment List",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "EU Endocrine Disruptor List",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "ChemSec - SIN",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "TEDX",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Endocrine System Effects",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS H-Phrase - Single Exposure",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS Category - STOT -Single Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS H-Phrase - Repeated Exposure",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Other Chronic Organ Effects",
+      "unit": "GHS Category - STOT - Repeated Exposure",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Ecological Hazards",
+      "unit": "Ecological Hazards",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "Acute Fish LC50 (mg/l)",
+      "status": "No data",
+      "reason": "no aquatic LC50/EC50"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "Acute Algae (or other aquatic plant) EC50 (mg/l)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Acute Aquatic Toxicity",
+      "unit": "GHS Category level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "NOEC (NOAEC) or ECx (mg/l)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "ChV mg/l",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "GHS H Phrases",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Ecological Hazards",
+      "subcategory": "Chronic Aquatic Toxicity (fish, crustacea or algae)",
+      "unit": "GHS Category",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Environmental Fate & Transport",
+      "unit": "Environmental Fate & Transport",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Water t1/2 Days",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Water Signal Words",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Air t1/2 Days",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Air Signal Words",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Soil/Sediment t1/2 Days",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Soil/Sediment Signal Words",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Persistence",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "28-day Study: % Breakdown Dissolved Organic Carbon",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "28-day Study: % Based on O2 or CO2",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "BOD Half-life (days)",
+      "status": "No data",
+      "reason": "no BOD half-life (OPERA BioDeg optional)"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "Hydrolysis Half-life (days)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Rapid Degradability",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Bioconcentration/ Bioaccumulation",
+      "unit": "Log Kow / Pow",
+      "status": "No data",
+      "reason": "no log Kow / Pow"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Bioconcentration/ Bioaccumulation",
+      "unit": "BAF/BCF (l/kg)",
+      "status": "No data",
+      "reason": "no BAF/BCF (L/kg)"
+     },
+     {
+      "category": "Environmental Fate & Transport",
+      "subcategory": "Bioconcentration/ Bioaccumulation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Atmospheric Hazard",
+      "unit": "Greenhouse Gas",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Atmospheric Hazard",
+      "unit": "GWP Relative to CO2",
+      "status": "No data",
+      "reason": "no GWP100 (non-gas heuristic or ATMO/CSV lookup)"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Atmospheric Hazard",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "ODP Units",
+      "status": "No data",
+      "reason": "no ODP value"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "Ozone Classification",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Ozone Depletor",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Acid Rain Formation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "Acid Rain Formation",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "NESHAP",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Atmospheric Hazard",
+      "subcategory": "NESHAP",
+      "unit": "Y/N",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Physical Properties",
+      "unit": "Physical Properties",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Vapor Pressure",
+      "unit": "mm Hg",
+      "status": "No data",
+      "reason": "no vapor pressure"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "NFPA/HMIS 0,1,2,3,4",
+      "status": "No data",
+      "reason": "no NFPA fire rating"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "GHS Category level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "Flash Point deg C",
+      "status": "No data",
+      "reason": "no flash point"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Liquid",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Gas",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Gas",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Flammability: Gas",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "NFPA/HMIS 0,1,2,3,4",
+      "status": "No data",
+      "reason": "no applicable evidence"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reactivity",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "pH",
+      "unit": "pH Units",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "pH",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Corrosivity to Materials",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Corrosivity to Materials",
+      "unit": "GHS Category Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Corrosivity to Materials",
+      "unit": "GHS H Phrase",
+      "status": "No data",
+      "reason": "no GHS H-codes"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Odor",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Volatile Organic Compound",
+      "unit": "g/l",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Volatile Organic Compound",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Physical Properties",
+      "subcategory": "Reportable Quantity",
+      "unit": "Pounds",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Process Factors",
+      "unit": "Work Environment Process Factors",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Heat",
+      "unit": "WBGT, deg C",
+      "status": "No data",
+      "reason": "no flash point"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Heat",
+      "unit": "Hot work condition",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Heat",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Cold",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Noise Generation",
+      "unit": "dBA/hr",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Noise Generation",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 1 Small Machine (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 2 Medium Machine (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 3 Large Rigid Foundation (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Vibration",
+      "unit": "Class 4 Large Soft Foundation (mm/s)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Ergonomic Hazard",
+      "unit": "Occurence",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Ergonomic Hazard",
+      "unit": "Hazard Level",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Overload and Pace: Work Load",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Overload and Pace: Machine Pacing",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Overload and Pace: Time Constraints",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Schedule: Shift Work",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Schedule: Work Isolation",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Control",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Environment & Equipment: Equipment Stability",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Psychosocial Hazard",
+      "unit": "Work Environment & Equipment: Work Space",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Pressure System",
+      "unit": "Pressure (Delta % Change From Ambient)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Pressure System",
+      "unit": "GHS Phrase",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Pressure System",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Temperature System",
+      "unit": "Temperature (Delta % Change From Ambient)",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Temperature System",
+      "unit": "GHS Phrase",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "High/Low Temperature System",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Water Use",
+      "unit": "% Water Change",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Water Use",
+      "unit": "Reuse",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Energy Use",
+      "unit": "% Energy Change",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Energy Use",
+      "unit": "% Renewable Energy",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Near Certain",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Highly Likely",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Likely",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Unlikely",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Process Factors",
+      "subcategory": "Exposure Potential",
+      "unit": "Occurence: Remote",
+      "status": "No data",
+      "reason": "text unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Life Cycle Factors",
+      "unit": "Life Cycle Factors",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Upstream Effects",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Consumer Hazard",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Disposal Hazard (landfill, incineration)",
+      "unit": "Key Phrases",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Recycling",
+      "unit": "% Recyclable at End of Life",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Recycling",
+      "unit": "Uses Products With % Recycled Material",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Renewable to Nonrenewable Resource",
+      "unit": "% Renewable Materials",
+      "status": "No data",
+      "reason": "numeric unit not mapped to an extractor"
+     },
+     {
+      "category": "Life Cycle Factors",
+      "subcategory": "Renewable to Nonrenewable Resource",
+      "unit": "Key Words",
+      "status": "No data",
+      "reason": "no phrase corpus"
+     }
+    ],
+    "category_status": {
+     "Acute Human Effects": "No data",
+     "Chronic Human Effects": "No data",
+     "Ecological Hazards": "No data",
+     "Environmental Fate & Transport": "No data",
+     "Atmospheric Hazard": "No data",
+     "Physical Properties": "No data",
+     "Process Factors": "No data",
+     "Life Cycle Factors": "No data"
+    }
+   }
+  }
+ }
+}
