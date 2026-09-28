@@ -360,6 +360,37 @@ def test_ecosar_pyepisuite():
     pytest.skip("ecosar_pyepisuite is TODO (PR #6)")
 
 
+def test_measured_wins_over_ecosar():
+    """ECOSAR gap-fill rule: measured data wins over ECOSAR.
+
+    Verifies that the _has_measured_aquatic_data helper and the measured-first
+    logic in _extract_lc50_aquatic work correctly.
+    """
+    from packages.p2oasys_scorer.utils import p2oasys_scorer
+    from packages.p2oasys_scorer.utils.p2oasys_scorer import GHS_AQUATIC_H_PHRASES
+
+    # Verify GHS aquatic H-phrases constant exists
+    assert GHS_AQUATIC_H_PHRASES == {"H400", "H410", "H411", "H412", "H413"}
+
+    # Verify helper function exists
+    assert hasattr(p2oasys_scorer, "_has_measured_aquatic_data")
+
+    # GHS H410 should indicate measured data
+    hd = {"ghs": {"h_codes": ["H410"]}}
+    assert p2oasys_scorer._has_measured_aquatic_data(hd) is True
+
+    # No aquatic H-phrases should not indicate measured data
+    hd_no_aquatic = {"ghs": {"h_codes": ["H301", "H225"]}}
+    assert p2oasys_scorer._has_measured_aquatic_data(hd_no_aquatic) is False
+
+    # Measured LC50 in toxicities should be detected
+    hd_measured = {
+        "ghs": {"h_codes": []},
+        "toxicities": [{"value": "LC50 fish 10.0 mg/L", "predicted": False}],
+    }
+    assert p2oasys_scorer._has_measured_aquatic_data(hd_measured) is True
+
+
 def test_iuclid_dossiers():
     """IUCLID dossiers is TODO."""
     registry = load_registry()

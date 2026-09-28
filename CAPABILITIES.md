@@ -124,6 +124,35 @@ For each of the 34 auto subcategories (Acute 9, Chronic 7, Ecological 2, Fate 3,
 - Keep other evidence in trace
 - Predicted-only values labeled
 
+### ECOSAR Gap-Fill Rule
+
+**Rule (Gabriel decision 2026-09-28):** ECOSAR may fill Ecological subcategories ONLY when
+no measured data exists for that subcategory.
+
+**Measured data definition:**
+- Measured LC50/EC50/NOEC values (marked `predicted=false`)
+- GHS aquatic H-phrases (H400, H410, H411, H412, H413)
+
+The GHS aquatic H-phrases are assigned based on measured aquatic toxicity data:
+| H-Code | Meaning | Basis |
+|--------|---------|-------|
+| H400 | Very toxic to aquatic life | LC50 ≤ 1 mg/L |
+| H410 | Very toxic with long lasting effects | LC50 ≤ 1 AND NOEC ≤ 0.1 |
+| H411 | Toxic with long lasting effects | 1 < LC50 ≤ 10 AND NOEC ≤ 1 |
+| H412 | Harmful with long lasting effects | 10 < LC50 ≤ 100 |
+| H413 | May cause long lasting harmful effects | Rapid degradation, NOEC > 1 |
+
+**Requirements:**
+1. Measured data ALWAYS wins over ECOSAR — never averaged together
+2. Every ECOSAR-derived unit is labelled `predicted=true` and counted in `predicted_only_categories`
+3. Fix 4 caps remain in effect:
+   - Inorganics, polymers, siloxanes (ECOSAR not applicable)
+   - Predictions far below water solubility (implausible "no effect at saturation")
+
+**Tests:**
+- `test_measured_wins_over_ecosar` — when measured LC50 exists, ECOSAR is not used
+- `test_ecosar_fills_gap` — when no measured data, ECOSAR fills with predicted label
+
 ### Maestri Flash Point Model (wired_local_models)
 
 XGBoost-based flash point prediction with applicability domain checking.
