@@ -118,7 +118,13 @@
       "_predicted": false
      },
      "_category_max": 10.0,
-     "_category_predicted": false
+     "_category_predicted": false,
+     "Reproductive/ Developmental": {
+      "_max": 4.0,
+      "_predicted": false,
+      "_default": true,
+      "_default_reason": "no classification found in hazard data"
+     }
     },
     "Ecological Hazards": {
      "Acute Aquatic Toxicity": {
@@ -242,7 +248,10 @@
      "biodeg_half_life_days": null,
      "molecular_weight": 78.11,
      "ph_estimate": null,
-     "ph_heuristic": null
+     "ph_heuristic": null,
+     "smiles": null,
+     "has_s_or_n": false,
+     "is_neshap_hap": false
     },
     "rejected": [
      {
@@ -977,6 +986,20 @@
       },
       "score": 10,
       "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "default",
+      "input_value": null,
+      "qualifier": "default_no_classification",
+      "matrix_rule": {
+       "type": "default",
+       "default_score": 4
+      },
+      "score": 4,
+      "status": "Default (no classification)",
       "predicted": false
      }
     ],
@@ -2062,7 +2085,8 @@
      "auto6_count": 6,
      "categories_at_8_or_above": 3,
      "measured_categories_at_8_or_above": 3
-    }
+    },
+    "subcats_default": 1
    }
   },
   "acetone_like": {
@@ -2134,7 +2158,25 @@
       "_predicted": false
      },
      "_category_max": 6.0,
-     "_category_predicted": false
+     "_category_predicted": false,
+     "Carcinogen": {
+      "_max": 2.0,
+      "_predicted": false,
+      "_default": true,
+      "_default_reason": "no classification found in hazard data"
+     },
+     "Mutagen/ Teratogen": {
+      "_max": 4.0,
+      "_predicted": false,
+      "_default": true,
+      "_default_reason": "no classification found in hazard data"
+     },
+     "Reproductive/ Developmental": {
+      "_max": 4.0,
+      "_predicted": false,
+      "_default": true,
+      "_default_reason": "no classification found in hazard data"
+     }
     },
     "Ecological Hazards": {
      "Acute Aquatic Toxicity": {
@@ -2234,7 +2276,10 @@
      "biodeg_half_life_days": null,
      "molecular_weight": 58.08,
      "ph_estimate": null,
-     "ph_heuristic": null
+     "ph_heuristic": null,
+     "smiles": null,
+     "has_s_or_n": false,
+     "is_neshap_hap": false
     },
     "rejected": [
      {
@@ -2680,6 +2725,48 @@
       },
       "score": 10,
       "status": "Scored",
+      "predicted": false
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "default",
+      "input_value": null,
+      "qualifier": "default_no_classification",
+      "matrix_rule": {
+       "type": "default",
+       "default_score": 2
+      },
+      "score": 2,
+      "status": "Default (no classification)",
+      "predicted": false
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Mutagen/ Teratogen",
+      "unit": "default",
+      "input_value": null,
+      "qualifier": "default_no_classification",
+      "matrix_rule": {
+       "type": "default",
+       "default_score": 4
+      },
+      "score": 4,
+      "status": "Default (no classification)",
+      "predicted": false
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "default",
+      "input_value": null,
+      "qualifier": "default_no_classification",
+      "matrix_rule": {
+       "type": "default",
+       "default_score": 4
+      },
+      "score": 4,
+      "status": "Default (no classification)",
       "predicted": false
      }
     ],
@@ -3821,7 +3908,8 @@
      "auto6_count": 5,
      "categories_at_8_or_above": 2,
      "measured_categories_at_8_or_above": 2
-    }
+    },
+    "subcats_default": 3
    }
   },
   "rejections_demo": {
@@ -3850,7 +3938,28 @@
    },
    "scores": {
     "Acute Human Effects": {},
-    "Chronic Human Effects": {},
+    "Chronic Human Effects": {
+     "Carcinogen": {
+      "_max": 2.0,
+      "_predicted": false,
+      "_default": true,
+      "_default_reason": "no classification found in hazard data"
+     },
+     "Mutagen/ Teratogen": {
+      "_max": 4.0,
+      "_predicted": false,
+      "_default": true,
+      "_default_reason": "no classification found in hazard data"
+     },
+     "Reproductive/ Developmental": {
+      "_max": 4.0,
+      "_predicted": false,
+      "_default": true,
+      "_default_reason": "no classification found in hazard data"
+     },
+     "_category_max": 4.0,
+     "_category_predicted": false
+    },
     "Ecological Hazards": {},
     "Environmental Fate & Transport": {},
     "Atmospheric Hazard": {},
@@ -3858,9 +3967,9 @@
     "Process Factors": {},
     "Life Cycle Factors": {},
     "_overall": {
-     "score": null,
+     "score": 4.0,
      "predicted": false,
-     "auto6_count": 0,
+     "auto6_count": 1,
      "categories_at_8_or_above": 0,
      "measured_categories_at_8_or_above": 0
     }
@@ -3887,7 +3996,10 @@
      "biodeg_half_life_days": null,
      "molecular_weight": null,
      "ph_estimate": null,
-     "ph_heuristic": null
+     "ph_heuristic": null,
+     "smiles": null,
+     "has_s_or_n": false,
+     "is_neshap_hap": false
     },
     "rejected": [
      {
@@ -3926,7 +4038,50 @@
       "reason": "group attributed to another substance"
      }
     ],
-    "scored": [],
+    "scored": [
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Carcinogen",
+      "unit": "default",
+      "input_value": null,
+      "qualifier": "default_no_classification",
+      "matrix_rule": {
+       "type": "default",
+       "default_score": 2
+      },
+      "score": 2,
+      "status": "Default (no classification)",
+      "predicted": false
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Mutagen/ Teratogen",
+      "unit": "default",
+      "input_value": null,
+      "qualifier": "default_no_classification",
+      "matrix_rule": {
+       "type": "default",
+       "default_score": 4
+      },
+      "score": 4,
+      "status": "Default (no classification)",
+      "predicted": false
+     },
+     {
+      "category": "Chronic Human Effects",
+      "subcategory": "Reproductive/ Developmental",
+      "unit": "default",
+      "input_value": null,
+      "qualifier": "default_no_classification",
+      "matrix_rule": {
+       "type": "default",
+       "default_score": 4
+      },
+      "score": 4,
+      "status": "Default (no classification)",
+      "predicted": false
+     }
+    ],
     "missing": [
      {
       "category": "Acute Human Effects",
@@ -5128,7 +5283,7 @@
     ],
     "category_status": {
      "Acute Human Effects": "No data",
-     "Chronic Human Effects": "No data",
+     "Chronic Human Effects": "Scored",
      "Ecological Hazards": "No data",
      "Environmental Fate & Transport": "No data",
      "Atmospheric Hazard": "No data",
@@ -5137,12 +5292,13 @@
      "Life Cycle Factors": "No data"
     },
     "overall": {
-     "score": null,
+     "score": 4.0,
      "predicted": false,
-     "auto6_count": 0,
+     "auto6_count": 1,
      "categories_at_8_or_above": 0,
      "measured_categories_at_8_or_above": 0
-    }
+    },
+    "subcats_default": 3
    }
   },
   "empty": {
@@ -5192,7 +5348,10 @@
      "biodeg_half_life_days": null,
      "molecular_weight": null,
      "ph_estimate": null,
-     "ph_heuristic": null
+     "ph_heuristic": null,
+     "smiles": null,
+     "has_s_or_n": false,
+     "is_neshap_hap": false
     },
     "rejected": [],
     "scored": [],
@@ -6411,7 +6570,8 @@
      "auto6_count": 0,
      "categories_at_8_or_above": 0,
      "measured_categories_at_8_or_above": 0
-    }
+    },
+    "subcats_default": 0
    }
   }
  }
