@@ -4,13 +4,15 @@ P2OASys Hazard Score Calculator (Quick Hazard Assessment app).
 Maps hazard data to P2OASys scores using the TURI Hazard Matrix Excel file.
 Used by the P2OASys scoring tab. https://p2oasys.turi.org/chemical/hazard-score-matrix
 
-**Site-style aggregation (TURI methodology):**
-Matrix **units** (sub-subcategories) are scored on the **2–10** band. Within each
-**subcategory**, the score is the **mean of the two highest** unit scores (or the
-single score if only one unit is scored). The **category** score stored under
-``_category_max`` is likewise the **mean of the two highest** subcategory scores.
-Overall evaluation (DoSS / site) is the **mean of Auto6 category scores**
-(Process / Life Cycle excluded from that mean).
+**Expert-style aggregation (v7.0, aligned with expert1228 offline comparison):**
+Matrix **units** (sub-subcategories) are scored on the **2/4/6/8/10** band only.
+Within each **subcategory**, the score is the **MAX** (highest) unit score.
+The **category** score stored under ``_category_max`` is the **MAX** of subcategory scores.
+Overall evaluation is the **MAX of Auto6 category scores**
+(Process / Life Cycle excluded from that calculation).
+
+**ECOSAR gap-fill rule:** ECOSAR predictions fill Ecological subcategories ONLY
+when no measured data (LC50/EC50/NOEC or GHS H400-H413) exists. Measured always wins.
 """
 
 import hashlib
@@ -44,7 +46,8 @@ SCORE_COLS = [2, 4, 6, 8, 10]  # P2OASys score levels
 # v6 hardening: bump when scoring semantics change so audit traces are comparable.
 # v6.7: Flash point threshold direction fix, ECOSAR solubility bounds, predicted flag propagation
 # v6.8: Range threshold parsing (upper bound), NFPA Reactivity, ChV scoring, measured priority
-SCORER_VERSION = "p2oasys_scorer_v6.8_bug_fixes"
+# v7.0: Expert1228 alignment - MAX aggregation, ECOSAR gap-fill rules, band corrections
+SCORER_VERSION = "p2oasys_scorer_v7.0_expert_alignment"
 
 # Ideal-gas factor for mg/m³ → ppm at 25 °C, 1 atm (TURI / EPA convention).
 _MGM3_TO_PPM_FACTOR = 24.45
@@ -597,6 +600,67 @@ def _score_text(rule: dict, text: str) -> Optional[int]:
         if k.lower() in text_lower or text_lower in k.lower():
             return v
     return None
+
+
+def _smiles_contains_s_or_n(smiles: Optional[str]) -> bool:
+    """Check if SMILES contains sulfur (S) or nitrogen (N) atoms.
+    
+    Used for Acid Rain Formation scoring (Fix 7, expert1228):
+    If S or N present → minimum score 8 (may form SOx/NOx).
+    """
+    if not smiles:
+        return False
+    s = str(smiles).upper()
+    # Check for S not followed by i/e (to exclude Si, Se)
+    # Check for N not followed by a/i (to exclude Na, Ni) and not in aromatic ring notation
+    # Simple heuristic: look for standalone S or N
+    has_sulfur = bool(re.search(r'(?<![A-Z])S(?![ie])', s))
+    has_nitrogen = bool(re.search(r'(?<![A-Z])N(?![ai])', s))
+    return has_sulfur or has_nitrogen
+
+
+def _is_neshap_listed_hap(hazard_data: dict) -> bool:
+    """Check if chemical is a NESHAP Listed Hazardous Air Pollutant.
+    
+    Used for NESHAP scoring (Fix 7, expert1228):
+    If listed → score 10.
+    
+    Checks toxicities and hazard_metrics for HAP/NESHAP mentions.
+    Only positive listings count - "not listed" / "not considered" are excluded.
+    """
+    # Negation patterns that indicate NOT listed as HAP
+    negation_patterns = (
+        "not listed", "not considered", "not a ", "unlisted",
+        "not classified", "not designated", "not identified",
+    )
+
+    def _is_positive_hap_mention(text: str) -> bool:
+        """Check if text positively lists chemical as HAP (no negation)."""
+        low = text.lower()
+        # Must have HAP-related keywords
+        has_hap = "hazardous air pollutant" in low or ("hap" in low.split() and ("listed" in low or "neshap" in low))
+        if not has_hap:
+            return False
+        # Check for negation patterns
+        for neg in negation_patterns:
+            if neg in low:
+                return False
+        # Positive mention of being listed
+        return "listed" in low or "designated" in low or "identified" in low
+
+    # Check toxicities for HAP mentions
+    for t in hazard_data.get("toxicities") or []:
+        val = str(t.get("value") or "")
+        if _is_positive_hap_mention(val):
+            return True
+    
+    # Check hazard_metrics for HAP/NESHAP designation
+    hm = hazard_data.get("hazard_metrics") or {}
+    for item in hm.get("other_designations") or []:
+        if _is_positive_hap_mention(str(item)):
+            return True
+    
+    return False
 
 
 def _tox_text_and_route(entry: dict) -> tuple[str, str]:
@@ -1293,28 +1357,34 @@ def _extract_odp(hazard_data: dict) -> Optional[float]:
     return None
 
 
-def mean_of_top_two_highest(scores: list[float]) -> Optional[float]:
+def max_score(scores: list[float]) -> Optional[float]:
     """
-    Site-style rollup: mean of the two highest scores (worst hazards).
+    Expert-style rollup: maximum score (worst hazard) wins.
 
-    With one value, that value is returned. Empty → None.
-    Used for units → subcategory and subcategories → category.
+    This matches expert1228 offline comparison where:
+    - Subcategory score = highest unit score (no averaging, no odd 3/5/7/9)
+    - Category score = highest subcategory score (not mean of top 2)
+
+    Empty → None.
     """
     nums = [float(v) for v in scores if isinstance(v, (int, float))]
     if not nums:
         return None
-    ranked = sorted(nums, reverse=True)
-    k = min(2, len(ranked))
-    return sum(ranked[:k]) / float(k)
+    return max(nums)
 
 
-def _category_score_mean_top_two_subcategories(subcategory_maxima: list[float]) -> Optional[float]:
-    """Official-style P2OASys **category** score from subcategory scores (top-two mean)."""
-    return mean_of_top_two_highest(subcategory_maxima)
+# Legacy alias for backward compatibility
+mean_of_top_two_highest = max_score
 
 
-# Back-compat alias (older form.py / callers).
-_category_score_mean_subcategories = _category_score_mean_top_two_subcategories
+def _category_score_max_subcategory(subcategory_maxima: list[float]) -> Optional[float]:
+    """P2OASys **category** score = MAX of subcategory scores (expert1228 rule)."""
+    return max_score(subcategory_maxima)
+
+
+# Back-compat aliases (older form.py / callers).
+_category_score_mean_top_two_subcategories = _category_score_max_subcategory
+_category_score_mean_subcategories = _category_score_max_subcategory
 
 
 def _round_score(value: float, sig_digits: int = 2) -> float:
@@ -1436,6 +1506,13 @@ def compute_p2oasys_scores_with_trace(
     except Exception:
         ph_info = None
 
+    # Band corrections (Fix 7, expert1228):
+    # - Acid Rain: S or N in SMILES → minimum score 8
+    # - NESHAP: listed HAP → score 10
+    smiles = hazard_data.get("smiles") or hazard_data.get("SMILES")
+    has_s_or_n = _smiles_contains_s_or_n(smiles)
+    is_neshap_hap = _is_neshap_listed_hap(hazard_data)
+
     # Phrase corpus for KEY PHRASE / ODP / GWP style matrix rows.
     phrase_corpus_parts: list[str] = []
     for t in hazard_data.get("toxicities") or []:
@@ -1471,6 +1548,9 @@ def compute_p2oasys_scores_with_trace(
         "molecular_weight": _num(hazard_data.get("molecular_weight")),
         "ph_estimate": ph_info,
         "ph_heuristic": ph_info,
+        "smiles": smiles,
+        "has_s_or_n": has_s_or_n,
+        "is_neshap_hap": is_neshap_hap,
     }
 
     def _record(
@@ -1746,6 +1826,18 @@ def compute_p2oasys_scores_with_trace(
                         predicted = True
                     if biodeg_hl and input_value is biodeg_hl and biodeg_hl.get("predicted"):
                         predicted = True
+
+                    # Band corrections (Fix 7, expert1228):
+                    # Acid Rain Formation: S or N in SMILES → minimum score 8
+                    if subcat == "Acid Rain Formation" and has_s_or_n:
+                        if score < 8:
+                            score = 8
+                            qualifier = "band_corrected_s_or_n"
+                    # NESHAP: listed HAP → score 10
+                    if subcat == "NESHAP" and is_neshap_hap:
+                        score = 10
+                        qualifier = "band_corrected_neshap_hap"
+
                     status = STATUS_PREDICTED_ONLY if predicted else STATUS_SCORED
                     sub_scores[unit_name] = score
                     _record(
