@@ -182,6 +182,21 @@ class SDSEnrichConfig:
         """Whether TCI SDS enrichment is enabled (always on for now)."""
         return True
 
+    @staticmethod
+    def sds_cache_dir() -> Path | None:
+        """
+        Offline SDS cache root directory.
+        
+        Layout: <DIR>/<cas>/<vendor>/<revision>/<sha256[:12]>/original.pdf
+        Set TSCD_SDS_CACHE_DIR environment variable or use --sds-cache CLI option.
+        """
+        return _env_path("TSCD_SDS_CACHE_DIR")
+
+    @staticmethod
+    def sds_allow_mixture() -> bool:
+        """Whether to include mixture/solution SDS values in scoring."""
+        return _env_bool("TSCD_SDS_ALLOW_MIXTURE", default=False)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Scorer reference tables (PR #8)

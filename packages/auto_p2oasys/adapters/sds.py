@@ -1,20 +1,57 @@
 """
 SDS (Safety Data Sheet) adapter for auto_p2oasys.
 
-Parses SDS PDFs to extract CAS numbers, flash point, vapor pressure, and
-other hazard data from Section 9 (Physical Properties) and other sections.
-"""
+Parses SDS PDFs to extract hazard data with full GHaz7-compatible structured parsing.
+Supports both explicit uploads (--sds) and cache lookup (--sds-cache / TSCD_SDS_CACHE_DIR).
 
+Ported from GHaz7 with offline-only support and bug fixes per PR #12 brief.
+"""
 from __future__ import annotations
 
+import hashlib
 import re
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
 from ..evidence import Evidence
 from ..source_report import SourceReport, AdapterStatus
-from ..cas_utils import extract_cas_from_text, format_cas_display
+from ..cas_utils import extract_cas_from_text, format_cas_display, validate_cas_checksum
+
+from . import sds_text
+from . import sds_structured
+from . import sds_bridge
+from . import sds_cache
+
+
+@dataclass
+class SDSParseOutcome:
+    """Result of parsing an SDS document."""
+    
+    fields: dict = field(default_factory=dict)
+    evidence: list = field(default_factory=list)
+    unmapped: list = field(default_factory=list)
+    mixture: dict | None = None
+    meta: dict = field(default_factory=dict)
+    error: str | None = None
+
+
+@dataclass
+class SDSMeta:
+    """SDS document metadata."""
+    
+    path: Path | None = None
+    vendor: str = "unknown"
+    revision: str = ""
+    sha256: str = ""
+    n_pages: int = 0
+    backend: str = ""
+    sections_found: list = field(default_factory=list)
+    file_name: str = ""
+    is_mixture: bool = False
+    mixture_reason: str = ""
+    target_concentration: str = ""
 
 
 def extract_cas_from_sds(
@@ -36,10 +73,19 @@ def extract_cas_from_sds(
             report.add("sds_extract", AdapterStatus.ERROR, "File not found")
         return []
 
-    text = _extract_text(sds_path)
+    text, backend = sds_text.extract_text_from_pdf(sds_path)
     if not text:
         if report:
             report.add("sds_extract", AdapterStatus.ERROR, "Could not extract text")
+        return []
+
+    if sds_text.is_scanned_pdf(text):
+        if report:
+            report.add(
+                "sds_extract",
+                AdapterStatus.ERROR,
+                "No text layer (scanned PDF?); OCR not supported offline",
+            )
         return []
 
     cas_numbers = extract_cas_from_text(text)
@@ -57,261 +103,279 @@ def extract_cas_from_sds(
     return cas_numbers
 
 
-def parse_sds(sds_path: Path, cas: str) -> list[Evidence]:
+def _extract_vendor_from_text(text: str) -> str:
+    """Extract vendor/supplier name from SDS text."""
+    patterns = [
+        r"(?:Supplier|Manufacturer|Company)[:\s]+([^\n]{5,60})",
+        r"(?:Distributed\s+by|Produced\s+by)[:\s]+([^\n]{5,60})",
+    ]
+    for pattern in patterns:
+        m = re.search(pattern, text, re.I)
+        if m:
+            vendor = m.group(1).strip()
+            vendor = re.sub(r"\s+", " ", vendor)
+            vendor = vendor[:50]
+            return vendor
+    return "unknown vendor"
+
+
+def _compute_sha256(path: Path) -> str:
+    """Compute SHA256 hash of file."""
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _detect_mixture(
+    sections: dict[int, str],
+    target_cas: str,
+    full_text: str,
+) -> tuple[bool, str, str]:
+    """
+    Detect if SDS is for a mixture/solution.
+    
+    Returns:
+        (is_mixture, reason, target_concentration)
+    """
+    sec3 = sections.get(3) or ""
+    
+    cas_pattern = re.compile(r"\b(\d{1,9}-\d{2}-\d)\b")
+    cas_hits = cas_pattern.findall(sec3)
+    
+    valid_cas = []
+    for cas in cas_hits:
+        if validate_cas_checksum(cas):
+            valid_cas.append(cas)
+    
+    unique_cas = list(dict.fromkeys(valid_cas))
+    
+    conc_pattern = re.compile(
+        r"(\d+(?:\.\d+)?)\s*(?:-\s*(\d+(?:\.\d+)?))?\s*%",
+        re.I,
+    )
+    
+    target_conc = None
+    target_normalized = target_cas.replace("-", "")
+    
+    for cas in unique_cas:
+        cas_norm = cas.replace("-", "")
+        if cas_norm == target_normalized:
+            line_pattern = re.compile(
+                rf"{re.escape(cas)}[^\n]{{0,50}}?(\d+(?:\.\d+)?)\s*(?:-\s*(\d+(?:\.\d+)?))?\s*%",
+                re.I,
+            )
+            m = line_pattern.search(sec3)
+            if m:
+                low = float(m.group(1))
+                high = float(m.group(2)) if m.group(2) else low
+                target_conc = (low, high)
+    
+    is_mixture = False
+    reason = ""
+    concentration = ""
+    
+    if len(unique_cas) >= 2:
+        if target_conc and target_conc[1] < 90:
+            is_mixture = True
+            reason = f"Target CAS concentration {target_conc[0]}-{target_conc[1]}% < 90%"
+            concentration = f"{target_conc[0]}-{target_conc[1]}%"
+        elif not target_conc and len(unique_cas) >= 2:
+            is_mixture = True
+            reason = f"Multiple CAS numbers ({len(unique_cas)}) without concentration data"
+    
+    if not is_mixture and target_conc is None:
+        product_match = re.search(r"\d+\s*%|solution|mixture|blend", full_text[:2000], re.I)
+        if product_match:
+            is_mixture = True
+            reason = f"Product name suggests mixture/solution"
+    
+    if target_conc:
+        concentration = f"{target_conc[0]}%" if target_conc[0] == target_conc[1] else f"{target_conc[0]}-{target_conc[1]}%"
+    
+    return is_mixture, reason, concentration
+
+
+def parse_sds_document(
+    path: Path,
+    cas: str,
+    *,
+    vendor: str | None = None,
+    include_mixture: bool = False,
+) -> SDSParseOutcome:
+    """
+    Parse SDS PDF with full structured extraction.
+    
+    Args:
+        path: Path to SDS PDF file
+        cas: Target CAS number
+        vendor: Override vendor name (from cache metadata)
+        include_mixture: Include mixture SDS values in scoring
+    
+    Returns:
+        SDSParseOutcome with fields, evidence, unmapped, mixture info, and metadata
+    """
+    outcome = SDSParseOutcome()
+    
+    if not path.exists():
+        outcome.error = "File not found"
+        return outcome
+    
+    text, backend = sds_text.extract_text_from_pdf(path)
+    
+    if not text:
+        outcome.error = "Could not extract text from PDF"
+        return outcome
+    
+    if sds_text.is_scanned_pdf(text):
+        outcome.error = "No text layer (scanned PDF?); OCR not supported offline"
+        return outcome
+    
+    sha256 = _compute_sha256(path)
+    n_pages = sds_text.get_n_pages(path)
+    
+    if vendor is None:
+        vendor = _extract_vendor_from_text(text)
+    
+    sections = sds_text.split_sections(text)
+    
+    is_mixture, mixture_reason, target_conc = _detect_mixture(sections, cas, text)
+    
+    structured = sds_structured.parse_structured_sds(sections, full_text=text)
+    
+    fields = sds_bridge.structured_sds_to_extra_fields(structured)
+    
+    file_name = path.name
+    source_label = f"SDS ({vendor}, {file_name})"
+    
+    evidence, unmapped = sds_bridge.sds_fields_to_evidence(
+        fields,
+        cas,
+        source_label=source_label,
+        vendor=vendor,
+        revision="",
+        file_name=file_name,
+    )
+    
+    if is_mixture:
+        for ev in evidence:
+            if ev.reliability:
+                new_reliability = f"{ev.reliability}; mixture/solution SDS: not pure-substance data"
+            else:
+                new_reliability = "mixture/solution SDS: not pure-substance data"
+            evidence[evidence.index(ev)] = Evidence(
+                cas=ev.cas,
+                endpoint=ev.endpoint,
+                value=ev.value,
+                unit=ev.unit,
+                qualifier=ev.qualifier,
+                source=ev.source,
+                source_type=ev.source_type,
+                predicted=ev.predicted,
+                reliability=new_reliability,
+                reference=ev.reference,
+                retrieved_at=ev.retrieved_at,
+                section=ev.section,
+                raw_text=ev.raw_text,
+            )
+    
+    outcome.fields = fields
+    outcome.evidence = evidence
+    outcome.unmapped = unmapped
+    outcome.mixture = {
+        "is_mixture": is_mixture,
+        "reason": mixture_reason,
+        "target_concentration": target_conc,
+    } if is_mixture else None
+    outcome.meta = {
+        "path": str(path),
+        "vendor": vendor,
+        "sha256": sha256[:12],
+        "n_pages": n_pages,
+        "backend": backend,
+        "sections_found": list(sections.keys()),
+        "file_name": file_name,
+        "is_mixture": is_mixture,
+        "mixture_reason": mixture_reason,
+        "target_concentration": target_conc,
+        "source_label": source_label,
+    }
+    
+    return outcome
+
+
+def parse_sds(
+    sds_path: Path,
+    cas: str,
+    vendor: str | None = None,
+) -> list[Evidence]:
     """
     Parse SDS PDF and extract evidence for a specific CAS.
-
-    Focuses on Section 9 (Physical Properties) for flash point, vapor pressure,
-    boiling point, etc.
+    
+    Backward-compatible wrapper around parse_sds_document.
 
     Args:
         sds_path: Path to SDS PDF file
         cas: CAS number to associate with evidence
+        vendor: Override vendor name (from cache metadata)
 
     Returns:
         List of Evidence records extracted
     """
-    if not sds_path.exists():
+    outcome = parse_sds_document(sds_path, cas, vendor=vendor)
+    
+    if outcome.error:
         return []
-
-    text = _extract_text(sds_path)
-    if not text:
-        return []
-
-    display_cas = format_cas_display(cas)
-    now = datetime.now(timezone.utc)
-    evidence: list[Evidence] = []
-
-    section_9 = _extract_section(text, "9")
-
-    if section_9:
-        flash = _parse_flash_point(section_9)
-        if flash is not None:
-            evidence.append(
-                Evidence(
-                    cas=display_cas,
-                    endpoint="flash_point",
-                    value=flash["value"],
-                    unit=flash.get("unit", "°C"),
-                    qualifier=flash.get("qualifier"),
-                    source="SDS",
-                    predicted=False,
-                    section="Section 9",
-                    raw_text=flash.get("raw"),
-                    retrieved_at=now,
-                )
-            )
-
-        vp = _parse_vapor_pressure(section_9)
-        if vp is not None:
-            evidence.append(
-                Evidence(
-                    cas=display_cas,
-                    endpoint="vapor_pressure",
-                    value=vp["value"],
-                    unit=vp.get("unit", "mmHg"),
-                    source="SDS",
-                    predicted=False,
-                    section="Section 9",
-                    raw_text=vp.get("raw"),
-                    retrieved_at=now,
-                )
-            )
-
-        bp = _parse_boiling_point(section_9)
-        if bp is not None:
-            evidence.append(
-                Evidence(
-                    cas=display_cas,
-                    endpoint="boiling_point",
-                    value=bp["value"],
-                    unit=bp.get("unit", "°C"),
-                    source="SDS",
-                    predicted=False,
-                    section="Section 9",
-                    raw_text=bp.get("raw"),
-                    retrieved_at=now,
-                )
-            )
-
-    section_2 = _extract_section(text, "2")
-    if section_2:
-        h_codes = re.findall(r"\bH\d{3}[A-Z]?\b", section_2)
-        if h_codes:
-            evidence.append(
-                Evidence(
-                    cas=display_cas,
-                    endpoint="h_codes",
-                    value=list(set(h_codes)),
-                    source="SDS",
-                    predicted=False,
-                    section="Section 2",
-                    retrieved_at=now,
-                )
-            )
-
-    return evidence
+    
+    return outcome.evidence
 
 
-def _extract_text(path: Path) -> str:
-    """Extract text from PDF using available libraries."""
-    try:
-        import pdfplumber
-
-        with pdfplumber.open(path) as pdf:
-            text_parts = []
-            for page in pdf.pages:
-                text = page.extract_text() or ""
-                text_parts.append(text)
-            return "\n".join(text_parts)
-    except ImportError:
-        pass
-    except Exception:
-        pass
-
-    try:
-        from pypdf import PdfReader
-
-        reader = PdfReader(path)
-        text_parts = []
-        for page in reader.pages:
-            text = page.extract_text() or ""
-            text_parts.append(text)
-        return "\n".join(text_parts)
-    except ImportError:
-        pass
-    except Exception:
-        pass
-
-    return ""
-
-
-def _extract_section(text: str, section_num: str) -> str | None:
-    """Extract a specific section from SDS text."""
-    pattern = rf"(?:SECTION\s*{section_num}|{section_num}\.\s*\w)"
-    parts = re.split(pattern, text, flags=re.IGNORECASE)
-
-    if len(parts) < 2:
-        return None
-
-    section_text = parts[1]
-
-    next_section = re.search(
-        rf"(?:SECTION\s*{int(section_num) + 1}|\n{int(section_num) + 1}\.\s*\w)",
-        section_text,
-        flags=re.IGNORECASE,
-    )
-    if next_section:
-        section_text = section_text[: next_section.start()]
-
-    return section_text[:5000]
-
-
-def _parse_flash_point(text: str) -> dict | None:
-    """Parse flash point from text."""
-    patterns = [
-        r"flash\s*point[:\s]*([<>≈~]?\s*[-−]?\d+\.?\d*)\s*°?\s*([CF])",
-        r"flash\s*point[:\s]*([<>≈~]?\s*[-−]?\d+\.?\d*)\s*(celsius|fahrenheit)",
-    ]
-
-    for pattern in patterns:
-        match = re.search(pattern, text, re.IGNORECASE)
-        if match:
-            val_str = match.group(1).strip()
-            unit = match.group(2).upper()
-
-            qualifier = None
-            if val_str[0] in "<>≈~":
-                qualifier = val_str[0]
-                val_str = val_str[1:].strip()
-
-            try:
-                value = float(val_str.replace("−", "-"))
-                if unit == "F" or "fahrenheit" in unit.lower():
-                    value = (value - 32) * 5 / 9
-                    unit = "°C"
-                else:
-                    unit = "°C"
-
-                return {
-                    "value": round(value, 1),
-                    "unit": unit,
-                    "qualifier": qualifier,
-                    "raw": match.group(0),
-                }
-            except ValueError:
-                pass
-
-    return None
-
-
-def _parse_vapor_pressure(text: str) -> dict | None:
-    """Parse vapor pressure from text."""
-    patterns = [
-        r"vapor\s*pressure[:\s]*([<>≈~]?\s*\d+\.?\d*)\s*(mmHg|mm\s*Hg|hPa|kPa|mbar|atm)",
-        r"vapour\s*pressure[:\s]*([<>≈~]?\s*\d+\.?\d*)\s*(mmHg|mm\s*Hg|hPa|kPa|mbar|atm)",
-    ]
-
-    for pattern in patterns:
-        match = re.search(pattern, text, re.IGNORECASE)
-        if match:
-            val_str = match.group(1).strip()
-            unit = match.group(2).lower()
-
-            if val_str[0] in "<>≈~":
-                val_str = val_str[1:].strip()
-
-            try:
-                value = float(val_str)
-
-                if "hpa" in unit or "mbar" in unit:
-                    value = value * 0.750062
-                elif "kpa" in unit:
-                    value = value * 7.50062
-                elif "atm" in unit:
-                    value = value * 760
-
-                return {
-                    "value": round(value, 2),
-                    "unit": "mmHg",
-                    "raw": match.group(0),
-                }
-            except ValueError:
-                pass
-
-    return None
-
-
-def _parse_boiling_point(text: str) -> dict | None:
-    """Parse boiling point from text."""
-    patterns = [
-        r"boiling\s*point[:\s]*([<>≈~]?\s*[-−]?\d+\.?\d*)\s*°?\s*([CF])",
-        r"boiling\s*range[:\s]*([<>≈~]?\s*[-−]?\d+\.?\d*)\s*°?\s*([CF])",
-    ]
-
-    for pattern in patterns:
-        match = re.search(pattern, text, re.IGNORECASE)
-        if match:
-            val_str = match.group(1).strip()
-            unit = match.group(2).upper()
-
-            if val_str[0] in "<>≈~":
-                val_str = val_str[1:].strip()
-
-            try:
-                value = float(val_str.replace("−", "-"))
-                if unit == "F":
-                    value = (value - 32) * 5 / 9
-                    unit = "°C"
-                else:
-                    unit = "°C"
-
-                return {
-                    "value": round(value, 1),
-                    "unit": unit,
-                    "raw": match.group(0),
-                }
-            except ValueError:
-                pass
-
-    return None
+def resolve_sds(
+    cas: str,
+    explicit_sds: Path | None = None,
+    cache_dir: Path | None = None,
+) -> tuple[Path | None, dict]:
+    """
+    Resolve SDS PDF path from explicit upload or cache.
+    
+    Args:
+        cas: CAS registry number
+        explicit_sds: Explicit --sds path (takes precedence)
+        cache_dir: Override cache directory
+    
+    Returns:
+        (path, meta) where meta has vendor, revision, sha256, candidates
+    """
+    if explicit_sds is not None:
+        if explicit_sds.exists():
+            sha256 = _compute_sha256(explicit_sds)
+            vendor = "uploaded"
+            return explicit_sds, {
+                "vendor": vendor,
+                "revision": "",
+                "sha256": sha256[:12],
+                "source": "explicit_upload",
+                "candidates": [],
+            }
+        return None, {"error": f"File not found: {explicit_sds}"}
+    
+    hit = sds_cache.lookup_sds_in_cache(cas, cache_dir)
+    if hit:
+        return hit["path"], {
+            "vendor": hit["vendor"],
+            "revision": hit["revision"],
+            "sha256": hit["sha256"][:12],
+            "source": "cache",
+            "relative_path": hit["relative_path"],
+            "candidates": hit["candidates"],
+        }
+    
+    if cache_dir is not None or sds_cache.get_cache_dir() is not None:
+        cache_path = cache_dir or sds_cache.get_cache_dir()
+        return None, {
+            "error": f"SDS: none found in {cache_path} for CAS {cas}",
+            "source": "cache_miss",
+        }
+    
+    return None, {"source": "none_configured"}

@@ -281,6 +281,21 @@ capabilities:
     test_id: "test_capabilities::test_sigma_sds_enrich"
     status: "stub"
 
+  sds_offline_parse:
+    name: "SDS offline parse (sections 2,8–12,14, NFPA)"
+    description: |
+      Offline SDS PDF parse (upload or TSCD_SDS_CACHE_DIR) -> labelled scorer evidence;
+      mixture flag; no network. Extracts H-codes, NFPA, flash point, vapor pressure,
+      LD50/LC50, aquatic toxicity (LC50/EC50/NOEC), BCF, log Kow, odor, pH, and cues.
+    module: "packages.auto_p2oasys.adapters.sds"
+    required: false
+    licensed: false
+    env_vars:
+      - "TSCD_SDS_CACHE_DIR"
+      - "TSCD_SDS_ALLOW_MIXTURE"
+    test_id: "test_capabilities::test_sds_offline_parse"
+    status: "active"
+
   # ─────────────────────────────────────────────────────────────────────────────
   # HSPiP Hansen Solubility Parameters
   # ─────────────────────────────────────────────────────────────────────────────

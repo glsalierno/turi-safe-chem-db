@@ -253,6 +253,27 @@ def test_sigma_sds_enrich():
     assert "pending" in result.get("error", "").lower() or "stub" in result.get("error", "").lower()
 
 
+def test_sds_offline_parse():
+    """SDS offline parse extracts structured data from SDS text."""
+    from packages.auto_p2oasys.adapters import sds, sds_text, sds_structured, sds_bridge
+    from tests.fixtures.synthetic_sds import SYNTH_PURE
+
+    assert hasattr(sds, "parse_sds")
+    assert hasattr(sds, "parse_sds_document")
+    assert hasattr(sds, "extract_cas_from_sds")
+
+    sections = sds_text.split_sections(SYNTH_PURE)
+    structured = sds_structured.parse_structured_sds(sections, full_text=SYNTH_PURE)
+    fields = sds_bridge.structured_sds_to_extra_fields(structured)
+
+    assert "ghs_h_codes" in fields
+    assert "H225" in fields["ghs_h_codes"]
+    assert fields.get("nfpa_health") == 2
+    assert fields.get("nfpa_fire") == 3
+    assert len(fields.get("flash_points", [])) > 0
+    assert fields.get("ld50_oral_mg_kg") == 5800
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # HSPiP capabilities
 # ─────────────────────────────────────────────────────────────────────────────

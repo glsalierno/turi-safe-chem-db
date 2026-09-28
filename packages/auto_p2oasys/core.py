@@ -177,6 +177,8 @@ def _lookup_expert_subcategories(cas: str) -> dict | None:
 def _run_fast_pipeline(
     cas: str,
     sds_pdf: Path | None = None,
+    sds_cache_dir: Path | None = None,
+    sds_allow_mixture: bool = False,
     report: SourceReport | None = None,
 ) -> tuple[dict | None, list[Evidence], dict]:
     """
@@ -196,7 +198,13 @@ def _run_fast_pipeline(
 
     from .pipeline import gather_evidence, build_hazard_data, run_scorer
 
-    evidence = gather_evidence(cas, sds_pdf=sds_pdf, report=report)
+    evidence = gather_evidence(
+        cas,
+        sds_pdf=sds_pdf,
+        sds_cache_dir=sds_cache_dir,
+        sds_allow_mixture=sds_allow_mixture,
+        report=report,
+    )
     hazard_data = build_hazard_data(cas, evidence)
     scores, trace = run_scorer(hazard_data)
 
@@ -207,6 +215,8 @@ def _run_fast_pipeline(
 def auto_p2oasys(
     cas: str | None = None,
     sds_pdf: Path | None = None,
+    sds_cache_dir: Path | None = None,
+    sds_allow_mixture: bool = False,
     *,
     force_fast: bool = False,
 ) -> P2OASysResult:
@@ -224,6 +234,8 @@ def auto_p2oasys(
     Args:
         cas: CAS registry number (optional if sds_pdf provided)
         sds_pdf: Path to SDS PDF file for CAS extraction and data
+        sds_cache_dir: Offline SDS cache directory (TSCD_SDS_CACHE_DIR)
+        sds_allow_mixture: Include values from mixture/solution SDS in scoring
         force_fast: Force fast pipeline even if expert exists
 
     Returns:
@@ -298,7 +310,11 @@ def auto_p2oasys(
         )
 
     fast_scores, evidence, trace = _run_fast_pipeline(
-        display_cas, sds_pdf=sds_pdf, report=report
+        display_cas,
+        sds_pdf=sds_pdf,
+        sds_cache_dir=sds_cache_dir,
+        sds_allow_mixture=sds_allow_mixture,
+        report=report,
     )
 
     if expert_result and force_fast:
