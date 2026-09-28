@@ -186,33 +186,29 @@ def gather_evidence(
     if resolved_sds is not None:
         try:
             start = time.monotonic()
-            sds_evidence = sds_adapter.parse_sds(
+            outcome = sds_adapter.parse_sds_document(
                 resolved_sds, cas,
                 vendor=sds_meta.get("vendor") if sds_meta else None,
+                revision=sds_meta.get("revision") if sds_meta else None,
+                relative_path=sds_meta.get("relative_path") if sds_meta else None,
             )
             duration = (time.monotonic() - start) * 1000
             
+            sds_evidence = outcome.evidence
+            sds_unmapped = outcome.unmapped
+            
             mixture_holdout = []
             if sds_evidence:
-                if hasattr(sds_adapter, "is_mixture_sds"):
-                    is_mixture = sds_adapter.is_mixture_sds(resolved_sds, cas)
-                    if is_mixture and not sds_allow_mixture:
-                        mixture_holdout = sds_evidence
-                        sds_evidence = []
-                        report.add(
-                            "sds_parse",
-                            AdapterStatus.RAN,
-                            reason=f"mixture/solution SDS: {len(mixture_holdout)} values held out of pure-substance scoring",
-                            evidence_count=0,
-                        )
-                    else:
-                        evidence.extend(sds_evidence)
-                        report.add(
-                            "sds_parse",
-                            AdapterStatus.RAN,
-                            evidence_count=len(sds_evidence),
-                            duration_ms=duration,
-                        )
+                is_mixture = outcome.mixture is not None and outcome.mixture.get("is_mixture", False)
+                if is_mixture and not sds_allow_mixture:
+                    mixture_holdout = sds_evidence
+                    sds_evidence = []
+                    report.add(
+                        "sds_parse",
+                        AdapterStatus.RAN,
+                        reason=f"mixture/solution SDS: {len(mixture_holdout)} values held out of pure-substance scoring",
+                        evidence_count=0,
+                    )
                 else:
                     evidence.extend(sds_evidence)
                     report.add(
@@ -223,14 +219,30 @@ def gather_evidence(
                     )
             else:
                 report.add("sds_parse", AdapterStatus.NO_DATA, "No data extracted")
+            
+            if sds_unmapped:
+                unmapped_fields = [u.get("field", "unknown") for u in sds_unmapped]
+                report.add(
+                    "sds_unmapped",
+                    AdapterStatus.RAN,
+                    reason=f"{len(sds_unmapped)} ({', '.join(set(unmapped_fields))})",
+                    evidence_count=len(sds_unmapped),
+                )
         except Exception as e:
             report.add("sds_parse", AdapterStatus.ERROR, str(e))
     else:
-        report.add(
-            "sds_parse",
-            AdapterStatus.SKIPPED,
-            reason="SDS: none supplied",
-        )
+        if sds_cache_dir is not None:
+            report.add(
+                "sds_parse",
+                AdapterStatus.SKIPPED,
+                reason="SDS: none found in cache",
+            )
+        else:
+            report.add(
+                "sds_parse",
+                AdapterStatus.SKIPPED,
+                reason="SDS: none supplied",
+            )
 
     try:
         start = time.monotonic()

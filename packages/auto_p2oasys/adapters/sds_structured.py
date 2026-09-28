@@ -38,19 +38,29 @@ _LIMIT_LINE = re.compile(
 )
 
 # Fixed LD50/LC50 patterns - use line-based context (fix bug 1)
+# Fix #3: Added g/kg pattern, Fix #8: Added qualifier capture
 _LD50_LINE_RE = re.compile(
-    r"(?P<line>[^\n]*\bLD\s*50\b[^\n]*?(?P<value>\d[\d,]*(?:\.\d+)?)\s*(?P<unit>mg/kg|g/kg)[^\n]*)",
+    r"(?P<line>[^\n]*\bLD\s*50\b[^\n]*?"
+    r"(?P<qualifier>[<>]|>=|<=)?\s*"
+    r"(?P<value>\d[\d,]*(?:\.\d+)?)\s*"
+    r"(?P<unit>mg/kg|g/kg)[^\n]*)",
     re.I,
 )
 _LC50_INH_LINE_RE = re.compile(
-    r"(?P<line>[^\n]*\bLC\s*50\b[^\n]*?(?P<value>\d[\d,]*(?:\.\d+)?)\s*(?P<unit>ppm|mg/m3|mg/m³|mg/L)[^\n]*)",
+    r"(?P<line>[^\n]*\bLC\s*50\b[^\n]*?"
+    r"(?P<qualifier>[<>]|>=|<=)?\s*"
+    r"(?P<value>\d[\d,]*(?:\.\d+)?)\s*"
+    r"(?P<unit>ppm|mg/m3|mg/m³|g/m3|g/m³|mg/L)[^\n]*)",
     re.I,
 )
 
 # Aquatic patterns - keep all hits with species (fix bug 5)
+# Fix #3: Added ppm unit
 _AQUATIC_RE = re.compile(
     r"\b(?P<endpoint>LC\s*50|EC\s*50|NOEC)\b[^\n]{0,200}?"
-    r"(?P<value>\d[\d,]*(?:\.\d+)?)\s*(?P<unit>mg/L|mg/l|µg/L|ug/L)",
+    r"(?P<qualifier>[<>]|>=|<=)?\s*"
+    r"(?P<value>\d[\d,]*(?:\.\d+)?)\s*"
+    r"(?P<unit>mg/L|mg/l|µg/L|ug/L|ppm)",
     re.I,
 )
 _DURATION_RE = re.compile(r"\b(?P<dur>\d+(?:\.\d+)?)\s*(?P<unit>h|hr|hrs|hour|hours|d|day|days)\b", re.I)
@@ -67,6 +77,15 @@ _PH_RE = re.compile(r"\bpH[:\s]*(?P<value>\d+(?:\.\d+)?)", re.I)
 
 # Odor pattern for section 9
 _ODOR_RE = re.compile(r"Odor[:\s]*(?P<desc>[^\n]{3,100})", re.I)
+
+# Boiling point pattern - specific extraction (fix #9)
+_BOILING_POINT_RE = re.compile(
+    r"Boiling\s*point[/\s]*(?:range)?\s*[:=]?\s*"
+    r"(?P<qualifier>[<>~])?\s*"
+    r"(?P<value>-?\d+(?:[.,]\d+)?)\s*"
+    r"(?P<unit>°?\s*[CF]|deg\s*[CF]|Celsius|Fahrenheit)?\b",
+    re.IGNORECASE,
+)
 
 _BCF_RE = re.compile(
     r"\b(?:BCF|bioconcentration\s*factor|bioaccumulation\s*factor)\b[^\n]{0,60}?"
@@ -120,23 +139,28 @@ def _section_after_label(text: str, label: str) -> str | None:
     Extract value after a label.
     
     Fix bug 3: Parse same line first (Label: value), not next line.
+    Fix #9: Ensure we get the actual value, not part of the label.
     """
     if not text:
         return None
     
     same_line = re.search(
-        rf"{re.escape(label)}[:\-\s]+([^\n]{{3,400}})",
+        rf"\b{re.escape(label)}\b\s*[:\-]\s*([^\n]{{3,400}})",
         text, re.I
     )
     if same_line:
-        return same_line.group(1).strip()
+        val = same_line.group(1).strip()
+        if val and not val.lower().startswith("and "):
+            return val
     
     next_line = re.search(
-        rf"{re.escape(label)}[^\n]{{0,40}}\n([^\n]{{8,400}})",
+        rf"\b{re.escape(label)}\b[^\n]{{0,40}}\n([^\n]{{8,400}})",
         text, re.I
     )
     if next_line:
-        return next_line.group(1).strip()
+        val = next_line.group(1).strip()
+        if val and not val.lower().startswith("and "):
+            return val
     
     return None
 
@@ -175,28 +199,44 @@ def _tox_numbers(sec11: str) -> dict[str, Any]:
     Extract oral/dermal LD50 and inhalation LC50 numbers from §11.
     
     Fix bug 1: Classify route using the matched line only, not context window.
+    Fix #3: Convert g/kg to mg/kg, g/m³ to mg/m³.
+    Fix #8: Capture qualifiers.
+    Minor: Prefer rat over mouse for oral LD50.
     """
     oral = dermal = inhalation = None
     oral_unit = dermal_unit = inh_unit = None
     oral_line = dermal_line = inh_line = None
+    oral_qual = dermal_qual = inh_qual = None
+    oral_is_rat = False
     
     for m in _LD50_LINE_RE.finditer(sec11 or ""):
         line = m.group("line").lower()
         val = m.group("value").replace(",", "")
         unit = m.group("unit")
+        qualifier = m.group("qualifier") or ""
         try:
             num = float(val)
         except ValueError:
             continue
         
+        if unit.lower() == "g/kg":
+            num = num * 1000
+            unit = "mg/kg"
+        
+        is_rat = "rat" in line
+        is_mouse = "mouse" in line
+        
         if "dermal" in line or "skin" in line:
             if dermal is None:
                 dermal, dermal_unit = num, unit
                 dermal_line = m.group("line")
-        elif "oral" in line or ("rat" in line and "dermal" not in line):
-            if oral is None:
+                dermal_qual = qualifier
+        elif "oral" in line or (is_rat and "dermal" not in line):
+            if oral is None or (is_rat and not oral_is_rat and is_mouse):
                 oral, oral_unit = num, unit
                 oral_line = m.group("line")
+                oral_qual = qualifier
+                oral_is_rat = is_rat
     
     for m in _LC50_INH_LINE_RE.finditer(sec11 or ""):
         line = m.group("line").lower()
@@ -204,10 +244,15 @@ def _tox_numbers(sec11: str) -> dict[str, Any]:
             continue
         val = m.group("value").replace(",", "")
         unit = m.group("unit")
+        qualifier = m.group("qualifier") or ""
         try:
             inhalation = float(val)
+            if unit.lower() in ("g/m3", "g/m³"):
+                inhalation = inhalation * 1000
+                unit = "mg/m³"
             inh_unit = unit
             inh_line = m.group("line")
+            inh_qual = qualifier
             break
         except ValueError:
             continue
@@ -216,12 +261,15 @@ def _tox_numbers(sec11: str) -> dict[str, Any]:
         "ld50_oral": oral,
         "ld50_oral_unit": oral_unit,
         "ld50_oral_line": oral_line,
+        "ld50_oral_qualifier": oral_qual,
         "ld50_dermal": dermal,
         "ld50_dermal_unit": dermal_unit,
         "ld50_dermal_line": dermal_line,
+        "ld50_dermal_qualifier": dermal_qual,
         "lc50_inhalation": inhalation,
         "lc50_inhalation_unit": inh_unit,
         "lc50_inhalation_line": inh_line,
+        "lc50_inhalation_qualifier": inh_qual,
     }
 
 
@@ -365,10 +413,14 @@ def _eco_fields(sec12: str) -> dict[str, Any]:
     blob = (sec12 or "").lower()
     if re.search(r"not\s+consider(?:ed)?\s+harmful\s+to\s+aquatic|not\s+harmful\s+to\s+aquatic", blob):
         phrase_cues.append("Not considered harmful to aquatic life")
-    if re.search(r"readily\s+biodegrad", blob):
+    
+    if re.search(r"not\s+readily\s+biodegrad|not\s+inherently\s+biodegrad", blob):
+        phrase_cues.append("Not readily biodegradable")
+    elif re.search(r"readily\s+biodegrad|inherently\s+biodegrad", blob):
         phrase_cues.append("Readily degradable")
-    elif re.search(r"\bbiodegrad", blob):
+    elif re.search(r"\bbiodegrad", blob) and not re.search(r"not\s+biodegrad", blob):
         phrase_cues.append("Biodegradable")
+    
     if re.search(r"will\s+not\s+bioaccumul|not\s+(?:likely|expected)\s+to\s+bioaccumul", blob):
         phrase_cues.append("Will not bioaccumulate")
     if re.search(r"not\s+persistent|not\s+expected\s+to\s+be\s+persistent", blob):
@@ -458,9 +510,16 @@ def _extract_vapor_pressures(text: str) -> list[dict[str, Any]]:
             except ValueError:
                 pass
         
+        if mmhg >= 1:
+            mmhg_rounded = round(mmhg, 2)
+        elif mmhg >= 0.01:
+            mmhg_rounded = round(mmhg, 4)
+        else:
+            mmhg_rounded = float(f"{mmhg:.3g}")
+        
         out.append({
             "value": val,
-            "value_mmhg": round(mmhg, 2),
+            "value_mmhg": mmhg_rounded,
             "unit": m.group("unit") or "",
             "temperature_c": temp_c,
             "raw_text": m.group(0).strip(),
@@ -552,6 +611,13 @@ def parse_structured_sds(sections: dict[int, str], *, full_text: str = "") -> di
     flash_points = _extract_flash_points(sec9)
     vapor_pressures = _extract_vapor_pressures(sec9)
     
+    boiling_point_value = None
+    bp_m = _BOILING_POINT_RE.search(sec9)
+    if bp_m:
+        bp_val = bp_m.group("value").replace(",", ".")
+        bp_unit = (bp_m.group("unit") or "°C").replace(" ", "").replace("deg", "°")
+        boiling_point_value = f"{bp_val} {bp_unit}"
+    
     ph_value = None
     ph_m = _PH_RE.search(sec9)
     if ph_m:
@@ -626,7 +692,7 @@ def parse_structured_sds(sections: dict[int, str], *, full_text: str = "") -> di
                 f"{flash_points[0]['value_c']} °C" if flash_points else None
             ),
             "flash_points": flash_points,
-            "boiling_point": phys.get("Boiling point"),
+            "boiling_point": boiling_point_value or phys.get("Boiling point"),
             "melting_point": phys.get("Melting point"),
             "vapor_pressure": phys.get("Vapor pressure") or (
                 f"{vapor_pressures[0]['value_mmhg']} mmHg" if vapor_pressures else None

@@ -167,8 +167,8 @@ capabilities:
     env_vars:
       - "TURI_FPT_MODEL_DIR"
     test_id: "test_auto_p2oasys::TestFlashPointPredictor::test_model_not_configured_status"
-    status: "wired_local_models"
-    note: "Models trained on licensed DIPPR/HSPiP/Yaws data - NOT in repo. Code: Zenodo 10.5281/zenodo.20931012 (CC-BY-4.0)"
+    status: "optional"
+    note: "Models trained on licensed DIPPR/HSPiP/Yaws data - NOT in repo. Code: Zenodo 10.5281/zenodo.20931012 (CC-BY-4.0). Set TURI_FPT_MODEL_DIR to enable."
 
   auto_p2oasys_iuclid:
     name: "Auto P2OASys IUCLID adapter"
@@ -459,8 +459,8 @@ capabilities:
     env_vars: []
     test_id: "test_capabilities::test_assess_spine"
     pr: "#5"
-    status: "superseded"
-    note: "Superseded by auto_p2oasys (PR F); PR #5 to be closed"
+    status: "stub"
+    note: "Superseded by auto_p2oasys; maintained for backward compatibility only"
 
   # ─────────────────────────────────────────────────────────────────────────────
   # GHaz7/GHaz8 stack capabilities (ported from fast P2OASys)

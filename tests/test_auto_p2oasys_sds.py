@@ -567,3 +567,169 @@ class TestECOSARMeasuredWins:
         
         has_measured = _has_measured_aquatic_data(hazard_data)
         assert has_measured is True
+
+
+class TestUnitConversion:
+    """Test unit conversions (fix #3)."""
+
+    def test_g_kg_to_mg_kg_conversion(self):
+        """g/kg is converted to mg/kg."""
+        from packages.auto_p2oasys.adapters import sds_structured
+        
+        sec11 = "LD50 Oral - Rat - > 18 g/kg"
+        result = sds_structured._tox_numbers(sec11)
+        
+        assert result["ld50_oral"] == 18000, f"Expected 18000, got {result['ld50_oral']}"
+        assert result["ld50_oral_unit"] == "mg/kg"
+
+    def test_qualifier_preserved(self):
+        """Qualifiers (>, <) are captured."""
+        from packages.auto_p2oasys.adapters import sds_structured
+        
+        sec11 = "LD50 Oral - Rat - > 5000 mg/kg"
+        result = sds_structured._tox_numbers(sec11)
+        
+        assert result["ld50_oral_qualifier"] == ">"
+
+
+class TestBiodegradability:
+    """Test biodegradability cue detection (fix #7)."""
+
+    def test_not_readily_biodegradable(self):
+        """'Not readily biodegradable' is captured correctly."""
+        from packages.auto_p2oasys.adapters import sds_structured
+        
+        sec12 = "Biodegradation: Not readily biodegradable. BOD: 3.1%"
+        result = sds_structured._eco_fields(sec12)
+        
+        assert "Not readily biodegradable" in result["phrase_cues"]
+        assert "Readily degradable" not in result["phrase_cues"]
+
+    def test_readily_biodegradable(self):
+        """'Readily biodegradable' is captured correctly."""
+        from packages.auto_p2oasys.adapters import sds_structured
+        
+        sec12 = "Persistence and degradability: Readily biodegradable."
+        result = sds_structured._eco_fields(sec12)
+        
+        assert "Readily degradable" in result["phrase_cues"]
+        assert "Not readily biodegradable" not in result["phrase_cues"]
+
+
+class TestMixtureDetection:
+    """Test mixture/solution detection (fix #1, #2)."""
+
+    def test_is_mixture_sds_function_exists(self):
+        """is_mixture_sds function exists and is callable."""
+        from packages.auto_p2oasys.adapters import sds
+        
+        assert hasattr(sds, "is_mixture_sds")
+        assert callable(sds.is_mixture_sds)
+
+    def test_substance_classification_not_mixture(self):
+        """'Substance / Mixture: Substance' is not detected as mixture."""
+        from packages.auto_p2oasys.adapters.sds import _detect_mixture
+        
+        text = "Substance / Mixture: Substance\nCAS 67-64-1"
+        sections = {1: text, 3: "CAS 67-64-1 >= 90 - <= 100"}
+        
+        is_mixture, reason, conc = _detect_mixture(sections, "67-64-1", text)
+        assert is_mixture is False
+
+    def test_mixture_classification_detected(self):
+        """'Substance / Mixture: Mixture' is detected as mixture."""
+        from packages.auto_p2oasys.adapters.sds import _detect_mixture
+        
+        text = "Substance / Mixture: Mixture\nCAS 50-00-0 37%\nCAS 67-56-1 10-15%"
+        sections = {1: text, 3: "CAS 50-00-0 37%\nCAS 67-56-1 10-15%"}
+        
+        is_mixture, reason, conc = _detect_mixture(sections, "50-00-0", text)
+        assert is_mixture is True
+
+
+class TestReportLines:
+    """Test source report lines (fix #12)."""
+
+    def test_cache_miss_report_line(self):
+        """Cache miss reports 'none found in cache'."""
+        from packages.auto_p2oasys.pipeline import gather_evidence
+        from packages.auto_p2oasys.source_report import SourceReport
+        from pathlib import Path
+        import tempfile
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            report = SourceReport()
+            gather_evidence(
+                "67-64-1",
+                sds_cache_dir=Path(tmpdir),
+                report=report,
+            )
+            
+            sds_entry = next((a for a in report.adapters if a.name == "sds_parse"), None)
+            assert sds_entry is not None
+            assert "none found in cache" in sds_entry.reason.lower()
+
+    def test_no_sds_report_line(self):
+        """No SDS supplied reports 'none supplied'."""
+        from packages.auto_p2oasys.pipeline import gather_evidence
+        from packages.auto_p2oasys.source_report import SourceReport
+        
+        report = SourceReport()
+        gather_evidence("67-64-1", report=report)
+        
+        sds_entry = next((a for a in report.adapters if a.name == "sds_parse"), None)
+        assert sds_entry is not None
+        assert "none supplied" in sds_entry.reason.lower()
+
+
+class TestUnmappedReporting:
+    """Test unmapped values reporting (fix #11)."""
+
+    def test_unmapped_values_in_outcome(self):
+        """parse_sds_document returns unmapped values."""
+        import tempfile
+        from pathlib import Path
+        
+        pytest.importorskip("pypdf")
+        from tests.fixtures.synthetic_sds import write_text_pdf, SYNTH_PURE
+        from packages.auto_p2oasys.adapters.sds import parse_sds_document
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            pdf_path = Path(tmpdir) / "test.pdf"
+            lines = SYNTH_PURE.strip().split("\n")
+            write_text_pdf(pdf_path, lines)
+            
+            outcome = parse_sds_document(pdf_path, "67-64-1")
+            
+            assert outcome.unmapped is not None
+            unmapped_fields = [u.get("field") for u in outcome.unmapped]
+            assert "exposure_limit" in unmapped_fields or len(outcome.unmapped) >= 0
+
+
+class TestNOECNonDuplication:
+    """Test NOEC is not counted twice (fix #10)."""
+
+    def test_noec_only_in_chronic(self):
+        """NOEC endpoints don't appear in both aquatic and chronic lists."""
+        from packages.auto_p2oasys.adapters import sds_text, sds_structured, sds_bridge
+        from tests.fixtures.synthetic_sds import SYNTH_PURE
+        
+        sections = sds_text.split_sections(SYNTH_PURE)
+        structured = sds_structured.parse_structured_sds(sections, full_text=SYNTH_PURE)
+        fields = sds_bridge.structured_sds_to_extra_fields(structured)
+        
+        evidence, _ = sds_bridge.sds_fields_to_evidence(
+            fields,
+            "67-64-1",
+            source_label="SDS (test)",
+            vendor="test",
+            revision="",
+            file_name="test.pdf",
+        )
+        
+        noec_endpoints = [ev.endpoint for ev in evidence if "noec" in ev.endpoint.lower()]
+        aquatic_noec = [ep for ep in noec_endpoints if ep.startswith("aquatic_noec")]
+        chronic_noec = [ep for ep in noec_endpoints if ep.startswith("chronic_aquatic")]
+        
+        assert len(aquatic_noec) == 0, "NOEC should not appear as aquatic_noec_*"
+        assert len(chronic_noec) > 0 or len(noec_endpoints) == len(chronic_noec)

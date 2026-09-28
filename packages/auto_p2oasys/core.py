@@ -283,6 +283,13 @@ def auto_p2oasys(
             AdapterStatus.RAN,
             evidence_count=1,
         )
+        
+        if sds_pdf is not None or sds_cache_dir is not None:
+            report.add(
+                "sds_parse",
+                AdapterStatus.SKIPPED,
+                reason="expert row wins; SDS not used",
+            )
 
         cats = {}
         if expert_subcats:
