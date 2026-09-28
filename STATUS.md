@@ -9,7 +9,7 @@ Product rule: **Teams pack is the coworker product**; GitHub is for code updates
 Keep Cursor posted: update this file after meaningful steps (not chat alone).
 
 ## Now
-- WIP  | 2026-09-27 ET PubChem FTP bulk index: local CAS→CID lookup from bulk files, CLI (build/refresh/status), streaming parser, API fallback
+- WIP  | 2026-09-28 ET PubChem FTP bulk index rework: CID-Identifiers PRIMARY source, multi-CID resolution, LCSS parsing (GHS/NFPA/flash), offline mode, source flags (pubchem_source, toxicity_sections), fixed size claims (~11 GB full, ~1.1 GB core)
 - PASS | 2026-09-23 ET PubChem throttle hardening: rate limiting, cache, backoff+jitter, PubChemThrottledError, UI messaging, tests
 - PASS | 2026-09-23 ET DoSS app now based on full P2OASys universe (~1,250 CAS), not priority-62 set
 - PASS | 2026-09-23 ET Added searchable chemical picker from bundled SQLite universe

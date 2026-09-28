@@ -7,8 +7,8 @@ Implements NCBI PubChem Dynamic Request Throttling compliance:
   https://pubchem.ncbi.nlm.nih.gov/docs/dynamic-request-throttling
 
 Key behaviors:
-  - Optional local bulk index from PubChem FTP files (CAS → CID, SMILES, etc.)
-  - Falls back to PUG-REST API on bulk cache miss
+  - Optional local bulk index from PubChem FTP files (CAS → CID, SMILES, LCSS hazards)
+  - Falls back to PUG-REST API on bulk cache miss (unless offline mode)
   - Process-wide rate limiting (default 0.35s between requests; env PUBCHEM_MIN_INTERVAL_S)
   - Exponential backoff with jitter on 429/503/5xx
   - Honors Retry-After header when present
@@ -18,6 +18,13 @@ Key behaviors:
 Bulk index env vars:
   - PUBCHEM_BULK_DIR: Override bulk data directory
   - PUBCHEM_DISABLE_BULK=1: Skip bulk lookup entirely
+  - PUBCHEM_OFFLINE_MODE=1: Block ALL live PubChem calls; return local-only results
+
+Offline mode (PUBCHEM_OFFLINE_MODE=1):
+  - All lookups use only local bulk index
+  - API calls return PubChemOfflineError instead of making network requests
+  - Does NOT write synthetic entries to HTTP cache
+  - Results include pubchem_source and toxicity_sections flags
 """
 
 from __future__ import annotations
@@ -51,6 +58,16 @@ _last_request_lock = threading.Lock()
 _last_request_at = 0.0
 
 _CACHE_DIR: Path | None = None
+_offline_mode: bool | None = None
+
+
+def _is_offline_mode() -> bool:
+    """Check if offline mode is enabled (blocks ALL live PubChem calls)."""
+    global _offline_mode
+    if _offline_mode is not None:
+        return _offline_mode
+    _offline_mode = os.environ.get("PUBCHEM_OFFLINE_MODE", "").strip() == "1"
+    return _offline_mode
 
 
 def _try_bulk_lookup(cas: str) -> Optional[int]:
@@ -72,6 +89,28 @@ def _get_bulk_data(cid: int) -> Optional[Dict[str, Any]]:
     try:
         from packages.doss_core.pubchem_bulk import lookup_cid_data
         return lookup_cid_data(cid)
+    except ImportError:
+        return None
+    except Exception:
+        return None
+
+
+def _get_bulk_lcss(cid: int) -> Optional[Dict[str, Any]]:
+    """Try to get LCSS hazard data from bulk index."""
+    try:
+        from packages.doss_core.pubchem_bulk import lookup_lcss_data
+        return lookup_lcss_data(cid)
+    except ImportError:
+        return None
+    except Exception:
+        return None
+
+
+def _get_bulk_cas_full(cas: str) -> Optional[Dict[str, Any]]:
+    """Try to get full compound data from bulk index."""
+    try:
+        from packages.doss_core.pubchem_bulk import lookup_cas_full
+        return lookup_cas_full(cas)
     except ImportError:
         return None
     except Exception:
@@ -151,6 +190,16 @@ class PubChemNotFoundError(PubChemError):
     pass
 
 
+class PubChemOfflineError(PubChemError):
+    """Raised when offline mode is enabled and data is not in local bulk index.
+
+    The UI should catch this and show "PubChem offline mode — use local bulk index
+    or disable PUBCHEM_OFFLINE_MODE" rather than attempting network calls.
+    """
+
+    pass
+
+
 def _throttle() -> None:
     """Enforce minimum interval between PubChem requests (process-wide)."""
     global _last_request_at
@@ -212,6 +261,7 @@ def _get_with_retries(
         requests.Response on success
 
     Raises:
+        PubChemOfflineError: If offline mode is enabled and not in cache
         PubChemThrottledError: On 429/503 after retries exhausted
         PubChemNotFoundError: On 404
         PubChemError: On other failures
@@ -227,6 +277,13 @@ def _get_with_retries(
             fake_resp._content = json.dumps(cached).encode("utf-8")
             fake_resp.headers["X-Cache"] = "HIT"
             return fake_resp
+
+    if _is_offline_mode():
+        raise PubChemOfflineError(
+            f"{label}: offline mode enabled (PUBCHEM_OFFLINE_MODE=1). "
+            "Data not in local bulk index or HTTP cache. "
+            "Build the bulk index with: python -m packages.doss_core.pubchem_bulk build"
+        )
 
     last_exc: Exception | None = None
     last_retry_after: Optional[float] = None
@@ -538,30 +595,109 @@ def fetch_compound_data(cas: str, name_hint: Optional[str] = None) -> Dict[str, 
     """
     Fetch compound data for a CAS number.
 
-    Basic identity always comes from PUG REST. PUG View (physchem / GHS / NFPA)
-    is retried on ServerBusy; if it still fails, the row is built from identity
-    alone and ``view_warning`` explains the partial result.
+    In offline mode (PUBCHEM_OFFLINE_MODE=1):
+      - Uses only local bulk index (no network calls)
+      - Returns data from FTP LCSS with explicit source flags
+      - Raises PubChemOfflineError if CAS not in bulk index
+
+    Online mode:
+      - Basic identity comes from PUG REST (or bulk cache)
+      - PUG View (physchem / GHS / NFPA) is retried on ServerBusy
+      - If PUG View fails, checks bulk LCSS as fallback
+      - Row is built from available data; ``view_warning`` explains partial result
+
+    Returns dict includes:
+      - pubchem_source: "api", "ftp_lcss", or "ftp_bulk"
+      - toxicity_sections: "present" (API) or "absent" (LCSS lacks LD50/LC50)
 
     Raises:
+        PubChemOfflineError: In offline mode, CAS not in bulk index
         PubChemThrottledError: On throttling after retries (UI should catch this)
         PubChemNotFoundError: Compound not found
         PubChemError: Other API failures
     """
+    if _is_offline_mode():
+        bulk_full = _get_bulk_cas_full(cas)
+        if bulk_full is None:
+            raise PubChemOfflineError(
+                f"Compound {cas} not found in local bulk index. "
+                "Build the index with: python -m packages.doss_core.pubchem_bulk build"
+            )
+
+        cid = bulk_full["cid"]
+        return {
+            "cid": cid,
+            "name": name_hint or bulk_full.get("title", ""),
+            "cas": cas,
+            "formula": "",
+            "molecular_weight": None,
+            "properties": {},
+            "ghs_hazards": bulk_full.get("ghs_hcodes", []),
+            "nfpa_health": str(bulk_full["nfpa_health"]) if bulk_full.get("nfpa_health") is not None else None,
+            "nfpa_flame": str(bulk_full["nfpa_fire"]) if bulk_full.get("nfpa_fire") is not None else None,
+            "pubchem_url": f"{PUBCHEM_COMPOUND_URL}/{cid}",
+            "view_warning": None,
+            "smiles": bulk_full.get("smiles", ""),
+            "pubchem_source": bulk_full.get("pubchem_source", "ftp_bulk"),
+            "toxicity_sections": bulk_full.get("toxicity_sections", "absent"),
+            "cid_ambiguous": bulk_full.get("cid_ambiguous", False),
+            "flash_point_c": bulk_full.get("flash_point_c"),
+            "vapor_pressure_mmhg": bulk_full.get("vapor_pressure_mmhg"),
+        }
+
     cid = get_cid_by_cas(cas)
     if cid is None:
         raise PubChemNotFoundError(f"Compound not found for CAS {cas}")
 
-    basic_props = get_compound_properties(cid)
+    basic_props: Dict[str, Any] = {}
+    try:
+        basic_props = get_compound_properties(cid)
+    except PubChemOfflineError:
+        bulk_data = _get_bulk_data(cid)
+        if bulk_data:
+            basic_props = {"Title": bulk_data.get("title"), "CanonicalSMILES": bulk_data.get("smiles")}
+    except PubChemError:
+        pass
 
     exp_props: Dict[str, Any] = {}
     view_warning: Optional[str] = None
+    pubchem_source = "api"
+    toxicity_sections = "present"
+
     try:
         view_data = get_compound_view_data(cid)
         exp_props = extract_experimental_properties(view_data)
     except PubChemThrottledError:
         raise
+    except PubChemOfflineError:
+        lcss_data = _get_bulk_lcss(cid)
+        if lcss_data:
+            exp_props = {
+                "GHS": lcss_data.get("ghs_hcodes", []),
+                "NFPA Health": str(lcss_data["nfpa_health"]) if lcss_data.get("nfpa_health") is not None else None,
+                "NFPA Flame": str(lcss_data["nfpa_fire"]) if lcss_data.get("nfpa_fire") is not None else None,
+                "Flash Point": f"{lcss_data['flash_point_c']}°C" if lcss_data.get("flash_point_c") is not None else None,
+            }
+            pubchem_source = "ftp_lcss"
+            toxicity_sections = "absent"
+            view_warning = "Using bulk LCSS data (offline mode or API unavailable)"
+        else:
+            view_warning = "PubChem offline and no LCSS data available"
+            pubchem_source = "ftp_bulk"
+            toxicity_sections = "absent"
     except PubChemError as e:
-        view_warning = str(e)
+        lcss_data = _get_bulk_lcss(cid)
+        if lcss_data:
+            exp_props = {
+                "GHS": lcss_data.get("ghs_hcodes", []),
+                "NFPA Health": str(lcss_data["nfpa_health"]) if lcss_data.get("nfpa_health") is not None else None,
+                "NFPA Flame": str(lcss_data["nfpa_fire"]) if lcss_data.get("nfpa_fire") is not None else None,
+            }
+            pubchem_source = "ftp_lcss"
+            toxicity_sections = "absent"
+            view_warning = f"API failed ({e}), using bulk LCSS fallback"
+        else:
+            view_warning = str(e)
 
     name = name_hint or basic_props.get("Title") or basic_props.get("IUPACName", "")
 
@@ -583,6 +719,8 @@ def fetch_compound_data(cas: str, name_hint: Optional[str] = None) -> Dict[str, 
             or basic_props.get("ConnectivitySMILES")
             or ""
         ),
+        "pubchem_source": pubchem_source,
+        "toxicity_sections": toxicity_sections,
     }
 
 
