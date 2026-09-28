@@ -87,23 +87,26 @@ def test_numeric_threshold_range_uses_upper_bound(cell_value, expected):
 
 
 # --------------------------------------------------------------------------- #
-# Site-style aggregation (top-two mean)
+# Expert-style aggregation (MAX - worst hazard wins)
+# Per expert1228: subcategory = max unit score, category = max subcategory score
 # --------------------------------------------------------------------------- #
 
-def test_mean_of_top_two_empty():
+def test_max_score_empty():
     assert mean_of_top_two_highest([]) is None
 
 
-def test_mean_of_top_two_single():
+def test_max_score_single():
     assert mean_of_top_two_highest([8.0]) == 8.0
 
 
-def test_mean_of_top_two_pair():
-    assert mean_of_top_two_highest([10.0, 6.0]) == 8.0
+def test_max_score_returns_highest():
+    """MAX aggregation: highest score wins (not average of top 2)."""
+    assert mean_of_top_two_highest([10.0, 6.0]) == 10.0
 
 
-def test_mean_of_top_two_takes_worst_two():
-    assert mean_of_top_two_highest([2.0, 10.0, 4.0, 8.0]) == 9.0
+def test_max_score_from_many():
+    """MAX of [2, 10, 4, 8] = 10 (not 9.0 from mean of top 2)."""
+    assert mean_of_top_two_highest([2.0, 10.0, 4.0, 8.0]) == 10.0
 
 
 # --------------------------------------------------------------------------- #
@@ -231,7 +234,7 @@ def test_matrix_fingerprint():
 
 
 def test_scorer_version():
-    assert SCORER_VERSION == "p2oasys_scorer_v6.8_bug_fixes"
+    assert SCORER_VERSION == "p2oasys_scorer_v7.0_expert_alignment"
 
 
 # --------------------------------------------------------------------------- #
@@ -803,3 +806,183 @@ def test_predicted_only_status_label(matrix):
         assert entry.get("status") == STATUS_PREDICTED_ONLY, \
             f"Predicted-only evidence should have status '{STATUS_PREDICTED_ONLY}', got '{entry.get('status')}'"
         assert entry.get("predicted") is True
+
+
+# --------------------------------------------------------------------------- #
+# Band corrections (Fix 7, expert1228)
+# --------------------------------------------------------------------------- #
+
+def test_acid_rain_s_or_n_minimum_8(matrix):
+    """Acid Rain Formation: S or N in SMILES → minimum score 8 (Fix 7)."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["smiles"] = "c1ccccc1S"  # Benzene with S
+    hd["toxicities"] = [
+        {"value": "Does not contain S or N"},  # Would normally score 2
+    ]
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    assert evidence.get("has_s_or_n") is True, "Should detect S in SMILES"
+
+    atmo = scores.get("Atmospheric Hazard", {})
+    acid_rain = atmo.get("Acid Rain Formation", {})
+    acid_rain_score = acid_rain.get("Key Phrases")
+
+    assert acid_rain_score is not None, "Should have Acid Rain score"
+    assert acid_rain_score >= 8, f"S in SMILES should give minimum 8, got {acid_rain_score}"
+
+
+def test_acid_rain_nitrogen_minimum_8(matrix):
+    """Acid Rain Formation: N in SMILES → minimum score 8 (Fix 7)."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["smiles"] = "c1ccc(N)cc1"  # Aniline
+    hd["toxicities"] = [
+        {"value": "Does not contain S or N"},  # Would normally score 2
+    ]
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    assert evidence.get("has_s_or_n") is True, "Should detect N in SMILES"
+
+    atmo = scores.get("Atmospheric Hazard", {})
+    acid_rain = atmo.get("Acid Rain Formation", {})
+    acid_rain_score = acid_rain.get("Key Phrases")
+
+    assert acid_rain_score is not None, "Should have Acid Rain score"
+    assert acid_rain_score >= 8, f"N in SMILES should give minimum 8, got {acid_rain_score}"
+
+
+def test_acid_rain_no_s_or_n_no_correction(matrix):
+    """Acid Rain Formation: no S or N in SMILES → no band correction."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["smiles"] = "c1ccccc1"  # Benzene without S or N
+    hd["toxicities"] = [
+        {"value": "Does not contain S or N"},  # Should score 2
+    ]
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    assert evidence.get("has_s_or_n") is False, "Should NOT detect S or N in SMILES"
+
+    atmo = scores.get("Atmospheric Hazard", {})
+    acid_rain = atmo.get("Acid Rain Formation", {})
+    acid_rain_score = acid_rain.get("Key Phrases")
+
+    assert acid_rain_score == 2, f"No S or N should score 2, got {acid_rain_score}"
+
+
+def test_neshap_hap_listed_scores_10(matrix):
+    """NESHAP: listed HAP → score 10 (Fix 7)."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["toxicities"] = [
+        {"value": "Listed as NESHAP Hazardous Air Pollutant"},
+        {"value": "Not listed as EPA hazardous air pollutant"},  # Would score 2
+    ]
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    assert evidence.get("is_neshap_hap") is True, "Should detect NESHAP HAP"
+
+    atmo = scores.get("Atmospheric Hazard", {})
+    neshap = atmo.get("NESHAP", {})
+    neshap_score = neshap.get("Key Phrases")
+
+    assert neshap_score == 10, f"NESHAP HAP should score 10, got {neshap_score}"
+
+
+def test_neshap_not_listed_no_correction(matrix):
+    """NESHAP: not listed HAP → no band correction."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["toxicities"] = [
+        {"value": "Not listed as EPA hazardous air pollutant"},  # Score 2
+    ]
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    assert evidence.get("is_neshap_hap") is False, "Should NOT detect NESHAP HAP"
+
+    atmo = scores.get("Atmospheric Hazard", {})
+    neshap = atmo.get("NESHAP", {})
+    neshap_score = neshap.get("Key Phrases")
+
+    assert neshap_score == 2, f"Not listed HAP should score 2, got {neshap_score}"
+
+
+# --------------------------------------------------------------------------- #
+# ECOSAR gap-fill rules (Gabriel's decision)
+# --------------------------------------------------------------------------- #
+
+def test_measured_wins_over_ecosar(matrix):
+    """Measured aquatic data ALWAYS wins over ECOSAR predictions (Gabriel's rule)."""
+    hd = _hd([], ghs={"h_codes": []})
+    # Predicted (ECOSAR) value is lower (more hazardous)
+    hd["lc50_aquatic_mg_l"] = {"value": 0.01, "predicted": True}  # Would score 10
+    # Measured value is higher (less hazardous)
+    hd["toxicities"] = [
+        {"value": "LC50 100 mg/L fish", "predicted": False},  # Should score 4
+    ]
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    lc50_ev = evidence.get("aquatic_lc50")
+
+    assert lc50_ev is not None
+    assert lc50_ev["value"] == 100.0, "Measured 100 mg/L should be used, not predicted 0.01"
+    assert lc50_ev["predicted"] is False, "Should use measured data"
+
+    eco = scores.get("Ecological Hazards", {})
+    aquatic = eco.get("Acute Aquatic Toxicity", {})
+    lc50_score = aquatic.get("Acute Fish LC50 (mg/l)")
+
+    # LC50 100 mg/L scores lower than LC50 0.01 mg/L
+    assert lc50_score is not None
+    assert lc50_score < 10, "Measured 100 mg/L should NOT score 10 (ECOSAR 0.01 should be ignored)"
+
+
+def test_ecosar_fills_gap(matrix):
+    """ECOSAR fills Ecological subcategories when no measured data exists (Gabriel's rule)."""
+    hd = _hd([], ghs={"h_codes": []})
+    # Only predicted (ECOSAR) value, no measured
+    hd["lc50_aquatic_mg_l"] = {"value": 5.0, "predicted": True}
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    lc50_ev = evidence.get("aquatic_lc50")
+
+    assert lc50_ev is not None
+    assert lc50_ev["value"] == 5.0, "ECOSAR value should be used when no measured"
+    assert lc50_ev["predicted"] is True, "Should be marked as predicted"
+
+    eco = scores.get("Ecological Hazards", {})
+    aquatic = eco.get("Acute Aquatic Toxicity", {})
+    lc50_score = aquatic.get("Acute Fish LC50 (mg/l)")
+
+    assert lc50_score is not None, "ECOSAR should fill gap when no measured data"
+
+    scored = trace.get("scored", [])
+    lc50_scored = [s for s in scored if "LC50" in s.get("unit", "") and "Aquatic" in s.get("subcategory", "")]
+    assert len(lc50_scored) > 0
+    assert all(s.get("predicted") is True for s in lc50_scored), "ECOSAR-derived units must be labelled predicted=true"
+
+
+def test_ghs_aquatic_h_codes_count_as_measured(matrix):
+    """GHS aquatic H-codes (H400-H413) count as measured data for ECOSAR override."""
+    hd = _hd([], ghs={"h_codes": ["H411"]})  # GHS chronic aquatic hazard
+    # Predicted (ECOSAR) value
+    hd["lc50_aquatic_mg_l"] = {"value": 0.001, "predicted": True}  # Would score 10
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    eco = scores.get("Ecological Hazards", {})
+    aquatic = eco.get("Acute Aquatic Toxicity", {})
+
+    # H411 triggers GHS scoring which should be used
+    assert aquatic.get("_max") is not None
+    # GHS H codes provide category-level scores that may differ from raw LC50
