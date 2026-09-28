@@ -1889,6 +1889,68 @@ def compute_p2oasys_scores_with_trace(
             results[category]["_category_max"] = _round_score(cat_agg)
             results[category]["_category_predicted"] = cat_all_predicted
 
+    # Fix 6: Chronic no-classification defaults (expert1228)
+    # Apply default scores when hazard data was retrieved but no relevant classification exists.
+    # Carcinogen → 2, Mutagen/Teratogen → 4, Reproductive/Developmental → 4
+    # ONLY when: hazard source retrieved (non-empty toxicities or GHS h_codes)
+    # NEVER when: NO_CID, NO_LCSS, or hazard_data_missing
+    CHRONIC_DEFAULTS = {
+        "Carcinogen": 2,
+        "Mutagen/ Teratogen": 4,
+        "Reproductive/ Developmental": 4,
+    }
+    STATUS_DEFAULT_NO_CLASSIFICATION = "Default (no classification)"
+
+    hazard_source_retrieved = bool(
+        hazard_data.get("toxicities") or (ghs and ghs.get("h_codes"))
+    )
+    subcats_default_count = 0
+
+    if hazard_source_retrieved:
+        chronic_results = results.get("Chronic Human Effects", {})
+        for subcat_name, default_score in CHRONIC_DEFAULTS.items():
+            subcat_data = chronic_results.get(subcat_name)
+            # Apply default if subcategory has no score
+            if subcat_data is None or subcat_data.get("_max") is None:
+                chronic_results[subcat_name] = {
+                    "_max": float(default_score),
+                    "_predicted": False,
+                    "_default": True,
+                    "_default_reason": "no classification found in hazard data",
+                }
+                subcats_default_count += 1
+                scored.append({
+                    "category": "Chronic Human Effects",
+                    "subcategory": subcat_name,
+                    "unit": "default",
+                    "input_value": None,
+                    "qualifier": "default_no_classification",
+                    "matrix_rule": {"type": "default", "default_score": default_score},
+                    "score": default_score,
+                    "status": STATUS_DEFAULT_NO_CLASSIFICATION,
+                    "predicted": False,
+                })
+
+        # Recompute Chronic category _category_max if defaults were applied
+        if subcats_default_count > 0:
+            chronic_maxima = []
+            chronic_pred_flags = []
+            for _sk, bundle in chronic_results.items():
+                if _sk.startswith("_") or not isinstance(bundle, dict):
+                    continue
+                sm = bundle.get("_max")
+                if isinstance(sm, (int, float)):
+                    chronic_maxima.append(float(sm))
+                    chronic_pred_flags.append(bool(bundle.get("_predicted")))
+            if chronic_maxima:
+                chronic_agg = _category_score_max_subcategory(chronic_maxima)
+                if chronic_agg is not None:
+                    chronic_results["_category_max"] = _round_score(chronic_agg)
+                    chronic_results["_category_predicted"] = (
+                        chronic_pred_flags and all(chronic_pred_flags)
+                    )
+            results["Chronic Human Effects"] = chronic_results
+
     category_status: dict[str, str] = {}
     for category in matrix:
         data = results.get(category) or {}
@@ -1940,6 +2002,7 @@ def compute_p2oasys_scores_with_trace(
         "missing": missing,
         "category_status": category_status,
         "overall": results["_overall"],
+        "subcats_default": subcats_default_count,
     }
     return results, trace
 

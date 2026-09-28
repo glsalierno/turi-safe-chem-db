@@ -986,3 +986,94 @@ def test_ghs_aquatic_h_codes_count_as_measured(matrix):
     # H411 triggers GHS scoring which should be used
     assert aquatic.get("_max") is not None
     # GHS H codes provide category-level scores that may differ from raw LC50
+
+
+# --------------------------------------------------------------------------- #
+# Chronic no-classification defaults (Fix 6, expert1228)
+# --------------------------------------------------------------------------- #
+
+def test_chronic_defaults_applied_when_data_exists(matrix):
+    """Chronic defaults applied when hazard data exists but no classification (Fix 6)."""
+    hd = _hd([
+        {"value": "LD50 1000 mg/kg", "species_route": ["oral", "rat"]},  # Non-chronic data
+    ], ghs={"h_codes": ["H302"]})  # Non-chronic H-code
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    chronic = scores.get("Chronic Human Effects", {})
+
+    # Carcinogen default = 2
+    carcinogen = chronic.get("Carcinogen", {})
+    assert carcinogen.get("_max") == 2.0, f"Carcinogen default should be 2, got {carcinogen.get('_max')}"
+    assert carcinogen.get("_default") is True, "Should be marked as default"
+
+    # Mutagen/Teratogen default = 4
+    mutagen = chronic.get("Mutagen/ Teratogen", {})
+    assert mutagen.get("_max") == 4.0, f"Mutagen/Teratogen default should be 4, got {mutagen.get('_max')}"
+    assert mutagen.get("_default") is True, "Should be marked as default"
+
+    # Reproductive/Developmental default = 4
+    repro = chronic.get("Reproductive/ Developmental", {})
+    assert repro.get("_max") == 4.0, f"Reproductive/Developmental default should be 4, got {repro.get('_max')}"
+    assert repro.get("_default") is True, "Should be marked as default"
+
+    # Check trace has subcats_default count
+    assert trace.get("subcats_default") == 3, "Should have 3 default subcategories"
+
+
+def test_chronic_defaults_not_applied_when_no_data(matrix):
+    """Chronic defaults NOT applied when no hazard data (empty case)."""
+    hd = _hd([], ghs={"h_codes": []})  # No toxicities, no H-codes
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    chronic = scores.get("Chronic Human Effects", {})
+
+    # Carcinogen should have no score (not defaulted)
+    carcinogen = chronic.get("Carcinogen", {})
+    assert carcinogen.get("_max") is None or carcinogen.get("_default") is not True, \
+        "Carcinogen should NOT have default when no hazard data"
+
+    # Subcats_default should be 0 when no hazard data
+    assert trace.get("subcats_default") == 0, "Should have 0 defaults when no hazard data"
+
+
+def test_chronic_defaults_not_override_existing(matrix):
+    """Chronic defaults do NOT override existing classifications (Fix 6)."""
+    hd = _hd([
+        {"value": "IARC Group 1: Carcinogenic to humans"},  # Real carcinogen classification
+    ], ghs={"h_codes": []})
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    chronic = scores.get("Chronic Human Effects", {})
+    carcinogen = chronic.get("Carcinogen", {})
+
+    # Should have IARC score (10), not default (2)
+    assert carcinogen.get("_max") == 10.0, f"IARC Group 1 should score 10, got {carcinogen.get('_max')}"
+    assert carcinogen.get("_default") is not True, "Should NOT be marked as default when real data exists"
+
+    # But Mutagen/Reproductive should still get defaults
+    mutagen = chronic.get("Mutagen/ Teratogen", {})
+    assert mutagen.get("_max") == 4.0, "Mutagen should still get default"
+    assert mutagen.get("_default") is True
+
+    # Only 2 defaults (not Carcinogen)
+    assert trace.get("subcats_default") == 2, "Should have 2 default subcategories (Mutagen, Reproductive)"
+
+
+def test_chronic_default_status_label(matrix):
+    """Chronic defaults have distinct status label 'Default (no classification)'."""
+    hd = _hd([
+        {"value": "LD50 1000 mg/kg", "species_route": ["oral", "rat"]},
+    ], ghs={"h_codes": ["H302"]})
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    scored = trace.get("scored", [])
+    default_entries = [s for s in scored if s.get("qualifier") == "default_no_classification"]
+
+    assert len(default_entries) == 3, "Should have 3 default entries in trace"
+    for entry in default_entries:
+        assert entry.get("status") == "Default (no classification)", \
+            f"Default entries should have status 'Default (no classification)', got '{entry.get('status')}'"
