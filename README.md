@@ -110,6 +110,89 @@ When PubChem returns HTTP 503 / 429 ("ServerBusy", "Too many requests"), the cli
 
 **Cache-first:** Cached responses are used on hit (default 24h); write on successful fetch. No invented chemical data.
 
+## PubChem Bulk Index (Offline/High-Volume)
+
+For high-volume CAS lookups or offline operation, build a local index from PubChem's FTP bulk files. This provides:
+- **Offline mode** (`PUBCHEM_OFFLINE_MODE=1`): No network calls, uses only local data
+- **Reduced API load**: Checks bulk index first, falls back to API on miss
+- **GHS/NFPA from LCSS**: Hazard data from Laboratory Chemical Safety Summaries
+
+### Bulk Files Indexed
+
+| File | Purpose | Size | Required |
+|------|---------|------|----------|
+| `CID-Identifiers.tsv.gz` | CAS → CID (PRIMARY, official) | ~50 MB | Yes |
+| `CID-Synonym-filtered.gz` | CAS → CID (FALLBACK) | ~600 MB | Yes |
+| `CID-LCSS.xml.gz` | GHS, NFPA, flash point, IARC | ~456 MB | Yes |
+| `CID-SMILES.gz` | CID → SMILES | ~3.5 GB | Optional |
+| `CID-Title.gz` | CID → compound name | ~2.5 GB | Optional |
+| `CID-InChI-Key.gz` | CID → InChI key | ~4 GB | Optional |
+
+**Core files:** ~1.1 GB compressed + ~300 MB SQLite index
+**Full index:** ~11 GB compressed + ~2 GB SQLite index
+
+### CLI Commands
+
+```bash
+# Core files only (~1.1 GB download)
+python -m packages.doss_core.pubchem_bulk build
+
+# Include optional large files (~11 GB download)
+python -m packages.doss_core.pubchem_bulk build --full
+
+# Restrict index to specific CAS list (much smaller)
+python -m packages.doss_core.pubchem_bulk build --cas-file expert_cas.txt
+
+# Check and update if stale (>30 days old)
+python -m packages.doss_core.pubchem_bulk refresh
+
+# Show index status and statistics
+python -m packages.doss_core.pubchem_bulk status
+
+# Look up a CAS number (for testing)
+python -m packages.doss_core.pubchem_bulk lookup 67-64-1
+
+# Remove all bulk data
+python -m packages.doss_core.pubchem_bulk clear --yes
+```
+
+### Environment Variables
+
+| Variable | Purpose |
+|----------|---------|
+| `PUBCHEM_BULK_DIR` | Override bulk data directory (default `~/.turi-safe-chem-db/pubchem-bulk/`) |
+| `PUBCHEM_DISABLE_BULK` | Set to `1` to skip bulk lookup entirely |
+| `PUBCHEM_OFFLINE_MODE` | Set to `1` to block ALL live PubChem calls |
+
+### CAS → CID Resolution
+
+199 of 1,228 expert CAS numbers map to multiple PubChem CIDs. Resolution rules:
+1. Prefer CID from `CID-Identifiers` (official registry) over synonyms
+2. Among same-source candidates, prefer lowest CID (parent compound)
+3. All candidates stored; `cid_ambiguous` flag set when multiple found
+
+### LCSS Data Coverage
+
+From `CID-LCSS.xml.gz` (257,169 records, validated identical to live for 44/44 tested):
+- ✅ GHS H/P codes, signal word, pictograms
+- ✅ NFPA Health/Fire/Reactivity
+- ✅ Flash point, vapor pressure, IARC
+- ❌ **LD50 (Toxicity Data)** — NOT in LCSS, differs ~1 in 6 vs live
+- ❌ **LC50/Aquatic (Ecotoxicity)** — NOT in LCSS, mostly lost
+
+### Source Flags (Never Silently Blank)
+
+Results include explicit provenance flags:
+- `pubchem_source`: `"api"`, `"ftp_lcss"`, or `"ftp_bulk"`
+- `toxicity_sections`: `"present"` (API) or `"absent"` (LCSS lacks LD50/LC50)
+
+### Important Notes
+
+- **Bulk files NOT committed to git** — stored in user data directories
+- **Streaming parser:** Multi-GB files processed line-by-line with bounded memory
+- **Offline mode does NOT write to HTTP cache** — keeps caches honest
+- See [CAPABILITIES.md](CAPABILITIES.md) for full capability matrix
+
 ## Fisher & TCI SDS enrichment
 
 Both vendors are **intentional, shareable** on-demand enrichers (not mass scrapers):
