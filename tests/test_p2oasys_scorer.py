@@ -1077,3 +1077,94 @@ def test_chronic_default_status_label(matrix):
     for entry in default_entries:
         assert entry.get("status") == "Default (no classification)", \
             f"Default entries should have status 'Default (no classification)', got '{entry.get('status')}'"
+
+
+# --------------------------------------------------------------------------- #
+# ECOSAR caps (Fix 4, expert1228)
+# --------------------------------------------------------------------------- #
+
+def test_ecosar_inorganic_excluded(matrix):
+    """Predicted LC50 for inorganic compounds (no C in SMILES) excluded (Fix 4)."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["smiles"] = "[Na+].[Cl-]"  # NaCl - no carbon
+    hd["lc50_aquatic_mg_l"] = {"value": 0.01, "predicted": True}
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    lc50_ev = evidence.get("aquatic_lc50", {})
+    assert lc50_ev.get("low_confidence") is True, "Inorganic should be flagged low_confidence"
+
+    eco = scores.get("Ecological Hazards", {})
+    aquatic = eco.get("Acute Aquatic Toxicity", {})
+    assert aquatic.get("_max") is None, "Inorganic predicted LC50 should NOT score"
+
+
+def test_ecosar_siloxane_excluded(matrix):
+    """Predicted LC50 for siloxane compounds excluded (Fix 4)."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["smiles"] = "[Si](C)(C)O[Si](C)(C)C"  # Simple siloxane
+    hd["lc50_aquatic_mg_l"] = {"value": 0.01, "predicted": True}
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    lc50_ev = evidence.get("aquatic_lc50", {})
+    assert lc50_ev.get("low_confidence") is True, "Siloxane should be flagged low_confidence"
+
+    eco = scores.get("Ecological Hazards", {})
+    aquatic = eco.get("Acute Aquatic Toxicity", {})
+    assert aquatic.get("_max") is None, "Siloxane predicted LC50 should NOT score"
+
+
+def test_ecosar_very_low_prediction_excluded(matrix):
+    """Predicted LC50 < 1e-3 mg/L excluded as implausibly low (Fix 4)."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["smiles"] = "c1ccccc1"  # Benzene - organic, not siloxane
+    hd["lc50_aquatic_mg_l"] = {"value": 1e-6, "predicted": True}  # Below 0.001 mg/L
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    lc50_ev = evidence.get("aquatic_lc50", {})
+    assert lc50_ev.get("low_confidence") is True, "Very low prediction should be flagged low_confidence"
+
+    eco = scores.get("Ecological Hazards", {})
+    aquatic = eco.get("Acute Aquatic Toxicity", {})
+    assert aquatic.get("_max") is None, "Very low predicted LC50 should NOT score"
+
+
+def test_ecosar_organic_normal_prediction_scored(matrix):
+    """Normal organic compound with reasonable predicted LC50 is scored."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["smiles"] = "c1ccccc1"  # Benzene - organic, not siloxane
+    hd["lc50_aquatic_mg_l"] = {"value": 5.0, "predicted": True}  # Reasonable value
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    lc50_ev = evidence.get("aquatic_lc50", {})
+    assert lc50_ev.get("low_confidence") is not True, "Normal prediction should NOT be flagged"
+
+    eco = scores.get("Ecological Hazards", {})
+    aquatic = eco.get("Acute Aquatic Toxicity", {})
+    assert aquatic.get("_max") is not None, "Normal organic predicted LC50 should score"
+
+
+def test_measured_lc50_not_excluded_for_inorganic(matrix):
+    """Measured LC50 for inorganic compounds is NOT excluded (Fix 4 only affects predicted)."""
+    hd = _hd([], ghs={"h_codes": []})
+    hd["smiles"] = "[Na+].[Cl-]"  # NaCl - no carbon
+    hd["toxicities"] = [
+        {"value": "LC50 10 mg/L fish", "predicted": False},  # Measured
+    ]
+
+    scores, trace = compute_p2oasys_scores_with_trace(hd, matrix)
+
+    evidence = trace.get("evidence", {})
+    lc50_ev = evidence.get("aquatic_lc50", {})
+    assert lc50_ev.get("low_confidence") is not True, "Measured value should NOT be flagged"
+
+    eco = scores.get("Ecological Hazards", {})
+    aquatic = eco.get("Acute Aquatic Toxicity", {})
+    assert aquatic.get("_max") is not None, "Measured LC50 should score even for inorganics"

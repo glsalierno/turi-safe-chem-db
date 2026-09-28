@@ -619,6 +619,34 @@ def _smiles_contains_s_or_n(smiles: Optional[str]) -> bool:
     return has_sulfur or has_nitrogen
 
 
+def _smiles_is_inorganic(smiles: Optional[str]) -> bool:
+    """Check if SMILES represents an inorganic compound (no carbon atoms).
+    
+    Used for ECOSAR cap (Fix 4, expert1228):
+    Inorganics should not have ECOSAR predictions scored as high hazard.
+    """
+    if not smiles:
+        return False
+    s = str(smiles).upper()
+    # Check for carbon: C followed by any letter except L (for Cl)
+    # or lowercase c (aromatic carbon)
+    has_carbon = bool(re.search(r'C(?![LLA])', s)) or 'c' in str(smiles)
+    return not has_carbon
+
+
+def _smiles_is_siloxane(smiles: Optional[str]) -> bool:
+    """Check if SMILES represents a siloxane or silane compound.
+    
+    Used for ECOSAR cap (Fix 4, expert1228):
+    Siloxanes/silanes have poor ECOSAR predictions.
+    """
+    if not smiles:
+        return False
+    s = str(smiles)
+    # Siloxanes contain Si-O linkages; silanes contain Si
+    return 'Si' in s or '[Si]' in s
+
+
 def _is_neshap_listed_hap(hazard_data: dict) -> bool:
     """Check if chemical is a NESHAP Listed Hazardous Air Pollutant.
     
@@ -1139,11 +1167,17 @@ def _extract_lc50_aquatic(hazard_data: dict, rejections: Optional[list] = None) 
     (the chemical cannot dissolve to that concentration). Such values are flagged as
     ``beyond_solubility`` and either capped at water solubility or rejected.
 
+    Fix 4 (expert1228): Additional exclusions for predicted values:
+    - Inorganics (no C in SMILES): ECOSAR not applicable
+    - Siloxanes/silanes: poor ECOSAR predictions
+    - Predictions < 1e-3 mg/L: implausibly low
+
     Returns ``{"value", "predicted", "source", "beyond_solubility", "water_solubility"}``
     or ``None``.
     """
     water_sol = _extract_water_solubility_mg_l(hazard_data)
     log_kow = _extract_log_kow(hazard_data)
+    smiles = hazard_data.get("smiles") or hazard_data.get("SMILES")
 
     candidates: list[dict[str, Any]] = []
 
@@ -1219,6 +1253,25 @@ def _extract_lc50_aquatic(hazard_data: dict, rejections: Optional[list] = None) 
             reason = f"Predicted LC50 {best['value']:.2e} mg/L with logKow={kow:.1f}, no solubility data - lipophilic exclusion"
             _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
 
+    # Fix 4: Additional ECOSAR caps (expert1228)
+    # Inorganics (no C in SMILES): ECOSAR not applicable for inorganic compounds
+    if best.get("predicted") and _smiles_is_inorganic(smiles):
+        low_confidence = True
+        reason = f"Predicted LC50 {best['value']:.2e} mg/L for inorganic compound (no C in SMILES) - ECOSAR not applicable"
+        _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
+
+    # Siloxanes/silanes: poor ECOSAR predictions
+    if best.get("predicted") and _smiles_is_siloxane(smiles):
+        low_confidence = True
+        reason = f"Predicted LC50 {best['value']:.2e} mg/L for siloxane/silane compound - ECOSAR unreliable"
+        _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
+
+    # Very low predictions (< 1e-3 mg/L): implausibly toxic for most compounds
+    if best.get("predicted") and best["value"] < 1e-3:
+        low_confidence = True
+        reason = f"Predicted LC50 {best['value']:.2e} mg/L below 0.001 mg/L threshold - implausibly low"
+        _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
+
     best["beyond_solubility"] = beyond_solubility
     best["low_confidence"] = low_confidence
     if ws_val is not None:
@@ -1240,12 +1293,13 @@ def _extract_chv_aquatic(hazard_data: dict, rejections: Optional[list] = None) -
     Looks for structured fields, hazard_metrics, and toxicities mentioning "ChV" or "chronic value".
 
     Measured values take precedence over predicted (ECOSAR) values.
-    Same solubility/lipophilicity rules as LC50 apply.
+    Same solubility/lipophilicity rules as LC50 apply (Fix 4).
 
     Returns ``{"value", "predicted", "source", "low_confidence"}`` or ``None``.
     """
     water_sol = _extract_water_solubility_mg_l(hazard_data)
     log_kow = _extract_log_kow(hazard_data)
+    smiles = hazard_data.get("smiles") or hazard_data.get("SMILES")
 
     candidates: list[dict[str, Any]] = []
 
@@ -1303,6 +1357,22 @@ def _extract_chv_aquatic(hazard_data: dict, rejections: Optional[list] = None) -
             low_confidence = True
             reason = f"Predicted ChV {best['value']:.2e} mg/L with logKow={kow:.1f}, no solubility data - lipophilic exclusion"
             _reject(rejections, "aquatic ChV", f"{best['value']:.2e} mg/L", reason)
+
+    # Fix 4: Additional ECOSAR caps (same as LC50)
+    if best.get("predicted") and _smiles_is_inorganic(smiles):
+        low_confidence = True
+        reason = f"Predicted ChV {best['value']:.2e} mg/L for inorganic compound (no C in SMILES) - ECOSAR not applicable"
+        _reject(rejections, "aquatic ChV", f"{best['value']:.2e} mg/L", reason)
+
+    if best.get("predicted") and _smiles_is_siloxane(smiles):
+        low_confidence = True
+        reason = f"Predicted ChV {best['value']:.2e} mg/L for siloxane/silane compound - ECOSAR unreliable"
+        _reject(rejections, "aquatic ChV", f"{best['value']:.2e} mg/L", reason)
+
+    if best.get("predicted") and best["value"] < 1e-3:
+        low_confidence = True
+        reason = f"Predicted ChV {best['value']:.2e} mg/L below 0.001 mg/L threshold - implausibly low"
+        _reject(rejections, "aquatic ChV", f"{best['value']:.2e} mg/L", reason)
 
     best["low_confidence"] = low_confidence
     return best
