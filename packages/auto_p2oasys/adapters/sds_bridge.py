@@ -167,6 +167,7 @@ def sds_fields_to_evidence(
     vendor: str = "unknown",
     revision: str = "",
     file_name: str = "",
+    reference: str = "",
 ) -> tuple[list[Evidence], list[dict[str, Any]]]:
     """
     Convert SDS fields to Evidence records.
@@ -186,8 +187,16 @@ def sds_fields_to_evidence(
     evidence: list[Evidence] = []
     unmapped: list[dict[str, Any]] = []
     
+    ref_str = reference or (f"{file_name}, rev {revision}" if revision else file_name)
+    
     h_codes = fields.get("ghs_h_codes") or []
+    h_code_sources: dict[str, list[str]] = {}
     if h_codes:
+        for code in h_codes:
+            if code not in h_code_sources:
+                h_code_sources[code] = []
+            h_code_sources[code].append(source_label)
+        
         evidence.append(Evidence(
             cas=cas,
             endpoint="h_codes",
@@ -197,9 +206,11 @@ def sds_fields_to_evidence(
             predicted=False,
             reliability="classification",
             section="Section 2",
-            reference=f"{file_name}, rev {revision}" if revision else file_name,
+            reference=ref_str,
             retrieved_at=now,
         ))
+    
+    fields["h_code_sources"] = h_code_sources
     
     fps = fields.get("flash_points") or []
     if fps:
@@ -216,7 +227,7 @@ def sds_fields_to_evidence(
             reliability="measured",
             section="Section 9",
             raw_text=fp.get("raw_text"),
-            reference=f"{file_name}, rev {revision}" if revision else file_name,
+            reference=ref_str,
             retrieved_at=now,
         ))
     elif fields.get("flash_point"):
@@ -234,7 +245,7 @@ def sds_fields_to_evidence(
                 reliability="measured",
                 section="Section 9",
                 raw_text=fp_str,
-                reference=f"{file_name}, rev {revision}" if revision else file_name,
+                reference=ref_str,
                 retrieved_at=now,
             ))
     
@@ -252,7 +263,7 @@ def sds_fields_to_evidence(
             reliability="measured",
             section="Section 9",
             raw_text=vp.get("raw_text"),
-            reference=f"{file_name}, rev {revision}" if revision else file_name,
+            reference=ref_str,
             retrieved_at=now,
         ))
     
@@ -268,7 +279,7 @@ def sds_fields_to_evidence(
             reliability="measured",
             section="Section 11",
             raw_text=fields.get("ld50_oral_line"),
-            reference=f"{file_name}, rev {revision}" if revision else file_name,
+            reference=ref_str,
             retrieved_at=now,
         ))
     
@@ -284,7 +295,7 @@ def sds_fields_to_evidence(
             reliability="measured",
             section="Section 11",
             raw_text=fields.get("ld50_dermal_line"),
-            reference=f"{file_name}, rev {revision}" if revision else file_name,
+            reference=ref_str,
             retrieved_at=now,
         ))
     
@@ -300,13 +311,15 @@ def sds_fields_to_evidence(
             reliability="measured",
             section="Section 11",
             raw_text=fields.get("lc50_inhalation_line"),
-            reference=f"{file_name}, rev {revision}" if revision else file_name,
+            reference=ref_str,
             retrieved_at=now,
         ))
     
     for aq in fields.get("aquatic_toxicity_all") or []:
         if isinstance(aq, dict) and aq.get("value") is not None:
             endpoint = aq.get("endpoint", "LC50")
+            if endpoint.upper() == "NOEC":
+                continue
             species = aq.get("species") or "aquatic"
             ep_name = f"aquatic_{endpoint.lower()}_{species.lower()}"
             evidence.append(Evidence(
@@ -320,7 +333,7 @@ def sds_fields_to_evidence(
                 reliability="measured" if not aq.get("predicted") else "classification",
                 section="Section 12",
                 raw_text=aq.get("raw"),
-                reference=f"{file_name}, rev {revision}" if revision else file_name,
+                reference=ref_str,
                 retrieved_at=now,
             ))
     
@@ -338,7 +351,7 @@ def sds_fields_to_evidence(
                 reliability="measured" if not noec.get("predicted") else "classification",
                 section="Section 12",
                 raw_text=noec.get("raw"),
-                reference=f"{file_name}, rev {revision}" if revision else file_name,
+                reference=ref_str,
                 retrieved_at=now,
             ))
     
@@ -352,7 +365,7 @@ def sds_fields_to_evidence(
             predicted=False,
             reliability="classification",
             section="Section 2",
-            reference=f"{file_name}, rev {revision}" if revision else file_name,
+            reference=ref_str,
             retrieved_at=now,
         ))
     
@@ -366,7 +379,7 @@ def sds_fields_to_evidence(
             predicted=False,
             reliability="classification",
             section="Section 2",
-            reference=f"{file_name}, rev {revision}" if revision else file_name,
+            reference=ref_str,
             retrieved_at=now,
         ))
     
@@ -380,7 +393,7 @@ def sds_fields_to_evidence(
             predicted=False,
             reliability="classification",
             section="Section 2",
-            reference=f"{file_name}, rev {revision}" if revision else file_name,
+            reference=ref_str,
             retrieved_at=now,
         ))
     
@@ -394,7 +407,7 @@ def sds_fields_to_evidence(
             predicted=False,
             reliability="measured",
             section="Section 9",
-            reference=f"{file_name}, rev {revision}" if revision else file_name,
+            reference=ref_str,
             retrieved_at=now,
         ))
     
@@ -411,7 +424,7 @@ def sds_fields_to_evidence(
                 reliability="classification",
                 section="Section 9",
                 raw_text=fields["odor"],
-                reference=f"{file_name}, rev {revision}" if revision else file_name,
+                reference=ref_str,
                 retrieved_at=now,
             ))
         else:
@@ -431,7 +444,7 @@ def sds_fields_to_evidence(
             predicted=False,
             reliability="classification",
             section="Section 12",
-            reference=f"{file_name}, rev {revision}" if revision else file_name,
+            reference=ref_str,
             retrieved_at=now,
         ))
     
@@ -446,7 +459,7 @@ def sds_fields_to_evidence(
             predicted=False,
             reliability="measured",
             section="Section 12",
-            reference=f"{file_name}, rev {revision}" if revision else file_name,
+            reference=ref_str,
             retrieved_at=now,
         ))
     
@@ -460,7 +473,7 @@ def sds_fields_to_evidence(
             predicted=False,
             reliability="measured",
             section="Section 12",
-            reference=f"{file_name}, rev {revision}" if revision else file_name,
+            reference=ref_str,
             retrieved_at=now,
         ))
     
@@ -474,7 +487,7 @@ def sds_fields_to_evidence(
             predicted=False,
             reliability="measured",
             section="Section 9",
-            reference=f"{file_name}, rev {revision}" if revision else file_name,
+            reference=ref_str,
             retrieved_at=now,
         ))
     

@@ -136,10 +136,21 @@ def _detect_mixture(
     """
     Detect if SDS is for a mixture/solution.
     
+    Fix #2: Use "Substance / Mixture" line and TCI concentration format (">= 90 - <= 100").
+    
     Returns:
         (is_mixture, reason, target_concentration)
     """
+    sec1 = sections.get(1) or ""
     sec3 = sections.get(3) or ""
+    
+    substance_line = re.search(r"Substance\s*/\s*Mixture\s*[:\-]?\s*(\w+)", full_text, re.I)
+    if substance_line:
+        classification = substance_line.group(1).lower()
+        if classification == "substance":
+            return False, "", ">= 90%"
+        elif classification == "mixture":
+            return True, "Classified as Mixture in section 1", ""
     
     cas_pattern = re.compile(r"\b(\d{1,9}-\d{2}-\d)\b")
     cas_hits = cas_pattern.findall(sec3)
@@ -151,25 +162,19 @@ def _detect_mixture(
     
     unique_cas = list(dict.fromkeys(valid_cas))
     
-    conc_pattern = re.compile(
-        r"(\d+(?:\.\d+)?)\s*(?:-\s*(\d+(?:\.\d+)?))?\s*%",
-        re.I,
-    )
-    
     target_conc = None
     target_normalized = target_cas.replace("-", "")
     
     for cas in unique_cas:
         cas_norm = cas.replace("-", "")
         if cas_norm == target_normalized:
-            line_pattern = re.compile(
-                rf"{re.escape(cas)}[^\n]{{0,50}}?(\d+(?:\.\d+)?)\s*(?:-\s*(\d+(?:\.\d+)?))?\s*%",
-                re.I,
+            tci_conc = re.search(
+                rf"{re.escape(cas)}[^\n]{{0,80}}?(?:>=?\s*)?(\d+(?:\.\d+)?)\s*(?:-\s*(?:<=?\s*)?(\d+(?:\.\d+)?))?\s*%?",
+                sec3, re.I,
             )
-            m = line_pattern.search(sec3)
-            if m:
-                low = float(m.group(1))
-                high = float(m.group(2)) if m.group(2) else low
+            if tci_conc:
+                low = float(tci_conc.group(1))
+                high = float(tci_conc.group(2)) if tci_conc.group(2) else low
                 target_conc = (low, high)
     
     is_mixture = False
@@ -185,16 +190,45 @@ def _detect_mixture(
             is_mixture = True
             reason = f"Multiple CAS numbers ({len(unique_cas)}) without concentration data"
     
-    if not is_mixture and target_conc is None:
-        product_match = re.search(r"\d+\s*%|solution|mixture|blend", full_text[:2000], re.I)
-        if product_match:
-            is_mixture = True
-            reason = f"Product name suggests mixture/solution"
-    
     if target_conc:
         concentration = f"{target_conc[0]}%" if target_conc[0] == target_conc[1] else f"{target_conc[0]}-{target_conc[1]}%"
     
     return is_mixture, reason, concentration
+
+
+def is_mixture_sds(path: Path, cas: str) -> bool:
+    """
+    Check if SDS is for a mixture/solution (fix #1: function was missing).
+    
+    Args:
+        path: Path to SDS PDF file
+        cas: Target CAS number
+    
+    Returns:
+        True if mixture/solution detected
+    """
+    text, _ = sds_text.extract_text_from_pdf(path)
+    if not text:
+        return False
+    
+    sections = sds_text.split_sections(text)
+    is_mixture, _, _ = _detect_mixture(sections, cas, text)
+    return is_mixture
+
+
+def _extract_revision_date(text: str) -> str:
+    """Extract SDS revision date from text (section 1 or section 16)."""
+    patterns = [
+        r"Revision\s*(?:Date|date)[:\s]*([0-9]{1,2}[/\-][0-9]{1,2}[/\-][0-9]{2,4})",
+        r"SDS\s*(?:Revision|revision)[:\s]*([0-9]{1,2}[/\-][0-9]{1,2}[/\-][0-9]{2,4})",
+        r"Last\s*(?:Revised|Updated)[:\s]*([0-9]{1,2}[/\-][0-9]{1,2}[/\-][0-9]{2,4})",
+        r"Date\s*(?:of\s+)?(?:Revision|Issue)[:\s]*([0-9]{1,2}[/\-][0-9]{1,2}[/\-][0-9]{2,4})",
+    ]
+    for pat in patterns:
+        m = re.search(pat, text, re.I)
+        if m:
+            return m.group(1).strip()
+    return ""
 
 
 def parse_sds_document(
@@ -202,6 +236,8 @@ def parse_sds_document(
     cas: str,
     *,
     vendor: str | None = None,
+    revision: str | None = None,
+    relative_path: str | None = None,
     include_mixture: bool = False,
 ) -> SDSParseOutcome:
     """
@@ -211,6 +247,8 @@ def parse_sds_document(
         path: Path to SDS PDF file
         cas: Target CAS number
         vendor: Override vendor name (from cache metadata)
+        revision: Override revision date (from cache metadata)
+        relative_path: Relative path in cache (for reference)
         include_mixture: Include mixture SDS values in scoring
     
     Returns:
@@ -238,6 +276,9 @@ def parse_sds_document(
     if vendor is None:
         vendor = _extract_vendor_from_text(text)
     
+    if revision is None:
+        revision = _extract_revision_date(text)
+    
     sections = sds_text.split_sections(text)
     
     is_mixture, mixture_reason, target_conc = _detect_mixture(sections, cas, text)
@@ -249,13 +290,22 @@ def parse_sds_document(
     file_name = path.name
     source_label = f"SDS ({vendor}, {file_name})"
     
+    ref_parts = [vendor]
+    if revision:
+        ref_parts.append(f"rev {revision}")
+    if relative_path:
+        ref_parts.append(relative_path)
+    ref_parts.append(f"sha256:{sha256[:12]}")
+    reference_str = ", ".join(ref_parts)
+    
     evidence, unmapped = sds_bridge.sds_fields_to_evidence(
         fields,
         cas,
         source_label=source_label,
         vendor=vendor,
-        revision="",
+        revision=revision or "",
         file_name=file_name,
+        reference=reference_str,
     )
     
     if is_mixture:

@@ -442,11 +442,15 @@ def test_doss_app():
 
 
 def test_assess_spine():
-    """assess() spine is superseded by auto_p2oasys."""
+    """assess() spine is superseded by auto_p2oasys (marked as stub)."""
     registry = load_registry()
     cap = registry["capabilities"]["assess_spine"]
-    assert cap["status"] == "superseded", "assess_spine is superseded by auto_p2oasys"
-    pytest.skip("assess_spine is superseded by auto_p2oasys (PR F)")
+    assert cap["status"] == "stub", "assess_spine is superseded by auto_p2oasys (marked as stub)"
+    
+    from packages import assess
+    assert hasattr(assess, "assess")
+    with pytest.raises(NotImplementedError):
+        assess.assess("67-64-1")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
