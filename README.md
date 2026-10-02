@@ -184,9 +184,31 @@ If you use this tooling in publications or internal reports, please acknowledge:
 
 Author / maintainer GitHub: [glsalierno](https://github.com/glsalierno).
 
+## Capability Registry
+
+Every feature is tracked in the **capability registry** to prevent silent feature loss:
+
+```bash
+# Show status of all capabilities
+python -m packages.capability_report
+```
+
+Output shows ACTIVE, DISABLED, MISSING_DATA, or TODO for each capability, with env vars to configure.
+
+| File | Purpose |
+|------|---------|
+| `capabilities.yaml` | Machine-readable registry with modules, tests, env vars |
+| `CAPABILITIES.md` | Human-readable capability documentation |
+| `tests/test_capabilities.py` | One test per capability |
+| `packages/capability_config.py` | Centralized config (no hard-coded paths) |
+| `docs/PORTING_CHECKLIST.md` | Version/release guidelines |
+
+See [CAPABILITIES.md](CAPABILITIES.md) for the full capability list.
+
 ## Docs
 
 - [docs/INSTALL.md](docs/INSTALL.md)
 - [docs/HSPiP_CLI.md](docs/HSPiP_CLI.md)
 - [docs/TEAMS_DEPLOY.md](docs/TEAMS_DEPLOY.md)
+- [docs/PORTING_CHECKLIST.md](docs/PORTING_CHECKLIST.md)
 - [PACKAGING_NOTES.md](PACKAGING_NOTES.md)
