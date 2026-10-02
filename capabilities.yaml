@@ -1,0 +1,387 @@
+# Capability Registry — TURI Safe Chem DB
+# Machine-readable registry of all features/capabilities with status, tests, and env vars.
+# See CAPABILITIES.md for human-readable documentation.
+#
+# Status values:
+#   active      — Implemented and tested on main
+#   TODO        — Planned; must be filled by referenced PR before merge
+#   stub        — Module exists but feature not yet functional
+#   optional    — Works when external data/license is configured; skip otherwise
+#   licensed    — Requires proprietary software/data; skip in CI
+#   MISSING     — Module not yet ported; needs implementation
+#   superseded  — Replaced by another capability or approach
+
+capabilities:
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # PubChem API capabilities
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  pubchem_pug_rest:
+    name: "PubChem PUG-REST (throttled)"
+    description: "CAS→CID lookup, identity, and physchem properties via PubChem PUG REST API"
+    module: "packages.doss_core.pubchem"
+    required: true
+    licensed: false
+    env_vars:
+      - "PUBCHEM_MIN_INTERVAL_S"
+      - "PUBCHEM_MAX_RETRIES"
+      - "PUBCHEM_CACHE_DIR"
+      - "PUBCHEM_CACHE_MAX_AGE_S"
+    test_id: "test_capabilities::test_pubchem_pug_rest"
+    status: "active"
+
+  pubchem_pug_view_ghs:
+    name: "PubChem PUG-View GHS/NFPA"
+    description: "Extended hazard data (GHS codes, NFPA ratings) via PUG View API"
+    module: "packages.doss_core.pubchem"
+    required: true
+    licensed: false
+    env_vars:
+      - "PUBCHEM_MIN_INTERVAL_S"
+      - "PUBCHEM_CACHE_DIR"
+    test_id: "test_capabilities::test_pubchem_pug_view_ghs"
+    status: "active"
+
+  pubchem_ftp_bulk:
+    name: "PubChem FTP bulk index"
+    description: "Bulk compound index via PubChem FTP for offline lookups"
+    module: "packages.doss_core.pubchem_bulk"
+    required: false
+    licensed: false
+    env_vars:
+      - "PUBCHEM_BULK_DIR"
+      - "PUBCHEM_DISABLE_BULK"
+    test_id: "test_capabilities::test_pubchem_ftp_bulk"
+    pr: "#7"
+    status: "TODO"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # P2OASys scoring capabilities
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  p2oasys_score_lookup:
+    name: "P2OASys score lookup (SQLite)"
+    description: "Expert/auto P2OASys overall scores from bundled SQLite database"
+    module: "packages.p2oasys_core.lookup"
+    required: true
+    licensed: false
+    env_vars:
+      - "P2OASYS_SCORE_LOOKUP_DB"
+      - "EXPERT_P2OASYS_CSV"
+    test_id: "test_capabilities::test_p2oasys_score_lookup"
+    status: "active"
+
+  p2oasys_matrix_scorer:
+    name: "P2OASys matrix + scorer"
+    description: "Full P2OASys hazard matrix computation and scoring"
+    module: "packages.p2oasys_scorer"
+    required: false
+    licensed: false
+    env_vars:
+      - "P2OASYS_MATRIX_PATH"
+    test_id: "test_capabilities::test_p2oasys_matrix_scorer"
+    pr: "#8"
+    status: "TODO"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # SDS enrichment capabilities
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  fisher_sds_enrich:
+    name: "Fisher SDS enrich"
+    description: "On-demand Fisher Scientific SDS/catalog enrichment (NFPA, pricing, physchem)"
+    module: "packages.doss_core.fisher"
+    required: false
+    licensed: false
+    env_vars:
+      - "DOSS_ENABLE_FISHER"
+    test_id: "test_capabilities::test_fisher_sds_enrich"
+    status: "active"
+
+  tci_sds_enrich:
+    name: "TCI SDS enrich"
+    description: "On-demand TCI SDS/catalog enrichment (NFPA, physchem, pricing)"
+    module: "packages.doss_core.tci"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_capabilities::test_tci_sds_enrich"
+    status: "active"
+
+  sigma_sds_enrich:
+    name: "Sigma-Aldrich SDS enrich"
+    description: "Sigma-Aldrich/MilliporeSigma SDS enrichment (STUB — access pending)"
+    module: "packages.doss_core.sigma"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_capabilities::test_sigma_sds_enrich"
+    status: "stub"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # HSPiP Hansen Solubility Parameters
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  hspip_sofx_lookup:
+    name: "HSPiP sofx D/P/H/RER lookup"
+    description: "Local HSPiP .sofx file lookup for Hansen parameters (D/P/H/RER)"
+    module: "packages.doss_core.hspip"
+    required: false
+    licensed: true
+    env_vars:
+      - "HSPIP_DATA"
+      - "HSPIP_DATA_DIR"
+    test_id: "test_capabilities::test_hspip_sofx_lookup"
+    status: "optional"
+
+  hspip_cli:
+    name: "HSPiP CLI (Y-MBSX)"
+    description: "HSPiP.exe CLI for computing D/P/H from SMILES (licensed, optional)"
+    module: "packages.doss_core.hspip"
+    required: false
+    licensed: true
+    env_vars:
+      - "HSPIP_EXE"
+      - "HSPIP_PATH"
+    test_id: "test_capabilities::test_hspip_cli"
+    status: "optional"
+
+  glove_hsp_screen:
+    name: "Glove HSP polymer screen"
+    description: "HSP-based glove polymer compatibility screening (RED calculation)"
+    module: "packages.doss_core.glove_hsp"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_capabilities::test_glove_hsp_screen"
+    status: "active"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Hazard reference tables (scorer)
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  cameo_nfpa_sqlite:
+    name: "CAMEO NFPA sqlite"
+    description: "CAMEO Chemicals NFPA 704 ratings from local SQLite database"
+    module: "packages.doss_core.cameo"
+    required: false
+    licensed: false
+    env_vars:
+      - "CAMEO_NFPA_DB"
+    test_id: "test_capabilities::test_cameo_nfpa_sqlite"
+    pr: "#1"
+    status: "TODO"
+
+  iarc_table:
+    name: "IARC carcinogen table"
+    description: "IARC carcinogen classification lookup"
+    module: "packages.p2oasys_scorer.iarc_lookup"
+    required: false
+    licensed: false
+    env_vars:
+      - "IARC_TABLE_PATH"
+    test_id: "test_capabilities::test_iarc_table"
+    pr: "#8"
+    status: "TODO"
+
+  odp_gwp_ipcc:
+    name: "ODP/GWP/IPCC atmo tables"
+    description: "Ozone Depletion Potential and Global Warming Potential tables"
+    module: "packages.p2oasys_scorer.atmo_gwp"
+    required: false
+    licensed: false
+    env_vars:
+      - "ODP_GWP_TABLE_PATH"
+    test_id: "test_capabilities::test_odp_gwp_ipcc"
+    pr: "#8"
+    status: "TODO"
+
+  caa_hap_list:
+    name: "CAA HAP list"
+    description: "Clean Air Act Hazardous Air Pollutants list lookup"
+    module: "packages.p2oasys_scorer.neshap_hap"
+    required: false
+    licensed: false
+    env_vars:
+      - "CAA_HAP_LIST_PATH"
+    test_id: "test_capabilities::test_caa_hap_list"
+    pr: "#8"
+    status: "TODO"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # External tools (optional, licensed)
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  ecosar_pyepisuite:
+    name: "ECOSAR/pyepisuite (optional)"
+    description: "ECOSAR aquatic toxicity and EPI Suite property estimation"
+    module: "packages.ecosar.pyepisuite"
+    required: false
+    licensed: true
+    env_vars:
+      - "EPISUITE_PATH"
+      - "ECOSAR_DISABLE"
+    test_id: "test_capabilities::test_ecosar_pyepisuite"
+    pr: "#6"
+    status: "TODO"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # IUCLID dossier access
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  iuclid_dossiers:
+    name: "IUCLID dossiers"
+    description: "IUCLID 6 dossier access for regulatory data"
+    module: "packages.iuclid.access"
+    required: false
+    licensed: false
+    env_vars:
+      - "IUCLID_API_URL"
+      - "IUCLID_API_KEY"
+    test_id: "test_capabilities::test_iuclid_dossiers"
+    pr: "#9"
+    status: "TODO"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Core application
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  doss_app:
+    name: "DoSS on-demand app"
+    description: "Streamlit DoSS row generator application"
+    module: "apps.doss_ondemand.app"
+    required: true
+    licensed: false
+    env_vars:
+      - "DOSS_ENABLE_FISHER"
+      - "PYTHONPATH"
+    test_id: "test_capabilities::test_doss_app"
+    status: "active"
+
+  assess_spine:
+    name: "assess() spine"
+    description: "Core assessment orchestration function"
+    module: "packages.assess"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_capabilities::test_assess_spine"
+    pr: "#5"
+    status: "TODO"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # GHaz7/GHaz8 stack capabilities (from fast P2OASys — not yet ported)
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  comptox_dsstox_lookup:
+    name: "CompTox / DSSTox lookup"
+    description: "EPA CompTox Dashboard DSSTox database lookup for chemical identifiers"
+    module: "packages.p2oasys_scorer.dsstox_local"
+    required: false
+    licensed: false
+    env_vars:
+      - "DSSTOX_CACHE_PATH"
+      - "COMPTOX_API_KEY"
+    test_id: "test_capabilities::test_comptox_dsstox_lookup"
+    status: "MISSING"
+    note: "Exists in GHaz7/GHaz8; not yet ported to turi-safe-chem-db"
+
+  toxval_lookup:
+    name: "ToxVal / ToxValDB lookup"
+    description: "EPA ToxValDB API client for toxicity values"
+    module: "packages.p2oasys_scorer.toxvaldb_client"
+    required: false
+    licensed: false
+    env_vars:
+      - "EPA_API_KEY"
+    test_id: "test_capabilities::test_toxval_lookup"
+    status: "MISSING"
+    note: "Exists in GHaz7/GHaz8; not yet ported to turi-safe-chem-db"
+
+  opera_predictions:
+    name: "OPERA predictions"
+    description: "NIEHS OPERA 2.9 QSAR property predictions (free, local CLI or cache)"
+    module: "packages.p2oasys_scorer.opera_client"
+    required: false
+    licensed: false
+    env_vars:
+      - "OPERA_EXE_PATH"
+      - "OPERA_CACHE_DB"
+    test_id: "test_capabilities::test_opera_predictions"
+    status: "MISSING"
+    note: "OPERA is free from NIEHS; exists in GHaz7/GHaz8; not yet ported"
+
+  ghaz7_headless_cli:
+    name: "GHaz7 headless auto-P2OASys CLI"
+    description: "Headless CLI for batch auto-P2OASys draft scoring (no Streamlit)"
+    module: "packages.p2oasys_scorer.draft_cli"
+    required: false
+    licensed: false
+    env_vars:
+      - "P2OASYS_MATRIX_PATH"
+    test_id: "test_capabilities::test_ghaz7_headless_cli"
+    status: "MISSING"
+    note: "Exists in GHaz7 outputs/tools/; needs re-rooting for turi-safe-chem-db layout"
+
+  fast_p2oasys_batch:
+    name: "fast P2OASys v2 batch"
+    description: "High-throughput batch P2OASys scoring with disk caching"
+    module: "packages.p2oasys_scorer.score_lookup"
+    required: false
+    licensed: false
+    env_vars:
+      - "P2OASYS_SCORE_LOOKUP_DB"
+      - "P2OASYS_HARVEST_DB"
+    test_id: "test_capabilities::test_fast_p2oasys_batch"
+    status: "MISSING"
+    note: "Exists in GHaz7/GHaz8; not yet ported to turi-safe-chem-db"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Scorer fixes (PR #10)
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  scorer_beyond_solubility:
+    name: "Scorer beyond-solubility checks"
+    description: "P2OASys scorer handling for values beyond solubility limits"
+    module: "packages.p2oasys_scorer"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_capabilities::test_scorer_beyond_solubility"
+    pr: "#10"
+    status: "TODO"
+
+  scorer_unit_conversion:
+    name: "Scorer unit conversion hardening"
+    description: "P2OASys scorer robust unit conversion (mg/m³→ppm, etc.)"
+    module: "packages.p2oasys_scorer"
+    required: false
+    licensed: false
+    env_vars: []
+    test_id: "test_capabilities::test_scorer_unit_conversion"
+    pr: "#10"
+    status: "TODO"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PR responsibility map — which PRs must fill in their TODO entries
+# ─────────────────────────────────────────────────────────────────────────────
+pr_responsibility:
+  "#1":
+    - cameo_nfpa_sqlite
+  "#5":
+    - assess_spine
+  "#6":
+    - ecosar_pyepisuite
+  "#7":
+    - pubchem_ftp_bulk
+  "#8":
+    - p2oasys_matrix_scorer
+    - iarc_table
+    - odp_gwp_ipcc
+    - caa_hap_list
+  "#9":
+    - iuclid_dossiers
+  "#10":
+    - scorer_beyond_solubility
+    - scorer_unit_conversion
