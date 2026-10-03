@@ -41,6 +41,17 @@ Keep Cursor posted: update this file after meaningful steps (not chat alone).
 2. Decide merge of `feat/cameo-nfpa-lookup` into main / Teams pack
 3. Coworker smoke-test Teams pack with new universe picker UI
 4. Optional: pause or fix harvest-compile routine resource_exhausted
+5. Review + merge `cursor/iuclid-access-8f00` PR (IUCLID dossier access restore)
+
+## IUCLID Access (PR D)
+- NEW | `packages/iuclid_core/` - ECHA REACH Study Results dossier parser (optional, local-only)
+- Extracts: acute tox (oral/dermal/inhalation LD50/LC50), aquatic (fish/daphnia/algae LC50/EC50), repeated-dose NOAEL/LOAEL, physchem (flash point, VP, log Kow)
+- Config via env: `IUCLID_DOSSIER_SOURCE`, `IUCLID_DOSSIER_INDEX`, `IUCLID_FORMAT_DIR`, `IUCLID_CACHE_DIR`
+- Legacy aliases: `OFFLINE_LOCAL_ARCHIVE`, `OFFLINE_DOSSIER_INFO_XLSX`
+- CLI: `python -m packages.iuclid_core.cache build --scope universe`
+- Output: P2OASys extra_sources format with `source=IUCLID`, `predicted=False`, reliability filtering
+- Tests use SYNTHETIC fixtures only (no ECHA data committed)
+- Clear logging when not configured ("IUCLID disabled: IUCLID_DOSSIER_SOURCE not set")
 
 ## Hard rules
 - No HSPiP.exe, licenses, or `.sofx` in git
