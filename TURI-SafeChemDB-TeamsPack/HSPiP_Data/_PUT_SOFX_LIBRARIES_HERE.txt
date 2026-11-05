@@ -1,0 +1,4 @@
+You do not need to copy .sofx files into this folder.
+They are usually in the same folder as HSPiP.exe.
+If the app does not find them, paste that folder in the sidebar.
+Do not commit proprietary .sofx files to public git.

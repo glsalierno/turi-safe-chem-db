@@ -1,0 +1,11 @@
+# TURI Safe Chem DB Teams pack — local only
+config/env.bat
+config/hspip_path.txt
+**/hspip_path.txt
+.turi-safe-chem-db/
+app/.venv/
+app/__pycache__/
+**/__pycache__/
+
+app/.venv/
+

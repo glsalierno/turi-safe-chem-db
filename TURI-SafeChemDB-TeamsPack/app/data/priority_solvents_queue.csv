@@ -1,0 +1,64 @@
+cas,name,in_p2oasys_harvest,pipeline_order
+67-64-1,Acetone,yes,expert_then_auto_parallel_doss
+108-24-7,Acetic Anhydride (Ac2O),yes,expert_then_auto_parallel_doss
+142-82-5,Heptanes,yes,expert_then_auto_parallel_doss
+1634-04-4,"Tert-Butyl Methyl Ether (MTBE, Methyl Tert-Butyl Ether)",yes,expert_then_auto_parallel_doss
+110-54-3,Hexanes,yes,expert_then_auto_parallel_doss
+75-09-2,Dichloromethane (DCM),yes,expert_then_auto_parallel_doss
+71-43-2,"Benzene (Benzol, phenyl hydride)",yes,expert_then_auto_parallel_doss
+680-31-9,HMPA (Hexamethylphosphoramide),yes,expert_then_auto_parallel_doss
+56-23-5,Carbon Tetrachloride,yes,expert_then_auto_parallel_doss
+123-91-1,"1,4-Dioxane (Dietheyelene diozide, diethylene ether)",yes,expert_then_auto_parallel_doss
+109-86-4,2-Methoxy-ethanol (Ethylene Glycol Monomethyl Ether),yes,expert_then_auto_parallel_doss
+872-50-4,"1-Methyl-2-pyrrolidinone (NMP, N Mehtylpyrrolidinone, N-methyl-2-pyrrolidone)",yes,expert_then_auto_parallel_doss
+64-19-7,"Acetic Acid (Glacial Acetic Acic, ethanoic acid)",yes,expert_then_auto_parallel_doss
+75-05-8,Acetonitrile,yes,expert_then_auto_parallel_doss
+7664-41-7,Ammonia (ammonium hydroxide),yes,expert_then_auto_parallel_doss
+71-36-3,"1 Butanol (Butanol, n-butanol, Butan-1-ol)",yes,expert_then_auto_parallel_doss
+628-63-7,Amyl Acetate (1-Pentyl Acetate),yes,expert_then_auto_parallel_doss
+100-66-3,Anisole (methoxybenzene),yes,expert_then_auto_parallel_doss
+100-51-6,"Benzyl Alcohol (phenylmethanol, phenyl carbinol)",yes,expert_then_auto_parallel_doss
+123-86-4,Butyl Acetate (n-BuOAc),yes,expert_then_auto_parallel_doss
+75-15-0,Carbon Disulfide,yes,expert_then_auto_parallel_doss
+108-90-7,Chlorobenzene,yes,expert_then_auto_parallel_doss
+67-66-3,Chloroform,yes,expert_then_auto_parallel_doss
+124-38-9,CO2 Sc (Supercritical CO2),yes,expert_then_auto_parallel_doss
+110-82-7,Cyclohexane (Hexahydrobenzene),yes,expert_then_auto_parallel_doss
+108-94-1,Cyclohexanone,yes,expert_then_auto_parallel_doss
+5989-27-5,"D Limonone (d-p-Mentha-1,8-diene 4-Isopropenyl-1-methylcyclohex
+ene)",yes,expert_then_auto_parallel_doss
+107-06-2,DCE (Ethylene dichloride),yes,expert_then_auto_parallel_doss
+123-42-2,Diacetone Alcohol (DAA),yes,expert_then_auto_parallel_doss
+60-29-7,Diethyl Ether,yes,expert_then_auto_parallel_doss
+108-20-3,Diisopropyl Ether (Isoppropyl ether),yes,expert_then_auto_parallel_doss
+115-10-6,Dimethyl Ether,yes,expert_then_auto_parallel_doss
+127-19-5,"DMAc (N,N Dimethyl Acetamide)",yes,expert_then_auto_parallel_doss
+110-71-4,"DME (1,2 Dimethoxyethane, Ethylene Glycol Dimethyl Ether)",yes,expert_then_auto_parallel_doss
+7226-23-5,"DMPU (1,3-Dimethyl-3,4,5,6-tetrahydro-2(1H)-pyrimidinone, N,N'-dimethylpropyleneurea)",yes,expert_then_auto_parallel_doss
+67-68-5,DMSO (Dimethyl sulfoxide),yes,expert_then_auto_parallel_doss
+64-17-5,Ethanol (Ethyl Alcohol),yes,expert_then_auto_parallel_doss
+141-78-6,Ethyl Acetate,yes,expert_then_auto_parallel_doss
+107-21-1,Ethylene Glycol,yes,expert_then_auto_parallel_doss
+64-18-6,Formic Acid (Methanoic acid),yes,expert_then_auto_parallel_doss
+108-21-4,Isopropyl Acetate (iPrOAc),yes,expert_then_auto_parallel_doss
+67-63-0,"Isopropyl Alcohol (Isopropanol, 2 propanol)",yes,expert_then_auto_parallel_doss
+96-47-9,Me THF (2-Methyltetrahydrofuran),yes,expert_then_auto_parallel_doss
+67-56-1,Methanol (Methyl Alcohol),yes,expert_then_auto_parallel_doss
+79-20-9,Methyl Acetate,yes,expert_then_auto_parallel_doss
+78-93-3,"Methyl Ethyl Ketone (MEK, 2-Butanone)",yes,expert_then_auto_parallel_doss
+108-10-1,"Methyl isobutyl ketone (MIBK, 4-Methyl-2-pentanone)",yes,expert_then_auto_parallel_doss
+108-87-2,Methylcyclohexane (Me-Cyclohexane),yes,expert_then_auto_parallel_doss
+75-52-5,NitroMethane (Nitrocarbol),yes,expert_then_auto_parallel_doss
+109-66-0,Pentane,yes,expert_then_auto_parallel_doss
+110-86-1,Pyridine,yes,expert_then_auto_parallel_doss
+64742-95-6,Shellsol A 100,yes,expert_then_auto_parallel_doss
+64742-94-5,Shellsol A 150,yes,expert_then_auto_parallel_doss
+126-33-0,Sulfolane (Tetramethylene sulfone),yes,expert_then_auto_parallel_doss
+75-65-0,"Tert-butanol (Tert-butyl alcohol, 2 methyl-2-propanol)",yes,expert_then_auto_parallel_doss
+109-99-9,"Tetrahydrofuran (THF, Oxolane)",yes,expert_then_auto_parallel_doss
+102-71-6,"Triethanolamine (TEA, Trolamine)",yes,expert_then_auto_parallel_doss
+8052-41-3,Turpenoid,yes,expert_then_auto_parallel_doss
+7732-18-5,Water,yes,expert_then_auto_parallel_doss
+1330-20-7,"Xylene (1,2 Dimethylbenzene)",yes,expert_then_auto_parallel_doss
+77-93-0,Triethyl Acetate,yes,expert_then_auto_parallel_doss
+8006-64-2,Turpentine,yes,expert_then_auto_parallel_doss

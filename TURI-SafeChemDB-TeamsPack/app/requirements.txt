@@ -1,0 +1,9 @@
+﻿# TURI Safe Chem DB — runtime deps (DoSS on-demand core)
+# RDKit is optional (vendors/cas_to_hspip only); install via conda if needed.
+streamlit>=1.28.0,<2
+pandas>=2.0.0
+requests>=2.31.0
+# Windows: use the OS certificate store (campus / corporate SSL). No-op on Linux and macOS.
+pip-system-certs>=4.0; sys_platform == "win32"
+pypdf>=4.0.0
+pdfminer.six>=20221105
