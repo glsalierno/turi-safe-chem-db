@@ -1,0 +1,4 @@
+You do not need to copy HSPiP into this folder.
+The app looks for HSPiP.exe in Program Files.
+If it is installed somewhere else, paste that folder in the app sidebar.
+Do not redistribute HSPiP.exe without a license.

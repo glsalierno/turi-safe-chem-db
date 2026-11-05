@@ -26,6 +26,7 @@ HSPiP_Data/
 
 # Caches / DBs
 cache/*.db
+data/cache/
 *.sqlite
 *.sqlite3
 !data/p2oasys_score_lookup.sqlite
@@ -54,3 +55,11 @@ config/hspip_path.txt
 config/env.bat
 **/hspip_path.txt
 .turi-safe-chem-db/
+
+# Installable Teams pack: keep placeholder folders and the bundled score DBs.
+!TURI-SafeChemDB-TeamsPack/HSPiP/
+!TURI-SafeChemDB-TeamsPack/HSPiP/**
+!TURI-SafeChemDB-TeamsPack/HSPiP_Data/
+!TURI-SafeChemDB-TeamsPack/HSPiP_Data/**
+!TURI-SafeChemDB-TeamsPack/app/data/p2oasys_score_lookup.sqlite
+!TURI-SafeChemDB-TeamsPack/app/data/p2oasys_harvest.sqlite

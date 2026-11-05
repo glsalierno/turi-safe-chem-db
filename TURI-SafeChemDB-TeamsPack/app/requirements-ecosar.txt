@@ -1,0 +1,3 @@
+# Optional ECOSAR / EPI Suite API client (unofficial; not EPA).
+# Does not install EPA binaries.
+pyepisuite>=1.2.0
