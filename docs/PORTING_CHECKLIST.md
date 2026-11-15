@@ -48,7 +48,7 @@ Review `capabilities.yaml`:
 ### 4. Verify Data Files
 
 Ensure bundled data is present:
-- [ ] `data/p2oasys_score_lookup.sqlite` — P2OASys scores
+- [ ] `data/p2oasys_score_lookup.sqlite` — TURI hazard scores (expert + automatic)
 - [ ] `data/fisher_catalog_by_cas.csv` — Fisher catalog
 - [ ] `data/priority_expert_p2oasys_scores.csv` — Optional expert overlay
 

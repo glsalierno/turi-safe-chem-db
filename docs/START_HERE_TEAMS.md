@@ -8,7 +8,7 @@
 |------|----------------|
 | **CAS** | A chemical’s ID number (example: acetone is **67-64-1**). |
 | **DoSS** | Database of Safer Solvents — a row of useful facts about a solvent. |
-| **P2OASys** | A hazard / process score used at TURI (higher can mean more concern). |
+| **TURI hazard score** | A hazard score used at TURI (six science categories, each 0–10; overall = max of those six; higher can mean more concern). **Expert scores** are expert-assigned; automatic scores are labelled separately. |
 | **SDS** | Safety Data Sheet — the vendor’s official hazard and handling info. |
 | **HSPiP** | Optional licensed software for Hansen solubility numbers (D / P / H). |
 
@@ -51,11 +51,10 @@ You can also use `run_doss.bat`; it does the same thing.
 
 ## Developers / updates
 
-Code updates live in the private GitHub repo:  
+Code updates live in the public GitHub repo:  
 https://github.com/glsalierno/turi-safe-chem-db  
 
 Coworkers: stay on this **Teams pack**. Developers: clone that repo.
 
 
 **Word guide:** docs/TURI_Safe_Chem_DB_Coworker_HowTo.docx (also in the Teams pack root).
-
