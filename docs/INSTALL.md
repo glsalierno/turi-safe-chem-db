@@ -5,22 +5,32 @@
 - Python 3.10+ (3.11–3.13 tested)
 - Network access for PubChem / Fisher / TCI enrichment
 - Optional: licensed HSPiP + `.sofx` data for D/P/H/RER
-- Bundled `data/p2oasys_score_lookup.sqlite` for expert harvest + auto P2OASys (override with `P2OASYS_SCORE_LOOKUP_DB`)
+- Bundled `data/p2oasys_score_lookup.sqlite` for expert harvest + automatic TURI hazard scores (override with `P2OASYS_SCORE_LOOKUP_DB`)
 
 ## Steps
 
 ```bash
+git clone https://github.com/glsalierno/turi-safe-chem-db.git
 cd turi-safe-chem-db
 python -m venv .venv
-.venv\Scripts\activate          # Windows
+# Windows:
+.venv\Scripts\activate
+# Linux/macOS:
+# source .venv/bin/activate
 pip install -r requirements.txt
 # optional editable install:
-pip install -e .
+# pip install -e .
 ```
 
 Without editable install, set `PYTHONPATH` to the repo root:
 
+```bash
+# Linux/macOS
+export PYTHONPATH=/path/to/turi-safe-chem-db
+```
+
 ```bat
+REM Windows
 set PYTHONPATH=C:\path\to\turi-safe-chem-db
 ```
 
@@ -34,4 +44,4 @@ Browser: http://localhost:8502
 
 ## Data seeds
 
-Seed CSVs and the P2OASys lookup/harvest sqlite files ship under `data/`. Point `EXPERT_P2OASYS_CSV` / `P2OASYS_SCORE_LOOKUP_DB` / `HSPIP_DATA` at overrides as needed.
+Seed CSVs and the score-lookup / harvest sqlite files ship under `data/`. Point `EXPERT_P2OASYS_CSV` / `P2OASYS_SCORE_LOOKUP_DB` / `HSPIP_DATA` at overrides as needed.

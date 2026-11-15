@@ -1,209 +1,135 @@
-# TURI Safe Chem DB (`turi-safe-chem-db`)
+# TURI Safe Chem DB
 
-## Just want to run it?
-**Coworkers:** use the **Teams pack** (`TURI-SafeChemDB-TeamsPack`) — sync the folder and double-click `1_Open_Safe_Chem_DB.bat`. No GitHub required.
-See that pack's `README_START_HERE.md`.
+On-demand chemical hazard and safer-solvent screening: enter a CAS number, get identity, GHS/physchem, expert or automatic TURI hazard scores, and optional SDS or Hansen enrichment.
 
-## Updating the code?
-Clone this private repo: https://github.com/glsalierno/turi-safe-chem-db  
-This git tree is the **source of truth for developers**. Coworkers should stay on the Teams pack.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Capabilities CI](https://github.com/glsalierno/turi-safe-chem-db/actions/workflows/capabilities-ci.yml/badge.svg)](https://github.com/glsalierno/turi-safe-chem-db/actions/workflows/capabilities-ci.yml)
 
----
+Research software from **TURI / UMass Lowell**. This repository’s code is MIT-licensed. Licensed third-party tools (HSPiP binaries and `.sofx` libraries) are **not** redistributed here.
 
-**TURI Safe Chem DB** is an open monorepo for safer-solvent screening and hazard enrichment:
+<!-- TODO: confirm whether a screenshot of the DoSS UI (port 8502) can be added under docs/ -->
 
-- **DoSS on-demand** — Streamlit app that builds Database of Safer Solvents (DoSS) rows from CAS
-- **P2OASys** — expert CSV + optional auto/expert SQLite score lookup (Auto6 category max convention)
-- **Fisher + TCI SDS** — on-demand SDS/product enrichment (NFPA, physchem, gloves, lab $/kg when available)
-- **HSPiP glue** — local `.sofx` D/P/H/RER lookup + optional licensed CLI for new CAS 
+## What it does
 
-Built for TURI / UMass Lowell research workflows. Shareable code is MIT; HSPiP binaries and `.sofx` libraries are **not** included.
-
-## Features
-
-| Feature | Status |
-|---------|--------|
-| Single-CAS DoSS lookup (Streamlit, port **8502**) | Yes |
-| Searchable chemical picker (full P2OASys universe) | Yes (~1,250 CAS) |
-| Free-text CAS for out-of-universe chemicals | Yes |
+| Capability | Notes |
+|------------|--------|
+| Single-CAS lookup (Streamlit, port **8502**) | `python scripts/run_doss_streamlit.py` or `streamlit run apps/doss_ondemand/app.py --server.port 8502` |
+| Searchable chemical picker | Bundled lookup covers **1,254** CAS; free-text CAS works for chemicals outside that set |
 | Batch CAS mode + CSV download | Yes |
-| Bundled `data/p2oasys_score_lookup.sqlite` expert + auto (harvest) | Yes (~1,250 CAS; override `P2OASYS_SCORE_LOOKUP_DB`) |
-| Optional expert CSV overlay (`data/priority_expert_p2oasys_scores.csv`) | Yes (sidebar toggle) |
-| PubChem identity / physchem / GHS / NFPA | Yes (throttle-hardened) |
-| **Fisher SDS enrich** (sidebar toggle; default from `DOSS_ENABLE_FISHER`) | Yes |
-| **TCI SDS enrich** (sidebar toggle; default **ON**) | Yes — best-effort |
-| HSPiP `.sofx` D/P/H/RER fill | Env / sidebar `HSPIP_DATA` |
-| HSPiP CLI for new CAS (Y-MBSX) | Opt-in; licensed `HSPiP.exe` |
-| HSP-predicted glove polymer screen | Yes (not breakthrough-time) |
-| Open vendor wrappers (`vendors/cas_to_hspip/`) | Yes |
-| Batch scripts (`scripts/batch_priority_doss.py`, `fill_hspip_dph_rer.py`) | Yes |
+| Expert and automatic TURI hazard scores | Six science categories (Acute, Chronic, Ecological, Fate & Transport, Atmospheric, Physical), each 0–10; **overall = max** of those six (Process / Life Cycle are not in the overall). Bundled `data/p2oasys_score_lookup.sqlite`. Optional expert CSV overlay (`data/priority_expert_p2oasys_scores.csv`, sidebar toggle). Override the database path with `P2OASYS_SCORE_LOOKUP_DB`. |
+| PubChem identity / physchem / GHS / NFPA | Throttle-hardened client with disk cache |
+| Fisher and TCI SDS enrichment | Optional, on-demand, best-effort (live HTTP may be blocked) |
+| HSPiP D/P/H/RER | Optional local `.sofx` and/or licensed CLI; not shipped |
+| HSP-predicted glove polymer screen | Not a breakthrough-time claim; curated SDS glove material wins when present |
+
+Every advertised capability is listed in [`CAPABILITIES.md`](CAPABILITIES.md) and checked by `tests/test_capabilities.py`.
 
 ## Quick start
 
+Python **3.10+** (3.11–3.13 tested). Network access is required for live PubChem / Fisher / TCI calls. The bundled score database works offline.
+
 ```bash
+git clone https://github.com/glsalierno/turi-safe-chem-db.git
 cd turi-safe-chem-db
 python -m venv .venv
-# Windows:
-.venv\Scripts\activate
+# Windows:  .venv\Scripts\activate
+# Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
-# optional editable install:
+# optional, so `packages.*` imports resolve without PYTHONPATH:
 # pip install -e .
 
-# Launch DoSS (port 8502 avoids clashing with other Streamlit apps on 8501)
 python scripts/run_doss_streamlit.py
-# equivalent:
-# streamlit run apps/doss_ondemand/app.py --server.port 8502
 ```
 
-Browser: http://localhost:8502
+Open http://localhost:8502
 
-With `PYTHONPATH` set to the repo root (or after `pip install -e .`), imports resolve as `packages.*`.
+Port **8502** is intentional: it avoids clashing with other Streamlit apps on 8501.
 
-## Repo layout
+Without an editable install, set `PYTHONPATH` to the repository root.
 
+Developer tests:
+
+```bash
+pip install -r requirements-dev.txt
+# optional RDKit, only for vendors/cas_to_hspip CLI canonicalization — prefer conda:
+# conda install -c conda-forge rdkit
+PYTHONPATH=. pytest
+PYTHONPATH=. python -m packages.capability_report
 ```
-apps/doss_ondemand/     # Streamlit UI (DoSS on-demand)
-packages/doss_core/     # PubChem, Fisher, TCI, HSPiP, schema, glove HSP
-packages/p2oasys_core/  # Expert/auto P2OASys lookup
-data/                   # Seed CSVs + bundled P2OASys sqlite lookup/harvest
-vendors/cas_to_hspip/   # Open HSPiP CLI / PubChem / MATLAB glue (no binary)
-scripts/                # Batch + Streamlit launcher
-docs/                   # INSTALL, HSPiP_CLI, TEAMS_DEPLOY
+
+Last clean local run on this tree: **`57 passed, 18 skipped`** (`pytest` with `PYTHONPATH=.`).
+
+### TURI coworkers (no Git required)
+
+The **Teams pack** (`TURI-SafeChemDB-TeamsPack`) is the supported coworker install: sync the folder and use the pack’s `README_START_HERE.md` / `run_doss.bat` (also port 8502). This GitHub repository is the source of truth for developers. See [docs/TEAMS_DEPLOY.md](docs/TEAMS_DEPLOY.md) and [docs/START_HERE_TEAMS.md](docs/START_HERE_TEAMS.md).
+
+## Example (one CAS)
+
+1. Launch the app as in Quick start.
+2. Pick **Acetone** from the searchable list, or enter CAS **`67-64-1`**.
+3. You should see PubChem identity and GHS/physchem when the network is up.
+4. From the bundled score database (offline), acetone resolves as an **expert** TURI hazard score with **overall 8** (max of the six science categories). Automatic scores, when used, are labelled with source `auto` and are **never averaged** with expert scores — expert CSV overlay wins first, then SQLite expert rows, then SQLite auto.
+5. Missing evidence stays blank or is marked with an explicit gap such as `needs_HSPiP`. Values are never invented. HSP glove flags are labelled **HSP-predicted**.
+
+Offline check (no Streamlit required):
+
+```bash
+PYTHONPATH=. python -c "from packages.p2oasys_core.lookup import resolve_p2oasys; print(resolve_p2oasys('67-64-1', expert_df=None))"
+# -> {'overall': '8', 'source': 'expert', 'detail': 'sqlite:p2oasys_score_lookup.sqlite', 'name': 'Acetone'}
 ```
 
-## Environment variables
+CSV export uses a DoSS-compatible column layout.
+
+## Configuration
 
 | Variable | Purpose |
 |----------|---------|
-| `P2OASYS_SCORE_LOOKUP_DB` | Override path to P2OASys score lookup SQLite. Default is bundled `data/p2oasys_score_lookup.sqlite` (~1,250 CAS with expert harvest + auto scores). |
-| `EXPERT_P2OASYS_CSV` | Path to optional expert P2OASys scores CSV overlay. Not loaded by default; enable via sidebar checkbox or upload. |
-| `HSPIP_PATH` / `HSPIP_EXE` | HSPiP install dir or `HSPiP.exe` (sidebar prompt + CLI scripts). Placeholder: `<YOUR_HSPIP_INSTALL>` |
-| `HSPIP_DATA` / `HSPIP_DATA_DIR` | Directory of licensed HSPiP `.sofx` libraries. Placeholder: `%HSPIP_DATA%` / `<YOUR_HSPIP_DATA>` |
-| `DOSS_ENABLE_FISHER` | Default for Fisher SDS sidebar toggle (`1`/`0`; default on) |
-| `PUBCHEM_MIN_INTERVAL_S` | Minimum seconds between PubChem requests (default `0.35`; conservative) |
-| `PUBCHEM_MAX_RETRIES` | Max retries on 429/503 before raising `PubChemThrottledError` (default `5`) |
-| `PUBCHEM_CACHE_DIR` | Custom cache directory for PubChem responses (default `data/cache/pubchem/`) |
-| `PUBCHEM_CACHE_MAX_AGE_S` | Cache TTL in seconds (default `86400` = 24h) |
-| `PYTHONPATH` | Set to repo root if not using editable install |
+| `P2OASYS_SCORE_LOOKUP_DB` | Override path to the bundled score-lookup SQLite (default `data/p2oasys_score_lookup.sqlite`) |
+| `EXPERT_P2OASYS_CSV` | Optional expert CSV overlay (not loaded until the sidebar checkbox or an upload) |
+| `HSPIP_PATH` / `HSPIP_EXE` | HSPiP install dir or `HSPiP.exe` (sidebar also prompts). Placeholder: `<YOUR_HSPIP_INSTALL>` |
+| `HSPIP_DATA` / `HSPIP_DATA_DIR` | Directory of licensed HSPiP `.sofx` libraries |
+| `DOSS_ENABLE_FISHER` | Default for the Fisher SDS sidebar toggle (`1`/`0`; default on) |
+| `PUBCHEM_MIN_INTERVAL_S` | Minimum seconds between PubChem requests (default `0.35`) |
+| `PUBCHEM_MAX_RETRIES` | Max retries on 429/503 (default `5`) |
+| `PUBCHEM_CACHE_DIR` | PubChem cache directory (default `data/cache/pubchem/`) |
+| `PUBCHEM_CACHE_MAX_AGE_S` | Cache TTL in seconds (default `86400`) |
+| `PYTHONPATH` | Repository root, if you did not `pip install -e .` |
 
-The DoSS sidebar **HSPiP setup** section also persists exe / data paths to `config/hspip_path.txt` (gitignored) and `~/.turi-safe-chem-db/hspip_path.txt`.
+The in-app **HSPiP setup** section can also persist paths to `config/hspip_path.txt` (gitignored) and `~/.turi-safe-chem-db/hspip_path.txt`.
 
-## PubChem API and Throttle Handling
+The names above are the current environment-variable identifiers in this repository. <!-- TODO: if these names are ever changed to drop the historical mark, document the new names and a compatibility alias. -->
 
-The PubChem client (`packages/doss_core/pubchem.py`) implements [NCBI Dynamic Request Throttling](https://pubchem.ncbi.nlm.nih.gov/docs/dynamic-request-throttling) compliance:
+## Outputs
 
-| Behavior | Default | Env Override |
-|----------|---------|--------------|
-| **Minimum request interval** | 0.35s process-wide | `PUBCHEM_MIN_INTERVAL_S` |
-| **Max retries on 429/503** | 5 | `PUBCHEM_MAX_RETRIES` |
-| **Exponential backoff** | Base 1.5s, max 60s, with jitter | — |
-| **Honor Retry-After** | Yes | — |
-| **Disk cache** | `data/cache/pubchem/` (24h TTL) | `PUBCHEM_CACHE_DIR`, `PUBCHEM_CACHE_MAX_AGE_S` |
+- On-screen assessment for one or many CAS numbers.
+- CSV download in the DoSS-shaped spreadsheet layout.
+- Optional SDS-derived NFPA, physchem, glove notes, and lab $/kg when Fisher/TCI enrichment succeeds.
+- Optional Hansen D/P/H/RER when HSPiP data or CLI is configured.
 
-When PubChem returns HTTP 503 / 429 ("ServerBusy", "Too many requests"), the client:
-1. Backs off exponentially with jitter
-2. Honors `Retry-After` header when present
-3. After retries exhausted, raises `PubChemThrottledError`
-4. UI surfaces this as: "PubChem throttled — try later / use bundled SQLite scores"
+**Source rules:** never invent hazard scores, NFPA digits, prices, or Hansen parameters. Lab/bulk cost columns are **$/kg**, or `-` when unknown. NFPA Health/Flame use a precautionary max across Fisher / TCI / PubChem (see **NFPA Source**). Glove HSP flags are **HSP-predicted**, not breakthrough times. Automatic TURI hazard scores are labelled separately from **expert scores** (`source` is `expert` or `auto`); the two are never averaged, and expert values take precedence.
 
-**For batch scripts:** on throttle, batch stops immediately to avoid further rate limiting.
+## Limits
 
-**Cache-first:** Cached responses are used on hit (default 24h); write on successful fetch. No invented chemical data.
+- HSPiP.exe, CLI licenses, and `.sofx` libraries are not included. Obtain HSPiP yourself from [hansen-solubility.com](https://www.hansen-solubility.com/HSPiP). Close the HSPiP GUI before using the CLI.
+- Live Fisher/TCI access is best-effort (network and bot-protection dependent). TCI may return Akamai / 403.
+- PubChem is rate-limited; after retries the UI reports a throttle and batch scripts stop rather than continuing to fire requests.
+- Automatic scores and HSP glove flags are not a substitute for expert review. This is research software.
 
-## Fisher & TCI SDS enrichment
+## Citation
 
-Both vendors are **intentional, shareable** on-demand enrichers (not mass scrapers):
-
-- **Fisher** (`packages/doss_core/fisher.py`) — SDS / product page for NFPA, lab $/kg, SDS link, §9 physchem when the seed catalog has a part number. Sidebar toggle; default from `DOSS_ENABLE_FISHER`.
-- **TCI** (`packages/doss_core/tci.py`) — SDS / product enrichment for NFPA, physchem, glove notes, and pricing when available. Sidebar **“On-demand TCI SDS enrich”** defaults to **ON** (`enable_tci=True`). Live HTTP may hit **Akamai / 403** blocks; when a local SDS cache is present under an optional sibling GHaz7 tree it is used as fallback. 
-
-Seed catalogs: `data/fisher_catalog_by_cas.csv` (and optional TCI catalog files if you add them under `data/`).
-
-## HSPiP
-
-**Due diligence / self-install:** This repo never ships `HSPiP.exe`, CLI licenses, or `.sofx` files. Obtain HSPiP from [hansen-solubility.com](https://www.hansen-solubility.com/HSPiP).
-
-| Mode | When |
-|------|------|
-| **`.sofx` libraries** | Preferred for interactive DoSS when CAS is in curated solvent tables → D/P/H/RER |
-| **CLI (`HSPiP.exe Y-MBSX`)** | Opt-in for **new CAS** missing sofx; needs licensed CLI + real SMILES (PubChem) |
-
-- In-app **HSPiP setup** sidebar: paste path to exe or install folder; validate; optional data folder.
-- **Close the HSPiP GUI** before CLI (GUI and CLI contend for locks / Out.dat / clipboard).
-- **D/P/H are never invented** — missing sofx or failed CLI parse → `needs_HSPiP`.
-- Open wrappers: `vendors/cas_to_hspip/` (set `PATH_TO_HSPIP_INSTALLATION` placeholders; optional RDKit via conda for CLI batch).
-
-See [docs/HSPiP_CLI.md](docs/HSPiP_CLI.md).
-
-## What is NOT included
-
-- `HSPiP.exe`, license keys, install trees
-- `*.sofx` solvent libraries / full harvest dumps
-- Large batch report CSVs / Streamlit logs / `__pycache__`
-- Guaranteed live Fisher/TCI access (network / bot-protection dependent)
-
-## Teams pack
-
-**Primary product for TURI coworkers** — sibling folder: **`TURI-SafeChemDB-TeamsPack`** (see [docs/TEAMS_DEPLOY.md](docs/TEAMS_DEPLOY.md)).
-
-- `app\` mirrors this monorepo (sync with robocopy; excludes `.venv`, `__pycache__`, `.git`)
-- Placeholder `HSPiP\` / `HSPiP_Data\` for licensed assets
-- `run_doss.bat` launches Streamlit on port **8502**
-
-Developers who prefer git should use this **`turi-safe-chem-db`** repo as source of truth.
-
-## Data provenance
-
-- **Never invent** P2OASys scores, NFPA digits, prices, or Hansen D/P/H/RER.
-- Lab / bulk cost columns are **$/kg**; leave `-` when unknown.
-- NFPA Health/Flame use a **precautionary max** merge across Fisher / TCI / PubChem; see **NFPA Source**.
-- Glove HSP flags are **HSP-predicted** (not breakthrough-time claims); curated SDS glove material wins when present.
-
-## Requirements
-
-See [requirements.txt](requirements.txt). Optional:
-
-```bash
-pip install -r requirements-dev.txt   # vulture, pytest
-# RDKit (vendors/cas_to_hspip CLI canonicalize only) — prefer conda:
-# conda install -c conda-forge rdkit
-```
-
-DoSS core does **not** require RDKit.
-
-## License
-
-- **Open code** (DoSS app, packages, scripts, vendor glue): **MIT** — see [LICENSE](LICENSE).
-- **Third-party:** PubChem (NCBI ToS), HSPiP proprietary (Hansen Solubility), Fisher / TCI websites (best-effort scraping; respect robots / ToS).
-
-## Citation / acknowledgement
-
-If you use this tooling in publications or internal reports, please acknowledge:
+If you use this tooling in publications or internal reports, please cite the software via [`CITATION.cff`](CITATION.cff), or acknowledge:
 
 > Toxics Use Reduction Institute (TURI), University of Massachusetts Lowell — TURI Safe Chem DB / DoSS on-demand.
 
-Author / maintainer GitHub: [glsalierno](https://github.com/glsalierno).
+Maintainer: [glsalierno](https://github.com/glsalierno).
 
-## Capability Registry
+<!-- TODO: add a Zenodo DOI when this tree is archived. -->
 
-Every feature is tracked in the **capability registry** to prevent silent feature loss:
+## License
 
-```bash
-# Show status of all capabilities
-python -m packages.capability_report
-```
-
-Output shows ACTIVE, DISABLED, MISSING_DATA, or TODO for each capability, with env vars to configure.
-
-| File | Purpose |
-|------|---------|
-| `capabilities.yaml` | Machine-readable registry with modules, tests, env vars |
-| `CAPABILITIES.md` | Human-readable capability documentation |
-| `tests/test_capabilities.py` | One test per capability |
-| `packages/capability_config.py` | Centralized config (no hard-coded paths) |
-| `docs/PORTING_CHECKLIST.md` | Version/release guidelines |
-
-See [CAPABILITIES.md](CAPABILITIES.md) for the full capability list.
+- **Code** in this repository: **MIT** — see [LICENSE](LICENSE).
+- **Third-party terms** still apply: PubChem (NCBI), HSPiP (Hansen Solubility), Fisher / TCI websites.
 
 ## Docs
 
@@ -212,3 +138,4 @@ See [CAPABILITIES.md](CAPABILITIES.md) for the full capability list.
 - [docs/TEAMS_DEPLOY.md](docs/TEAMS_DEPLOY.md)
 - [docs/PORTING_CHECKLIST.md](docs/PORTING_CHECKLIST.md)
 - [PACKAGING_NOTES.md](PACKAGING_NOTES.md)
+- [CAPABILITIES.md](CAPABILITIES.md)
