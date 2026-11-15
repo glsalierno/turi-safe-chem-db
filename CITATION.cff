@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+title: "TURI Safe Chem DB"
+message: "If you use this software, please cite it using these metadata."
+type: software
+authors:
+  - family-names: Salierno
+    given-names: Gabriel
+    affiliation: "Toxics Use Reduction Institute, University of Massachusetts Lowell"
+    # TODO: add ORCID when available (https://orcid.org/...)
+license: MIT
+repository-code: "https://github.com/glsalierno/turi-safe-chem-db"
+version: 0.1.0
+abstract: >-
+  On-demand chemical hazard and safer-solvent screening for TURI / UMass Lowell:
+  CAS lookup with identity, GHS/physchem, expert or automatic TURI hazard scores,
+  and optional SDS or Hansen enrichment.
+keywords:
+  - toxics use reduction
+  - chemical hazard
+  - safer solvents
+  - TURI

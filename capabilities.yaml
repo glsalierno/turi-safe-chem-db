@@ -57,12 +57,12 @@ capabilities:
     status: "TODO"
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # P2OASys scoring capabilities
+  # TURI hazard scoring capabilities (capability IDs / env vars unchanged)
   # ─────────────────────────────────────────────────────────────────────────────
 
   p2oasys_score_lookup:
-    name: "P2OASys score lookup (SQLite)"
-    description: "Expert/auto P2OASys overall scores from bundled SQLite database"
+    name: "TURI hazard score lookup (SQLite)"
+    description: "Expert/auto TURI hazard overall scores from bundled SQLite database"
     module: "packages.p2oasys_core.lookup"
     required: true
     licensed: false
@@ -73,8 +73,8 @@ capabilities:
     status: "active"
 
   p2oasys_matrix_scorer:
-    name: "P2OASys matrix + scorer"
-    description: "Full P2OASys hazard matrix computation and scoring"
+    name: "TURI hazard matrix + scorer"
+    description: "Full TURI hazard matrix computation and scoring"
     module: "packages.p2oasys_scorer"
     required: false
     licensed: false
@@ -271,7 +271,7 @@ capabilities:
     status: "TODO"
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # GHaz7/GHaz8 stack capabilities (from fast P2OASys — not yet ported)
+  # GHaz7/GHaz8 stack capabilities (from fast TURI hazard scoring — not yet ported)
   # ─────────────────────────────────────────────────────────────────────────────
 
   comptox_dsstox_lookup:
@@ -313,8 +313,8 @@ capabilities:
     note: "OPERA is free from NIEHS; exists in GHaz7/GHaz8; not yet ported"
 
   ghaz7_headless_cli:
-    name: "GHaz7 headless auto-P2OASys CLI"
-    description: "Headless CLI for batch auto-P2OASys draft scoring (no Streamlit)"
+    name: "GHaz7 headless automatic TURI hazard score CLI"
+    description: "Headless CLI for batch automatic TURI hazard draft scoring (no Streamlit)"
     module: "packages.p2oasys_scorer.draft_cli"
     required: false
     licensed: false
@@ -325,8 +325,8 @@ capabilities:
     note: "Exists in GHaz7 outputs/tools/; needs re-rooting for turi-safe-chem-db layout"
 
   fast_p2oasys_batch:
-    name: "fast P2OASys v2 batch"
-    description: "High-throughput batch P2OASys scoring with disk caching"
+    name: "fast TURI hazard v2 batch"
+    description: "High-throughput batch TURI hazard scoring with disk caching"
     module: "packages.p2oasys_scorer.score_lookup"
     required: false
     licensed: false
@@ -343,7 +343,7 @@ capabilities:
 
   scorer_beyond_solubility:
     name: "Scorer beyond-solubility checks"
-    description: "P2OASys scorer handling for values beyond solubility limits"
+    description: "TURI hazard scorer handling for values beyond solubility limits"
     module: "packages.p2oasys_scorer"
     required: false
     licensed: false
@@ -354,7 +354,7 @@ capabilities:
 
   scorer_unit_conversion:
     name: "Scorer unit conversion hardening"
-    description: "P2OASys scorer robust unit conversion (mg/m³→ppm, etc.)"
+    description: "TURI hazard scorer robust unit conversion (mg/m³→ppm, etc.)"
     module: "packages.p2oasys_scorer"
     required: false
     licensed: false

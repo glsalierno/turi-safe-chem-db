@@ -43,16 +43,18 @@ The capability registry ensures:
 
 ---
 
-## P2OASys Scoring
+## TURI Hazard Scoring
+
+Six science categories (Acute, Chronic, Ecological, Fate & Transport, Atmospheric, Physical), each 0–10; **overall = max** of those six. **Expert scores** and automatic scores are labelled separately (`source` is `expert` or `auto`) and are never averaged.
 
 | Capability | Status | Description |
 |------------|--------|-------------|
-| **P2OASys score lookup** | ✅ active | Expert/auto overall scores from bundled SQLite |
-| **P2OASys matrix + scorer** | 📝 TODO (#8) | Full hazard matrix computation |
+| **TURI hazard score lookup** | ✅ active | Expert/auto overall scores from bundled SQLite |
+| **TURI hazard matrix + scorer** | 📝 TODO (#8) | Full hazard matrix computation |
 
 ### Environment Variables
-- `P2OASYS_SCORE_LOOKUP_DB` — Override path to score lookup SQLite
-- `EXPERT_P2OASYS_CSV` — Optional expert CSV overlay
+- `P2OASYS_SCORE_LOOKUP_DB` — Override path to score lookup SQLite (current identifier; see README)
+- `EXPERT_P2OASYS_CSV` — Optional expert CSV overlay (current identifier)
 - `P2OASYS_MATRIX_DIR` — Directory for hazard matrix data (PR #8)
 
 ---
@@ -106,15 +108,15 @@ The capability registry ensures:
 
 ---
 
-## GHaz7/GHaz8 Stack (from fast P2OASys)
+## GHaz7/GHaz8 Stack (from fast TURI hazard scoring)
 
 | Capability | Status | Description |
 |------------|--------|-------------|
 | **CompTox / DSSTox lookup** | ❓ MISSING | EPA CompTox Dashboard DSSTox lookup |
 | **ToxVal / ToxValDB lookup** | ❓ MISSING | EPA ToxValDB API for toxicity values |
 | **OPERA predictions** | ❓ MISSING | NIEHS OPERA 2.9 QSAR predictions (free) |
-| **GHaz7 headless CLI** | ❓ MISSING | Headless auto-P2OASys CLI (needs re-rooting) |
-| **fast P2OASys v2 batch** | ❓ MISSING | High-throughput batch scoring |
+| **GHaz7 headless CLI** | ❓ MISSING | Headless automatic TURI hazard score CLI (needs re-rooting) |
+| **fast TURI hazard batch** | ❓ MISSING | High-throughput batch scoring |
 
 ### Environment Variables
 - `DSSTOX_CACHE_PATH` — DSSTox parquet cache path
@@ -122,7 +124,7 @@ The capability registry ensures:
 - `EPA_API_KEY` — EPA API key for ToxValDB
 - `OPERA_EXE_PATH` — Path to OPERA 2.9 executable
 - `OPERA_CACHE_DB` — OPERA results cache SQLite
-- `P2OASYS_HARVEST_DB` — P2OASys harvest results database
+- `P2OASYS_HARVEST_DB` — Harvest results database (current identifier)
 
 ### Notes
 - OPERA is **free** from NIEHS (not licensed); download from [niehs.nih.gov](https://www.niehs.nih.gov/research/resources/software/biostatistics/opera)
@@ -175,7 +177,7 @@ The capability registry ensures:
 | `PUBCHEM_MAX_RETRIES` | Max retries on throttle | 5 |
 | `PUBCHEM_CACHE_DIR` | PubChem cache location | `data/cache/pubchem/` |
 | `PUBCHEM_CACHE_MAX_AGE_S` | Cache TTL | 86400 |
-| `P2OASYS_SCORE_LOOKUP_DB` | P2OASys score SQLite | `data/p2oasys_score_lookup.sqlite` |
+| `P2OASYS_SCORE_LOOKUP_DB` | TURI hazard score SQLite | `data/p2oasys_score_lookup.sqlite` |
 | `EXPERT_P2OASYS_CSV` | Expert CSV overlay | (none) |
 | `DOSS_ENABLE_FISHER` | Fisher toggle default | 1 |
 | `HSPIP_DATA` | HSPiP .sofx directory | (none) |

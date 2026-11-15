@@ -6,8 +6,8 @@ Prep for first GitHub push as **turi-safe-chem-db** / TURI Safe Chem DB (Fierro2
 
 - DoSS Streamlit app → `apps/doss_ondemand/app.py` (`packages.*` imports)
 - Core → `packages/doss_core/` (schema, pubchem, **fisher**, **tci**, sigma, hspip, glove_hsp)
-- P2OASys → `packages/p2oasys_core/lookup.py`
-- Seed data → `data/*.csv`, `data/priority_cas_list.txt`, bundled `data/p2oasys_score_lookup.sqlite` + `data/p2oasys_harvest.sqlite`
+- TURI hazard score lookup → `packages/p2oasys_core/lookup.py` (package path unchanged)
+- Seed data → `data/*.csv`, `data/priority_cas_list.txt`, bundled `data/p2oasys_score_lookup.sqlite` + `data/p2oasys_harvest.sqlite` (file names unchanged)
 - Batch → `scripts/batch_priority_doss.py`, `scripts/fill_hspip_dph_rer.py`
 - Open HSPiP glue → `vendors/cas_to_hspip/` (py/m/README/LICENSE only)
 - Docs, MIT LICENSE, .gitignore, requirements.txt, requirements-dev.txt, pyproject.toml
