@@ -21,6 +21,10 @@ from typing import Any, Optional
 
 import pandas as pd
 
+from packages.doss_core.logging_support import cas_context, get_logger
+
+logger = get_logger(__name__)
+
 # Monorepo roots: packages/p2oasys_core/lookup.py -> repo root
 PKG_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PKG_DIR.parents[1]
@@ -95,8 +99,8 @@ def _to_float(v: Any) -> Optional[float]:
     try:
         if isinstance(v, float) and pd.isna(v):
             return None
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("score_nan_check_failed error_type=%s", type(exc).__name__)
     try:
         return float(v)
     except (TypeError, ValueError):
@@ -183,7 +187,8 @@ def load_expert_csv(path: Path | str | None = None) -> Optional[pd.DataFrame]:
                 df["cas"] = df["cas"].astype(str).str.strip()
                 df["_cas_digits"] = df["cas"].map(normalize_cas)
                 return df
-            except Exception:
+            except Exception as exc:
+                logger.warning("expert_csv_read_failed error_type=%s", type(exc).__name__)
                 continue
     return None
 
@@ -233,7 +238,9 @@ def _sqlite_row(cas: str, db_path: Path | str | None = None) -> Optional[dict[st
             return {k: row[k] for k in row.keys()}
         finally:
             conn.close()
-    except Exception:
+    except Exception as exc:
+        logger.warning("sqlite_score_lookup_failed cas=%s error_type=%s",
+                       cas_context(disp), type(exc).__name__)
         return None
 
 

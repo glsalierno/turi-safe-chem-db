@@ -28,6 +28,10 @@ from typing import Any, Dict, List, Optional
 
 import requests
 
+from packages.doss_core.logging_support import get_logger
+
+logger = get_logger(__name__)
+
 PUBCHEM_BASE = "https://pubchem.ncbi.nlm.nih.gov/rest/pug"
 PUBCHEM_VIEW_BASE = "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view"
 PUBCHEM_COMPOUND_URL = "https://pubchem.ncbi.nlm.nih.gov/compound"
@@ -81,7 +85,8 @@ def _read_cache(url: str) -> Optional[Dict[str, Any]]:
             return None
         data = json.loads(cache_file.read_text(encoding="utf-8"))
         return data
-    except Exception:
+    except Exception as exc:
+        logger.debug("pubchem_cache_read_failed error_type=%s", type(exc).__name__)
         return None
 
 
@@ -92,8 +97,8 @@ def _write_cache(url: str, data: Dict[str, Any]) -> None:
         key = _cache_key(url)
         cache_file = cache_dir / f"{key}.json"
         cache_file.write_text(json.dumps(data), encoding="utf-8")
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("pubchem_cache_write_failed error_type=%s", type(exc).__name__)
 
 
 class PubChemError(Exception):
@@ -231,8 +236,9 @@ def _get_with_retries(
                 try:
                     data = resp.json()
                     _write_cache(url, data)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.debug("pubchem_cache_decode_failed context=%r error_type=%s",
+                                 label, type(exc).__name__)
 
             return resp
 
@@ -550,8 +556,8 @@ def clear_cache() -> int:
             try:
                 f.unlink()
                 count += 1
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("pubchem_cache_entry_delete_failed error_type=%s", type(exc).__name__)
         return count
     except Exception:
         return 0
