@@ -10,7 +10,7 @@ along with the reason and env var to set for configuration.
 
 from __future__ import annotations
 
-import importlib
+import importlib.util
 import logging
 import sys
 from pathlib import Path
@@ -53,12 +53,7 @@ def load_registry() -> dict[str, Any]:
 
 def check_module_exists(module_path: str) -> bool:
     """Check if a module can be imported or file exists."""
-    try:
-        importlib.import_module(module_path)
-        return True
-    except ImportError:
-        pass
-
+    # Prefer repository paths so reporting does not execute application code.
     parts = module_path.split(".")
     py_path = REPO_ROOT / "/".join(parts[:-1]) / f"{parts[-1]}.py"
     if py_path.is_file():
@@ -69,7 +64,10 @@ def check_module_exists(module_path: str) -> bool:
     folder_path = REPO_ROOT / "/".join(parts)
     if folder_path.is_dir():
         return True
-    return False
+    try:
+        return importlib.util.find_spec(module_path) is not None
+    except (ImportError, ValueError):
+        return False
 
 
 def check_capability_status(cap_id: str, cap: dict[str, Any]) -> dict[str, Any]:

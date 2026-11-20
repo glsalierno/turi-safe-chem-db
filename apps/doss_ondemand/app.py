@@ -13,6 +13,13 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 import streamlit as st
 
+from packages.capability_report import capability_report
+from packages.doss_core.logging_support import cas_context, get_logger
+from packages.doss_core.system_diagnostics import (
+    active_overrides,
+    bundled_database,
+    dependency_versions,
+)
 from packages.doss_core.schema import (
     DOSS_COLUMNS,
     EMPTY_VALUE,
@@ -52,6 +59,8 @@ from packages.doss_core.hspip import (
     save_hspip_paths,
 )
 from packages.doss_core.glove_hsp import format_glove_hsp_flag
+
+logger = get_logger(__name__)
 
 st.set_page_config(
     page_title="TURI Safe Chem DB - DoSS",
@@ -445,7 +454,9 @@ def build_doss_row(
             elif tci.get("product_number"):
                 notes.append(f"TCI product {tci['product_number']}")
         except Exception as exc:
-            notes.append(f"TCI enrich skipped: {exc}")
+            logger.warning("vendor_enrichment_skipped vendor=TCI cas=%s error_type=%s",
+                           cas_context(cas), type(exc).__name__)
+            notes.append("TCI enrichment unavailable")
 
 
     # --- On-demand Fisher SDS (prefer over PubChem/TCI for NFPA + cost + SDS + §9 when present) ---
@@ -505,7 +516,9 @@ def build_doss_row(
             elif fisher.get("part_number"):
                 notes.append(f"Fisher part {fisher['part_number']}")
         except Exception as exc:
-            notes.append(f"Fisher enrich skipped: {exc}")
+            logger.warning("vendor_enrichment_skipped vendor=Fisher cas=%s error_type=%s",
+                           cas_context(cas), type(exc).__name__)
+            notes.append("Fisher enrichment unavailable")
 
     # --- Precautionary NFPA merge (higher rating wins; cite all sources on disagreement) ---
     h_val, h_note = _precautionary_nfpa(nfpa_health_cands)
@@ -560,8 +573,8 @@ def build_doss_row(
                 molar_vol = (mw_float / d_float) * 1000
                 row["Molar Volume"] = _fmt_num(molar_vol, 1)
                 prop_sources["Molar Volume"] = "calculated"
-        except (ValueError, TypeError):
-            pass
+        except (ValueError, TypeError) as exc:
+            logger.warning("molar_volume_skipped cas=%s error_type=%s", cas_context(cas), type(exc).__name__)
 
     # --- P2OASys (expert CSV → SQLite expert → SQLite auto) ---
     p2 = resolve_p2oasys(cas, expert_df)
@@ -694,6 +707,59 @@ def _load_universe_catalog():
     return load_cas_catalog()
 
 
+@st.cache_data(ttl=60, show_spinner=False)
+def _capability_statuses() -> list[dict[str, str]]:
+    # Reasons can contain filesystem paths or configuration URLs.
+    return [{"Capability": entry["name"], "Status": entry["status"]}
+            for entry in capability_report()]
+
+
+def render_system_diagnostics() -> None:
+    with st.sidebar.expander("System Diagnostics", expanded=False):
+        st.markdown("**Runtime versions**")
+        st.json(dependency_versions("turi-safe-chem-db", "0.1.0"), expanded=False)
+        db = bundled_database()
+        st.markdown("**Bundled score SQLite**")
+        st.caption(f"Status: {db['status']}")
+        if "rows" in db:
+            st.caption(f"Rows: {db['rows']:,}")
+        st.markdown("**Active overrides**")
+        names = active_overrides((
+            "DOSS_ENABLE_FISHER",
+            "EXPERT_P2OASYS_CSV",
+            "P2OASYS_SCORE_LOOKUP_DB",
+            "HSPIP_EXE",
+            "HSPIP_PATH",
+            "HSPIP_DATA",
+            "HSPIP_DATA_DIR",
+            "LOG_LEVEL",
+            "PUBCHEM_MIN_INTERVAL_S",
+            "PUBCHEM_MAX_RETRIES",
+            "PUBCHEM_CACHE_DIR",
+            "PUBCHEM_CACHE_MAX_AGE_S",
+            "PUBCHEM_BULK_DIR",
+            "PUBCHEM_DISABLE_BULK",
+            "P2OASYS_MATRIX_DIR",
+            "ODP_GWP_TABLE_PATH",
+            "CAA_HAP_LIST_PATH",
+            "ECOSAR_DISABLE",
+            "EPISUITE_PATH",
+            "IUCLID_API_URL",
+            "IUCLID_API_KEY",
+        ))
+        st.caption(", ".join(names) if names else "None")
+        st.markdown("**Capability registry**")
+        try:
+            statuses = _capability_statuses()
+            if statuses:
+                st.dataframe(statuses, hide_index=True, use_container_width=True)
+            else:
+                st.caption("No capabilities found")
+        except Exception as exc:
+            logger.warning("capability_report_unavailable error_type=%s", type(exc).__name__)
+            st.caption("Capability report unavailable")
+
+
 def main():
     st.title("🧪 TURI Safe Chem DB")
     st.markdown(
@@ -707,6 +773,7 @@ def main():
     expert_df = None
 
     st.sidebar.markdown("## Settings")
+    render_system_diagnostics()
 
     _lookup_db = default_lookup_db_path()
     if _lookup_db.is_file():
