@@ -275,18 +275,26 @@ def process_smiles_batch(smiles_list, batch_size, max_retries, max_output_retrie
         logger.info(f"Saving intermediate results at end of {round_desc} round after {batch_count} batches")
         save_intermediate_results(all_hsp_full, original_smiles, timestamp, batch_count)
 
+    return all_hsp_full, failed_output_smiles
+
+
 # Initial processing of valid SMILES
 batch_size = 100
 max_retries = 3
 max_output_retries = 3
 retry_delay = 2  # seconds
 clipboard_delay = 2  # Increased delay to avoid clipboard contention
-process_smiles_batch(valid_smiles, batch_size, max_retries, max_output_retries, retry_delay, clipboard_delay, "initial")
+all_hsp_full, failed_output_smiles = process_smiles_batch(
+    valid_smiles, batch_size, max_retries, max_output_retries, retry_delay, clipboard_delay, "initial",
+)
 
 # Second round for failed SMILES
 if failed_output_smiles:
     logger.info(f"Starting second round processing for {len(failed_output_smiles)} SMILES that failed due to empty/invalid output")
-    process_smiles_batch(failed_output_smiles, batch_size, max_retries, max_output_retries, retry_delay, clipboard_delay, "retry")
+    retry_results, _ = process_smiles_batch(
+        failed_output_smiles, batch_size, max_retries, max_output_retries, retry_delay, clipboard_delay, "retry",
+    )
+    all_hsp_full.extend(retry_results)
 else:
     logger.info("No SMILES required a second round of processing")
 
