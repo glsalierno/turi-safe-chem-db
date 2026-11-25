@@ -19,9 +19,10 @@ import re
 import time
 from pathlib import Path
 from typing import Any, Optional
-from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode
-from urllib.request import Request, urlopen
+
+from packages.doss_core.logging_support import get_logger
+from packages.doss_core.vendor_http import get_vendor_response
 
 try:
     from packages.p2oasys_core.lookup import APP_DIR, normalize_cas
@@ -32,6 +33,8 @@ except Exception:  # standalone / box without p2oasys_lookup
         if not cas:
             return ""
         return "".join(c for c in str(cas) if c.isdigit())
+
+logger = get_logger(__name__)
 
 _USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -162,26 +165,14 @@ def _throttle() -> None:
 
 
 def _http_get(url: str, *, accept: str = "*/*", timeout: float = 30.0) -> tuple[int, bytes, str]:
-    _throttle()
-    req = Request(
-        url,
+    return get_vendor_response(
+        url, vendor="fisher", throttle=_throttle, timeout=(5.0, timeout),
         headers={
             "User-Agent": _USER_AGENT,
             "Accept": accept,
             "Accept-Language": "en-US,en;q=0.9",
         },
     )
-    try:
-        with urlopen(req, timeout=timeout) as resp:
-            status = getattr(resp, "status", 200) or 200
-            ctype = (resp.headers.get("Content-Type") or "").lower()
-            data = resp.read()
-            return int(status), data, ctype
-    except HTTPError as e:
-        body = e.read() if hasattr(e, "read") else b""
-        return int(e.code), body or b"", ""
-    except (URLError, TimeoutError, OSError):
-        return 0, b"", ""
 
 
 def sds_url(part_number: str, *, vendor_id: str = _DEFAULT_VENDOR_ID) -> str:
@@ -247,8 +238,8 @@ def _pdf_to_text(pdf_bytes: bytes) -> str:
                 return proc.stdout.decode("utf-8", errors="ignore")
         finally:
             Path(tmp_path).unlink(missing_ok=True)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("sds_pdftotext_unavailable error_type=%s", type(exc).__name__)
     for mod_name in ("pypdf", "PyPDF2"):
         try:
             import importlib
