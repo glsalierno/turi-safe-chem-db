@@ -4,13 +4,15 @@ P2OASys Hazard Score Calculator (Quick Hazard Assessment app).
 Maps hazard data to P2OASys scores using the TURI Hazard Matrix Excel file.
 Used by the P2OASys scoring tab. https://p2oasys.turi.org/chemical/hazard-score-matrix
 
-**Site-style aggregation (TURI methodology):**
-Matrix **units** (sub-subcategories) are scored on the **2–10** band. Within each
-**subcategory**, the score is the **mean of the two highest** unit scores (or the
-single score if only one unit is scored). The **category** score stored under
-``_category_max`` is likewise the **mean of the two highest** subcategory scores.
-Overall evaluation (DoSS / site) is the **mean of Auto6 category scores**
-(Process / Life Cycle excluded from that mean).
+**Expert-style aggregation (v7.0, aligned with expert1228 offline comparison):**
+Matrix **units** (sub-subcategories) are scored on the **2/4/6/8/10** band only.
+Within each **subcategory**, the score is the **MAX** (highest) unit score.
+The **category** score stored under ``_category_max`` is the **MAX** of subcategory scores.
+Overall evaluation is the **MAX of Auto6 category scores**
+(Process / Life Cycle excluded from that calculation).
+
+**ECOSAR gap-fill rule:** ECOSAR predictions fill Ecological subcategories ONLY
+when no measured data (LC50/EC50/NOEC or GHS H400-H413) exists. Measured always wins.
 """
 
 import hashlib
@@ -42,7 +44,10 @@ DEFAULT_MATRIX_PATH = _default_matrix_path()
 SCORE_COLS = [2, 4, 6, 8, 10]  # P2OASys score levels
 
 # v6 hardening: bump when scoring semantics change so audit traces are comparable.
-SCORER_VERSION = "p2oasys_scorer_v6.6_site_top2"
+# v6.7: Flash point threshold direction fix, ECOSAR solubility bounds, predicted flag propagation
+# v6.8: Range threshold parsing (upper bound), NFPA Reactivity, ChV scoring, measured priority
+# v7.0: Expert1228 alignment - MAX aggregation, ECOSAR gap-fill rules, band corrections
+SCORER_VERSION = "p2oasys_scorer_v7.0_expert_alignment"
 
 # Ideal-gas factor for mg/m³ → ppm at 25 °C, 1 atm (TURI / EPA convention).
 _MGM3_TO_PPM_FACTOR = 24.45
@@ -56,34 +61,32 @@ STATUS_CONFLICTING = "Conflicting evidence"
 STATUS_SOURCE_UNAVAILABLE = "Source unavailable"
 
 # Routes that count as oral (or oral-equivalent) for Acute oral LD50.
-# TURI / P2OASys practice: intraperitoneal (i.p. / ip) is treated as oral.
-# Also accept common oral synonyms so true oral rows are not rejected.
+# Only true oral routes accepted - intraperitoneal (i.p.) is NOT oral-equivalent.
 _ORAL_ROUTE_RE = re.compile(
     r"(?:"
     r"\boral\b|\bperoral\b|per\s*os|\bp\.\s*o\.\b|\bpo\b|\bgavage\b|"
-    r"drinking\s*water|\bfeed\b|\bdietary\b|"
-    r"\bintraperitoneal\b|\bi\.\s*p\.\b|\bip\b"
+    r"drinking\s*water|\bfeed\b|\bdietary\b"
     r")",
     re.I,
 )
 
-# Routes that disqualify a record from oral LD50 when no oral-equivalent token is present.
-# Intraperitoneal / i.p. / ip are intentionally NOT listed (they are oral-equivalent).
+# Routes that disqualify a record from oral LD50 when no oral token is present.
+# Includes intraperitoneal (i.p.) - injection routes are not oral.
 # Word-bounded so short abbreviations (iv, sc, im) do not match inside other words.
 _NON_ORAL_ROUTE_RE = re.compile(
     r"\b(?:dermal|skin|inhalation|intravenous|subcutaneous|"
-    r"intramuscular|i\.?v\.?|s\.?c\.?|i\.?m\.?|parenteral)\b",
+    r"intramuscular|intraperitoneal|"
+    r"i\.?v\.?|s\.?c\.?|i\.?m\.?|i\.?p\.?|parenteral)\b",
     re.I,
 )
 
 
 def _has_oral_equivalent_route(combined_lower: str) -> bool:
-    """True when text/route mentions oral or oral-equivalent (incl. intraperitoneal)."""
+    """True when text/route mentions oral (injection routes like i.p. are NOT oral)."""
     if not combined_lower:
         return False
     # Normalize common punctuated forms before regex.
-    s = combined_lower.replace("i.p.", " ip ").replace("i.p", " ip ")
-    s = s.replace("p.o.", " po ").replace("p.o", " po ")
+    s = combined_lower.replace("p.o.", " po ").replace("p.o", " po ")
     return bool(_ORAL_ROUTE_RE.search(s))
 
 # Endpoints that are point-of-departure / repeated-dose values, NOT acute lethality.
@@ -251,13 +254,27 @@ def matrix_fingerprint(excel_path: Path) -> dict[str, Any]:
 
 
 def _parse_numeric_threshold(val: Any) -> Optional[float]:
-    """Parse numeric threshold from cell (handles '>100', '<50', etc.)."""
+    """
+    Parse numeric threshold from cell (handles '>100', '<50', '30-200', etc.).
+    
+    For range cells like "30-200" or ">300-1000", returns the UPPER bound.
+    This ensures ranges define the ceiling for each score band.
+    """
     if val is None or (isinstance(val, float) and pd.isna(val)):
         return None
     s = str(val).strip()
     if not s or s.lower() == "nan" or s == ".":
         return None
-    # Extract number from patterns like ">100", "<50", "5,000", "0.05", "6-7".
+    
+    # Range cells like "30-200" or ">300-1000" - use upper bound as the threshold
+    # Matches: 30-200, >300-1000, 0.1-1.0, etc. (hyphen or en-dash)
+    range_match = re.search(r"(\d[\d,]*\.?\d*)\s*[-–]\s*(\d[\d,]*\.?\d*)", s)
+    if range_match:
+        upper = _num(range_match.group(2))
+        if upper is not None:
+            return upper
+    
+    # Extract number from patterns like ">100", "<50", "5,000", "0.05".
     # Allow thousands separators so ">1,000" parses as 1000, not 1.
     m = re.search(r"[<>]?\s*(\d[\d,]*\.?\d*|\d*\.\d+)", s)
     if m:
@@ -400,10 +417,19 @@ def _build_rule(unit_name: str, values: list) -> Optional[dict]:
         if mapping:
             return {"type": "ghs_h", "unit": unit_name, "mapping": mapping, "cell_labels": cell_labels}
     # Key phrases - substring match for hazard descriptions
+    # Must preserve column→score mapping (empty columns are NOT score 0)
     if "KEY PHRASE" in u or "KEY WORD" in u:
-        phrases = [str(v).strip() for v in values if v and not (isinstance(v, float) and pd.isna(v))]
-        if phrases:
-            return {"type": "phrase", "unit": unit_name, "phrases": list(zip(phrases, SCORE_COLS)), "cell_labels": cell_labels}
+        phrase_list: list[tuple[str, int]] = []
+        for i, v in enumerate(values):
+            if i >= len(SCORE_COLS):
+                break
+            if v is None or (isinstance(v, float) and pd.isna(v)):
+                continue
+            s = str(v).strip()
+            if s:
+                phrase_list.append((s, SCORE_COLS[i]))
+        if phrase_list:
+            return {"type": "phrase", "unit": unit_name, "phrases": phrase_list, "cell_labels": cell_labels}
     # IARC Category: "3", "2B", "1 or 2A" - split so 1 and 2A both map to same score
     if "IARC" in u:
         mapping = {}
@@ -506,23 +532,40 @@ def _dump_matrix(matrix: dict[str, Any]) -> None:
 def _score_numeric(rule: dict, value: float, higher_is_safer: bool = True) -> Optional[int]:
     """
     Score numeric value against thresholds.
+
     higher_is_safer: True for LD50 (higher = less toxic), False for flash point (lower = less flammable).
+
+    For higher_is_safer=True (e.g., LD50):
+      - High value = safe → low score
+      - Low value = hazardous → high score
+      - Below lowest threshold → return most hazardous score
+
+    For higher_is_safer=False (e.g., flash point, vapor pressure):
+      - Low value = hazardous → high score
+      - High value = safe → low score
+      - Above highest threshold → return safest score (lowest score number)
     """
     thresh = rule.get("thresholds", [])
     if not thresh:
         return None
+
     if higher_is_safer:
         # LD50: find highest threshold where value >= threshold
-        for t, score in sorted(thresh, reverse=True):
+        sorted_desc = sorted(thresh, key=lambda x: x[0], reverse=True)
+        for t, score in sorted_desc:
             if value >= t:
                 return score
-        return thresh[-1][1]  # Most hazardous
+        # Value below all thresholds → most hazardous (highest score number)
+        return sorted_desc[-1][1]
     else:
-        # Flash point: find lowest threshold where value <= threshold
-        for t, score in sorted(thresh):
+        # Flash point / vapor pressure: find lowest threshold where value <= threshold
+        sorted_asc = sorted(thresh, key=lambda x: x[0])
+        for t, score in sorted_asc:
             if value <= t:
                 return score
-        return thresh[-1][1]
+        # Value above all thresholds → safest (lowest score number)
+        # The highest threshold has the lowest score for "lower is hazardous" endpoints
+        return sorted_asc[-1][1]
 
 
 def _score_ghs_h(rule: dict, h_codes: list[str]) -> Optional[int]:
@@ -559,6 +602,95 @@ def _score_text(rule: dict, text: str) -> Optional[int]:
     return None
 
 
+def _smiles_contains_s_or_n(smiles: Optional[str]) -> bool:
+    """Check if SMILES contains sulfur (S) or nitrogen (N) atoms.
+    
+    Used for Acid Rain Formation scoring (Fix 7, expert1228):
+    If S or N present → minimum score 8 (may form SOx/NOx).
+    """
+    if not smiles:
+        return False
+    s = str(smiles).upper()
+    # Check for S not followed by i/e (to exclude Si, Se)
+    # Check for N not followed by a/i (to exclude Na, Ni) and not in aromatic ring notation
+    # Simple heuristic: look for standalone S or N
+    has_sulfur = bool(re.search(r'(?<![A-Z])S(?![ie])', s))
+    has_nitrogen = bool(re.search(r'(?<![A-Z])N(?![ai])', s))
+    return has_sulfur or has_nitrogen
+
+
+def _smiles_is_inorganic(smiles: Optional[str]) -> bool:
+    """Check if SMILES represents an inorganic compound (no carbon atoms).
+    
+    Used for ECOSAR cap (Fix 4, expert1228):
+    Inorganics should not have ECOSAR predictions scored as high hazard.
+    """
+    if not smiles:
+        return False
+    s = str(smiles).upper()
+    # Check for carbon: C followed by any letter except L (for Cl)
+    # or lowercase c (aromatic carbon)
+    has_carbon = bool(re.search(r'C(?![LLA])', s)) or 'c' in str(smiles)
+    return not has_carbon
+
+
+def _smiles_is_siloxane(smiles: Optional[str]) -> bool:
+    """Check if SMILES represents a siloxane or silane compound.
+    
+    Used for ECOSAR cap (Fix 4, expert1228):
+    Siloxanes/silanes have poor ECOSAR predictions.
+    """
+    if not smiles:
+        return False
+    s = str(smiles)
+    # Siloxanes contain Si-O linkages; silanes contain Si
+    return 'Si' in s or '[Si]' in s
+
+
+def _is_neshap_listed_hap(hazard_data: dict) -> bool:
+    """Check if chemical is a NESHAP Listed Hazardous Air Pollutant.
+    
+    Used for NESHAP scoring (Fix 7, expert1228):
+    If listed → score 10.
+    
+    Checks toxicities and hazard_metrics for HAP/NESHAP mentions.
+    Only positive listings count - "not listed" / "not considered" are excluded.
+    """
+    # Negation patterns that indicate NOT listed as HAP
+    negation_patterns = (
+        "not listed", "not considered", "not a ", "unlisted",
+        "not classified", "not designated", "not identified",
+    )
+
+    def _is_positive_hap_mention(text: str) -> bool:
+        """Check if text positively lists chemical as HAP (no negation)."""
+        low = text.lower()
+        # Must have HAP-related keywords
+        has_hap = "hazardous air pollutant" in low or ("hap" in low.split() and ("listed" in low or "neshap" in low))
+        if not has_hap:
+            return False
+        # Check for negation patterns
+        for neg in negation_patterns:
+            if neg in low:
+                return False
+        # Positive mention of being listed
+        return "listed" in low or "designated" in low or "identified" in low
+
+    # Check toxicities for HAP mentions
+    for t in hazard_data.get("toxicities") or []:
+        val = str(t.get("value") or "")
+        if _is_positive_hap_mention(val):
+            return True
+    
+    # Check hazard_metrics for HAP/NESHAP designation
+    hm = hazard_data.get("hazard_metrics") or {}
+    for item in hm.get("other_designations") or []:
+        if _is_positive_hap_mention(str(item)):
+            return True
+    
+    return False
+
+
 def _tox_text_and_route(entry: dict) -> tuple[str, str]:
     """Return (value_text, combined_route_species_lower) for a toxicity entry."""
     val = str(entry.get("value", ""))
@@ -588,13 +720,14 @@ def _extract_ld50_oral(
 ) -> Optional[dict[str, Any]]:
     """Extract most conservative oral LD50 (lowest mg/kg).
 
-    Accepts oral and oral-equivalent routes (gavage, p.o., intraperitoneal / i.p.).
-    Rejects dermal / inhalation / iv / sc / im when no oral-equivalent token is present,
-    and rejects non-acute POD endpoints (NOAEL/LOAEL/…). Returns
-    ``{"value", "route", "qualifier", "raw"}`` or ``None``.
+    Accepts only true oral routes (gavage, p.o., dietary, drinking water).
+    Rejects non-oral routes including intraperitoneal (i.p.), dermal, inhalation,
+    and other injection routes (iv, sc, im).
+    Also rejects non-acute POD endpoints (NOAEL/LOAEL/…). Returns
+    ``{"value", "route", "qualifier", "raw", "predicted"}`` or ``None``.
 
-    If both oral-equivalent and a non-oral token appear (e.g. "oral/dermal"), the
-    oral-equivalent wins so true oral rows are not falsely rejected.
+    If both oral and a non-oral token appear (e.g. "oral/dermal"), the
+    oral route wins so true oral rows are not falsely rejected.
     """
     tox = hazard_data.get("toxicities", [])
     best: Optional[dict[str, Any]] = None
@@ -610,7 +743,7 @@ def _extract_ld50_oral(
             continue
         combined = vl + " " + sp
         if _has_oral_equivalent_route(combined):
-            pass  # oral / IP / gavage / p.o. — keep
+            pass  # oral / gavage / p.o. / dietary — keep
         elif _NON_ORAL_ROUTE_RE.search(combined):
             _reject(rejections, "oral LD50", val, "route is not oral")
             continue
@@ -664,7 +797,7 @@ def _extract_ld50_dermal(
         if parsed is None:
             continue
         if best is None or parsed["value"] < best["value"]:
-            best = {**parsed, "route": "dermal", "unit": "mg/kg"}
+            best = {**parsed, "route": "dermal", "unit": "mg/kg", "predicted": bool(t.get("predicted"))}
     return best
 
 
@@ -693,7 +826,7 @@ def _extract_lc50_inhalation(
         if m:
             parsed = parse_measured_value(m.group(1), higher_is_safer=True)
             if parsed is not None:
-                ppm_candidates.append({**parsed, "unit": "ppm", "source_unit": "ppm"})
+                ppm_candidates.append({**parsed, "unit": "ppm", "source_unit": "ppm", "predicted": bool(t.get("predicted"))})
             continue
         m_mg = re.search(r"([<>≤≥]?\s*\d[\d,]*(?:\.\d+)?(?:\s*[-–—]\s*\d[\d,]*(?:\.\d+)?)?)\s*mg/m[³3]", val, re.I)
         if m_mg:
@@ -720,6 +853,7 @@ def _extract_lc50_inhalation(
                 "source_unit": "mg/m3",
                 "molecular_weight": mw,
                 "mg_m3": parsed["value"],
+                "predicted": bool(t.get("predicted")),
             })
     if not ppm_candidates:
         return None
@@ -772,6 +906,8 @@ def _extract_nfpa_digit(text: str, *, kind: str) -> Optional[int]:
         return None
     if kind == "fire" and not ("fire" in low or "ignit" in low or "flamm" in low):
         return None
+    if kind == "reactivity" and not ("react" in low or "instab" in low or "special" in low):
+        return None
     m = re.search(r"^(\d)\s*[-–]", s)
     if m:
         return int(m.group(1))
@@ -800,6 +936,19 @@ def _extract_nfpa_fire(hazard_data: dict) -> Optional[int]:
     best: Optional[int] = None
     for n in hm.get("nfpa", []) or []:
         v = _extract_nfpa_digit(n, kind="fire")
+        if v is None:
+            continue
+        if best is None or v > best:
+            best = v
+    return best
+
+
+def _extract_nfpa_reactivity(hazard_data: dict) -> Optional[int]:
+    """Extract NFPA reactivity/instability rating (0-4); precautionary max across sources."""
+    hm = hazard_data.get("hazard_metrics", {})
+    best: Optional[int] = None
+    for n in hm.get("nfpa", []) or []:
+        v = _extract_nfpa_digit(n, kind="reactivity")
         if v is None:
             continue
         if best is None or v > best:
@@ -900,7 +1049,7 @@ def _extract_log_kow(hazard_data: dict) -> Optional[dict[str, Any]]:
     for item in hm.get("log_kow") or []:
         vv, pp = _unpack_numeric_evidence(item)
         if vv is not None:
-            return {"value": vv, "predicted": pp or True, "source": "hazard_metrics.log_kow"}
+            return {"value": vv, "predicted": bool(pp), "source": "hazard_metrics.log_kow"}
     for t in hazard_data.get("toxicities") or []:
         val = str(t.get("value") or "")
         low = val.lower()
@@ -935,7 +1084,7 @@ def _extract_bcf_l_kg(hazard_data: dict) -> Optional[dict[str, Any]]:
     for item in hm.get("bcf_l_kg") or []:
         vv, pp = _unpack_numeric_evidence(item)
         if vv is not None:
-            return {"value": vv, "predicted": pp or True, "source": "hazard_metrics.bcf_l_kg"}
+            return {"value": vv, "predicted": bool(pp), "source": "hazard_metrics.bcf_l_kg"}
     import re
     for t in hazard_data.get("toxicities") or []:
         val = str(t.get("value") or "")
@@ -976,16 +1125,76 @@ def _extract_biodeg_half_life_days(hazard_data: dict) -> Optional[dict[str, Any]
     return None
 
 
-def _extract_lc50_aquatic(hazard_data: dict) -> Optional[float]:
-    """Extract most conservative acute aquatic LC50 / EC50 (lowest mg/L)."""
-    candidates: list[float] = []
+def _extract_water_solubility_mg_l(hazard_data: dict) -> Optional[dict[str, Any]]:
+    """Extract water solubility in mg/L from hazard_data.
+
+    Checks structured fields (water_solubility_mg_l), hazard_metrics, and toxicities.
+    Returns ``{"value": float, "predicted": bool, "source": str}`` or ``None``.
+    """
+    v, pred = _unpack_numeric_evidence(hazard_data.get("water_solubility_mg_l"))
+    if v is not None and v > 0:
+        return {"value": v, "predicted": pred, "source": "water_solubility_mg_l"}
+
+    hm = hazard_data.get("hazard_metrics") or {}
+    for item in hm.get("water_solubility") or []:
+        vv, pp = _unpack_numeric_evidence(item)
+        if vv is not None and vv > 0:
+            return {"value": vv, "predicted": bool(pp), "source": "hazard_metrics.water_solubility"}
+
+    for t in hazard_data.get("toxicities") or []:
+        val = str(t.get("value") or "")
+        low = val.lower()
+        if "water solubility" in low or "solubility" in low and "mg/l" in low.replace(" ", ""):
+            m = re.search(r"(\d[\d,]*(?:\.\d+)?(?:[eE][-+]?\d+)?)\s*mg/L", val, re.I)
+            if m:
+                try:
+                    num = float(m.group(1).replace(",", ""))
+                    if num > 0:
+                        return {
+                            "value": num,
+                            "predicted": bool(t.get("predicted")),
+                            "source": str(t.get("source") or "toxicity"),
+                        }
+                except ValueError:
+                    pass
+    return None
+
+
+def _extract_lc50_aquatic(hazard_data: dict, rejections: Optional[list] = None) -> Optional[dict[str, Any]]:
+    """Extract most conservative acute aquatic LC50/EC50 (lowest mg/L) with solubility bounds.
+
+    Per ECOSAR/GHS practice, predicted LC50 values below water solubility are unrealistic
+    (the chemical cannot dissolve to that concentration). Such values are flagged as
+    ``beyond_solubility`` and either capped at water solubility or rejected.
+
+    Fix 4 (expert1228): Additional exclusions for predicted values:
+    - Inorganics (no C in SMILES): ECOSAR not applicable
+    - Siloxanes/silanes: poor ECOSAR predictions
+    - Predictions < 1e-3 mg/L: implausibly low
+
+    Returns ``{"value", "predicted", "source", "beyond_solubility", "water_solubility"}``
+    or ``None``.
+    """
+    water_sol = _extract_water_solubility_mg_l(hazard_data)
+    log_kow = _extract_log_kow(hazard_data)
+    smiles = hazard_data.get("smiles") or hazard_data.get("SMILES")
+
+    candidates: list[dict[str, Any]] = []
+
     for key in ("lc50_aquatic_mg_l", "aquatic_toxicity"):
         raw = hazard_data.get(key)
+        predicted = False
         if isinstance(raw, dict):
+            predicted = bool(raw.get("predicted"))
             raw = raw.get("value")
         v = _num(raw)
         if v is not None and v > 0:
-            candidates.append(float(v))
+            candidates.append({
+                "value": float(v),
+                "predicted": predicted,
+                "source": key,
+            })
+
     tox = hazard_data.get("toxicities", [])
     for t in tox:
         val = str(t.get("value", ""))
@@ -997,13 +1206,176 @@ def _extract_lc50_aquatic(hazard_data: dict) -> Optional[float]:
             or "daphn" in val.lower()
             or "algae" in val.lower()
         ):
-            m = re.search(r"(\d[\d,]*(?:\.\d+)?)\s*mg/L", val, re.I)
+            m = re.search(r"(\d[\d,]*(?:\.\d+)?(?:[eE][-+]?\d+)?)\s*mg/L", val, re.I)
             if m:
                 v = _num(m.group(1))
-                if v is not None:
-                    candidates.append(v)
-    return min(candidates) if candidates else None
+                if v is not None and v > 0:
+                    candidates.append({
+                        "value": float(v),
+                        "predicted": bool(t.get("predicted")),
+                        "source": str(t.get("source") or "toxicity"),
+                    })
 
+    if not candidates:
+        return None
+
+    # Measured values take precedence over predicted (ECOSAR/QSAR).
+    # Only use predicted if no measured data exists.
+    measured = [c for c in candidates if not c.get("predicted")]
+    predicted = [c for c in candidates if c.get("predicted")]
+
+    if measured:
+        best = min(measured, key=lambda c: c["value"])
+    else:
+        best = min(predicted, key=lambda c: c["value"])
+
+    beyond_solubility = False
+    low_confidence = False
+    ws_val = water_sol["value"] if water_sol else None
+
+    # ECOSAR/GHS solubility rule:
+    # - LC50 BELOW water_solubility = achievable concentration, score normally
+    # - LC50 ABOVE water_solubility = implausible "no effects at saturation"
+    #   Flag but do NOT cap (capping manufactures fake toxicity)
+    if ws_val is not None and best["value"] > ws_val:
+        beyond_solubility = True
+        reason = f"LC50 {best['value']:.2e} mg/L above water solubility {ws_val:.2e} mg/L (implausible)"
+        _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
+
+    # logKow heuristic for lipophilic compounds (logKow > 5):
+    # High logKow means poor water solubility - predicted LC50 values are unreliable
+    # because ECOSAR/QSAR models may predict concentrations exceeding actual solubility.
+    # Rule: when solubility is missing AND logKow > 5 AND value is predicted → exclude.
+    if log_kow and log_kow.get("value") is not None:
+        kow = log_kow["value"]
+        if kow > 5 and best.get("predicted") and ws_val is None:
+            low_confidence = True
+            reason = f"Predicted LC50 {best['value']:.2e} mg/L with logKow={kow:.1f}, no solubility data - lipophilic exclusion"
+            _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
+
+    # Fix 4: Additional ECOSAR caps (expert1228)
+    # Inorganics (no C in SMILES): ECOSAR not applicable for inorganic compounds
+    if best.get("predicted") and _smiles_is_inorganic(smiles):
+        low_confidence = True
+        reason = f"Predicted LC50 {best['value']:.2e} mg/L for inorganic compound (no C in SMILES) - ECOSAR not applicable"
+        _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
+
+    # Siloxanes/silanes: poor ECOSAR predictions
+    if best.get("predicted") and _smiles_is_siloxane(smiles):
+        low_confidence = True
+        reason = f"Predicted LC50 {best['value']:.2e} mg/L for siloxane/silane compound - ECOSAR unreliable"
+        _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
+
+    # Very low predictions (< 1e-3 mg/L): implausibly toxic for most compounds
+    if best.get("predicted") and best["value"] < 1e-3:
+        low_confidence = True
+        reason = f"Predicted LC50 {best['value']:.2e} mg/L below 0.001 mg/L threshold - implausibly low"
+        _reject(rejections, "aquatic LC50", f"{best['value']:.2e} mg/L", reason)
+
+    best["beyond_solubility"] = beyond_solubility
+    best["low_confidence"] = low_confidence
+    if ws_val is not None:
+        best["water_solubility_mg_l"] = ws_val
+
+    return best
+
+
+def _extract_lc50_aquatic_value(hazard_data: dict, rejections: Optional[list] = None) -> Optional[float]:
+    """Extract aquatic LC50 value (float) for backward compatibility."""
+    result = _extract_lc50_aquatic(hazard_data, rejections)
+    return result["value"] if result else None
+
+
+def _extract_chv_aquatic(hazard_data: dict, rejections: Optional[list] = None) -> Optional[dict[str, Any]]:
+    """Extract aquatic Chronic Value (ChV) in mg/L for Chronic Aquatic Toxicity scoring.
+
+    ChV is typically the geometric mean of NOEC and LOEC, used in ECOSAR and risk assessment.
+    Looks for structured fields, hazard_metrics, and toxicities mentioning "ChV" or "chronic value".
+
+    Measured values take precedence over predicted (ECOSAR) values.
+    Same solubility/lipophilicity rules as LC50 apply (Fix 4).
+
+    Returns ``{"value", "predicted", "source", "low_confidence"}`` or ``None``.
+    """
+    water_sol = _extract_water_solubility_mg_l(hazard_data)
+    log_kow = _extract_log_kow(hazard_data)
+    smiles = hazard_data.get("smiles") or hazard_data.get("SMILES")
+
+    candidates: list[dict[str, Any]] = []
+
+    v, pred = _unpack_numeric_evidence(hazard_data.get("chv_aquatic_mg_l"))
+    if v is not None and v > 0:
+        candidates.append({"value": float(v), "predicted": pred, "source": "chv_aquatic_mg_l"})
+
+    hm = hazard_data.get("hazard_metrics") or {}
+    for item in hm.get("chv_mg_l") or []:
+        vv, pp = _unpack_numeric_evidence(item)
+        if vv is not None and vv > 0:
+            candidates.append({"value": float(vv), "predicted": bool(pp), "source": "hazard_metrics.chv_mg_l"})
+
+    tox = hazard_data.get("toxicities", [])
+    for t in tox:
+        val = str(t.get("value", ""))
+        low = val.lower()
+        if "chv" in low or "chronic value" in low or ("chronic" in low and "mg/l" in low.replace(" ", "")):
+            m = re.search(r"(\d[\d,]*(?:\.\d+)?(?:[eE][-+]?\d+)?)\s*mg/L", val, re.I)
+            if m:
+                v_parsed = _num(m.group(1))
+                if v_parsed is not None and v_parsed > 0:
+                    candidates.append({
+                        "value": float(v_parsed),
+                        "predicted": bool(t.get("predicted")),
+                        "source": str(t.get("source") or "toxicity"),
+                    })
+
+    if not candidates:
+        return None
+
+    # Measured values take precedence over predicted (ECOSAR/QSAR).
+    measured = [c for c in candidates if not c.get("predicted")]
+    predicted_cands = [c for c in candidates if c.get("predicted")]
+
+    if measured:
+        best = min(measured, key=lambda c: c["value"])
+    else:
+        best = min(predicted_cands, key=lambda c: c["value"])
+
+    # Apply same solubility/lipophilicity rules as LC50
+    low_confidence = False
+    ws_val = water_sol["value"] if water_sol else None
+
+    # Beyond solubility check: ChV above water_solubility is implausible
+    if ws_val is not None and best["value"] > ws_val:
+        low_confidence = True
+        reason = f"ChV {best['value']:.2e} mg/L above water solubility {ws_val:.2e} mg/L (implausible)"
+        _reject(rejections, "aquatic ChV", f"{best['value']:.2e} mg/L", reason)
+
+    # logKow heuristic: when solubility is missing AND logKow > 5 AND predicted → exclude
+    if log_kow and log_kow.get("value") is not None:
+        kow = log_kow["value"]
+        if kow > 5 and best.get("predicted") and ws_val is None:
+            low_confidence = True
+            reason = f"Predicted ChV {best['value']:.2e} mg/L with logKow={kow:.1f}, no solubility data - lipophilic exclusion"
+            _reject(rejections, "aquatic ChV", f"{best['value']:.2e} mg/L", reason)
+
+    # Fix 4: Additional ECOSAR caps (same as LC50)
+    if best.get("predicted") and _smiles_is_inorganic(smiles):
+        low_confidence = True
+        reason = f"Predicted ChV {best['value']:.2e} mg/L for inorganic compound (no C in SMILES) - ECOSAR not applicable"
+        _reject(rejections, "aquatic ChV", f"{best['value']:.2e} mg/L", reason)
+
+    if best.get("predicted") and _smiles_is_siloxane(smiles):
+        low_confidence = True
+        reason = f"Predicted ChV {best['value']:.2e} mg/L for siloxane/silane compound - ECOSAR unreliable"
+        _reject(rejections, "aquatic ChV", f"{best['value']:.2e} mg/L", reason)
+
+    if best.get("predicted") and best["value"] < 1e-3:
+        low_confidence = True
+        reason = f"Predicted ChV {best['value']:.2e} mg/L below 0.001 mg/L threshold - implausibly low"
+        _reject(rejections, "aquatic ChV", f"{best['value']:.2e} mg/L", reason)
+
+    best["low_confidence"] = low_confidence
+    return best
 
 
 def _extract_gwp100(hazard_data: dict) -> Optional[float]:
@@ -1055,28 +1427,59 @@ def _extract_odp(hazard_data: dict) -> Optional[float]:
     return None
 
 
-def mean_of_top_two_highest(scores: list[float]) -> Optional[float]:
+def max_score(scores: list[float]) -> Optional[float]:
     """
-    Site-style rollup: mean of the two highest scores (worst hazards).
+    Expert-style rollup: maximum score (worst hazard) wins.
 
-    With one value, that value is returned. Empty → None.
-    Used for units → subcategory and subcategories → category.
+    This matches expert1228 offline comparison where:
+    - Subcategory score = highest unit score (no averaging, no odd 3/5/7/9)
+    - Category score = highest subcategory score (not mean of top 2)
+
+    Empty → None.
     """
     nums = [float(v) for v in scores if isinstance(v, (int, float))]
     if not nums:
         return None
-    ranked = sorted(nums, reverse=True)
-    k = min(2, len(ranked))
-    return sum(ranked[:k]) / float(k)
+    return max(nums)
 
 
-def _category_score_mean_top_two_subcategories(subcategory_maxima: list[float]) -> Optional[float]:
-    """Official-style P2OASys **category** score from subcategory scores (top-two mean)."""
-    return mean_of_top_two_highest(subcategory_maxima)
+# Legacy alias for backward compatibility
+mean_of_top_two_highest = max_score
 
 
-# Back-compat alias (older form.py / callers).
-_category_score_mean_subcategories = _category_score_mean_top_two_subcategories
+def _category_score_max_subcategory(subcategory_maxima: list[float]) -> Optional[float]:
+    """P2OASys **category** score = MAX of subcategory scores (expert1228 rule)."""
+    return max_score(subcategory_maxima)
+
+
+# Back-compat aliases (older form.py / callers).
+_category_score_mean_top_two_subcategories = _category_score_max_subcategory
+_category_score_mean_subcategories = _category_score_max_subcategory
+
+
+def _round_score(value: float, sig_digits: int = 2) -> float:
+    """Round a score to the specified significant digits (default 2).
+
+    P2OASys practice: report scores to 2 significant digits for precision
+    without implying false accuracy.
+    """
+    if value == 0:
+        return 0.0
+    import math
+    magnitude = math.floor(math.log10(abs(value)))
+    factor = 10 ** (sig_digits - 1 - magnitude)
+    return round(value * factor) / factor
+
+
+# Auto6 categories used for overall scoring (excludes Process and Life Cycle).
+AUTO6_CATEGORIES = (
+    "Acute Human Effects",
+    "Chronic Human Effects",
+    "Ecological Hazards",
+    "Environmental Fate & Transport",
+    "Atmospheric Hazard",
+    "Physical Properties",
+)
 
 
 def _rule_summary(rule: dict) -> dict[str, Any]:
@@ -1153,9 +1556,11 @@ def compute_p2oasys_scores_with_trace(
     vp = _extract_vapor_pressure_mmhg(hazard_data)
     nfpa_health = _extract_nfpa_health(hazard_data)
     nfpa_fire = _extract_nfpa_fire(hazard_data)
+    nfpa_reactivity = _extract_nfpa_reactivity(hazard_data)
     iarc = _extract_iarc(hazard_data, rejected)
     epa_carc = _extract_epa_carcinogen(hazard_data)
-    lc50_aq = _extract_lc50_aquatic(hazard_data)
+    lc50_aq = _extract_lc50_aquatic(hazard_data, rejected)
+    chv_aq = _extract_chv_aquatic(hazard_data, rejected)
     gwp100 = _extract_gwp100(hazard_data)
     odp = _extract_odp(hazard_data)
     log_kow = _extract_log_kow(hazard_data)
@@ -1170,6 +1575,13 @@ def compute_p2oasys_scores_with_trace(
         ph_info = estimate_ph_for_hazard(hazard_data)
     except Exception:
         ph_info = None
+
+    # Band corrections (Fix 7, expert1228):
+    # - Acid Rain: S or N in SMILES → minimum score 8
+    # - NESHAP: listed HAP → score 10
+    smiles = hazard_data.get("smiles") or hazard_data.get("SMILES")
+    has_s_or_n = _smiles_contains_s_or_n(smiles)
+    is_neshap_hap = _is_neshap_listed_hap(hazard_data)
 
     # Phrase corpus for KEY PHRASE / ODP / GWP style matrix rows.
     phrase_corpus_parts: list[str] = []
@@ -1189,11 +1601,13 @@ def compute_p2oasys_scores_with_trace(
         "oral_ld50": ld50_oral,
         "dermal_ld50": ld50_dermal,
         "inhalation_lc50": lc50_inh,
-        "aquatic_lc50": ({"value": lc50_aq, "unit": "mg/L"} if lc50_aq is not None else None),
+        "aquatic_lc50": ({**lc50_aq, "unit": "mg/L"} if lc50_aq is not None else None),
+        "aquatic_chv": ({**chv_aq, "unit": "mg/L"} if chv_aq is not None else None),
         "flash_point_c": ({"value": flash_c, "unit": "degC"} if flash_c is not None else None),
         "vapor_pressure_mmhg": ({"value": vp, "unit": "mmHg"} if vp is not None else None),
         "nfpa_health": nfpa_health,
         "nfpa_fire": nfpa_fire,
+        "nfpa_reactivity": nfpa_reactivity,
         "iarc": iarc,
         "epa_carcinogen": epa_carc,
         "gwp100": ({"value": gwp100, "unit": "CO2e"} if gwp100 is not None else None),
@@ -1204,6 +1618,9 @@ def compute_p2oasys_scores_with_trace(
         "molecular_weight": _num(hazard_data.get("molecular_weight")),
         "ph_estimate": ph_info,
         "ph_heuristic": ph_info,
+        "smiles": smiles,
+        "has_s_or_n": has_s_or_n,
+        "is_neshap_hap": is_neshap_hap,
     }
 
     def _record(
@@ -1299,7 +1716,7 @@ def compute_p2oasys_scores_with_trace(
                             score = _score_numeric(rule, lc50_inh["value"], higher_is_safer=True)
                         else:
                             miss_reason = "no inhalation LC50 in ppm (or convertible mg/m³)"
-                    elif "Flash" in unit_name or "deg C" in unit_name:
+                    elif ("Flash" in unit_name or "Flash Point" in unit_name) and ("Flammability" in subcat or "Physical" in category):
                         if flash_c is not None:
                             input_value = flash_c
                             score = _score_numeric(rule, flash_c, higher_is_safer=False)
@@ -1330,12 +1747,49 @@ def compute_p2oasys_scores_with_trace(
                                         break
                             else:
                                 miss_reason = "no NFPA fire rating"
+                        elif "Reactivity" in subcat or "react" in unit_name.lower() or "instab" in unit_name.lower():
+                            if nfpa_reactivity is not None:
+                                input_value = nfpa_reactivity
+                                for t, s in rule.get("thresholds", []):
+                                    if t == nfpa_reactivity:
+                                        score = s
+                                        break
+                            else:
+                                miss_reason = "no NFPA reactivity/instability rating"
                     elif "LC50" in unit_name and ("Aquatic" in subcat or "Aquatic" in str(subcats)):
                         if lc50_aq is not None:
-                            input_value = lc50_aq
-                            score = _score_numeric(rule, lc50_aq, higher_is_safer=True)
+                            # Beyond-solubility or low-confidence predictions must NOT drive high Eco scores.
+                            # "No effect at saturation" → skip this value entirely for scoring.
+                            if lc50_aq.get("beyond_solubility") or lc50_aq.get("low_confidence"):
+                                miss_reason = (
+                                    f"LC50 {lc50_aq['value']:.2e} mg/L excluded: "
+                                    f"{'beyond solubility' if lc50_aq.get('beyond_solubility') else 'low confidence (logKow>5, predicted)'}"
+                                )
+                                # Still record in trace for transparency
+                                qualifier = "excluded_beyond_solubility"
+                            else:
+                                input_value = lc50_aq["value"]
+                                score = _score_numeric(rule, lc50_aq["value"], higher_is_safer=True)
+                                if lc50_aq.get("predicted"):
+                                    predicted = True
                         else:
                             miss_reason = "no aquatic LC50/EC50"
+                    elif "ChV" in unit_name and ("Chronic" in subcat or "chronic" in subcat.lower()):
+                        if chv_aq is not None:
+                            # Same exclusion rules as LC50: low_confidence → skip
+                            if chv_aq.get("low_confidence"):
+                                miss_reason = (
+                                    f"ChV {chv_aq['value']:.2e} mg/L excluded: lipophilic compound, no solubility data"
+                                )
+                                qualifier = "excluded_lipophilic"
+                            else:
+                                input_value = chv_aq["value"]
+                                # Lower ChV = more hazardous (like LC50)
+                                score = _score_numeric(rule, chv_aq["value"], higher_is_safer=True)
+                                if chv_aq.get("predicted"):
+                                    predicted = True
+                        else:
+                            miss_reason = "no aquatic ChV (chronic value)"
                     elif "GWP" in unit_name:
                         if gwp100 is not None:
                             input_value = gwp100
@@ -1430,12 +1884,30 @@ def compute_p2oasys_scores_with_trace(
                         predicted = True
                     if ld50_oral and input_value == ld50_oral.get("value") and ld50_oral.get("predicted"):
                         predicted = True
+                    if ld50_dermal and input_value == ld50_dermal.get("value") and ld50_dermal.get("predicted"):
+                        predicted = True
+                    if lc50_inh and input_value == lc50_inh.get("value") and lc50_inh.get("predicted"):
+                        predicted = True
+                    if chv_aq and input_value == chv_aq.get("value") and chv_aq.get("predicted"):
+                        predicted = True
                     if log_kow and input_value is log_kow and log_kow.get("predicted"):
                         predicted = True
                     if bcf_l_kg and input_value is bcf_l_kg and bcf_l_kg.get("predicted"):
                         predicted = True
                     if biodeg_hl and input_value is biodeg_hl and biodeg_hl.get("predicted"):
                         predicted = True
+
+                    # Band corrections (Fix 7, expert1228):
+                    # Acid Rain Formation: S or N in SMILES → minimum score 8
+                    if subcat == "Acid Rain Formation" and has_s_or_n:
+                        if score < 8:
+                            score = 8
+                            qualifier = "band_corrected_s_or_n"
+                    # NESHAP: listed HAP → score 10
+                    if subcat == "NESHAP" and is_neshap_hap:
+                        score = 10
+                        qualifier = "band_corrected_neshap_hap"
+
                     status = STATUS_PREDICTED_ONLY if predicted else STATUS_SCORED
                     sub_scores[unit_name] = score
                     _record(
@@ -1454,27 +1926,105 @@ def compute_p2oasys_scores_with_trace(
             if sub_scores:
                 unit_vals = [float(v) for v in sub_scores.values() if isinstance(v, (int, float))]
                 sub_agg = mean_of_top_two_highest(unit_vals)
+                sub_max = sub_agg if sub_agg is not None else max(unit_vals)
+
+                subcat_units_scored = [
+                    s for s in scored
+                    if s["category"] == category and s["subcategory"] == subcat
+                ]
+                subcat_all_predicted = (
+                    subcat_units_scored and
+                    all(s.get("predicted") for s in subcat_units_scored)
+                )
+
                 results[category][subcat] = {
                     **sub_scores,
-                    "_max": sub_agg if sub_agg is not None else max(unit_vals),
+                    "_max": _round_score(sub_max),
+                    "_predicted": subcat_all_predicted,
                 }
 
         subcat_maxima: list[float] = []
+        subcat_predicted_flags: list[bool] = []
         for _sk, bundle in results[category].items():
             if _sk.startswith("_") or not isinstance(bundle, dict):
                 continue
             sm = bundle.get("_max")
             if isinstance(sm, (int, float)):
                 subcat_maxima.append(float(sm))
+                subcat_predicted_flags.append(bool(bundle.get("_predicted")))
+
         cat_agg = _category_score_mean_top_two_subcategories(subcat_maxima)
         if cat_agg is not None:
-            results[category]["_category_max"] = cat_agg
+            cat_all_predicted = subcat_predicted_flags and all(subcat_predicted_flags)
+            results[category]["_category_max"] = _round_score(cat_agg)
+            results[category]["_category_predicted"] = cat_all_predicted
+
+    # Fix 6: Chronic no-classification defaults (expert1228)
+    # Apply default scores when hazard data was retrieved but no relevant classification exists.
+    # Carcinogen → 2, Mutagen/Teratogen → 4, Reproductive/Developmental → 4
+    # ONLY when: hazard source retrieved (non-empty toxicities or GHS h_codes)
+    # NEVER when: NO_CID, NO_LCSS, or hazard_data_missing
+    CHRONIC_DEFAULTS = {
+        "Carcinogen": 2,
+        "Mutagen/ Teratogen": 4,
+        "Reproductive/ Developmental": 4,
+    }
+    STATUS_DEFAULT_NO_CLASSIFICATION = "Default (no classification)"
+
+    hazard_source_retrieved = bool(
+        hazard_data.get("toxicities") or (ghs and ghs.get("h_codes"))
+    )
+    subcats_default_count = 0
+
+    if hazard_source_retrieved:
+        chronic_results = results.get("Chronic Human Effects", {})
+        for subcat_name, default_score in CHRONIC_DEFAULTS.items():
+            subcat_data = chronic_results.get(subcat_name)
+            # Apply default if subcategory has no score
+            if subcat_data is None or subcat_data.get("_max") is None:
+                chronic_results[subcat_name] = {
+                    "_max": float(default_score),
+                    "_predicted": False,
+                    "_default": True,
+                    "_default_reason": "no classification found in hazard data",
+                }
+                subcats_default_count += 1
+                scored.append({
+                    "category": "Chronic Human Effects",
+                    "subcategory": subcat_name,
+                    "unit": "default",
+                    "input_value": None,
+                    "qualifier": "default_no_classification",
+                    "matrix_rule": {"type": "default", "default_score": default_score},
+                    "score": default_score,
+                    "status": STATUS_DEFAULT_NO_CLASSIFICATION,
+                    "predicted": False,
+                })
+
+        # Recompute Chronic category _category_max if defaults were applied
+        if subcats_default_count > 0:
+            chronic_maxima = []
+            chronic_pred_flags = []
+            for _sk, bundle in chronic_results.items():
+                if _sk.startswith("_") or not isinstance(bundle, dict):
+                    continue
+                sm = bundle.get("_max")
+                if isinstance(sm, (int, float)):
+                    chronic_maxima.append(float(sm))
+                    chronic_pred_flags.append(bool(bundle.get("_predicted")))
+            if chronic_maxima:
+                chronic_agg = _category_score_max_subcategory(chronic_maxima)
+                if chronic_agg is not None:
+                    chronic_results["_category_max"] = _round_score(chronic_agg)
+                    chronic_results["_category_predicted"] = (
+                        chronic_pred_flags and all(chronic_pred_flags)
+                    )
+            results["Chronic Human Effects"] = chronic_results
 
     category_status: dict[str, str] = {}
     for category in matrix:
         data = results.get(category) or {}
         if data.get("_category_max") is not None:
-            # Predicted-only if every scored unit in this category is predicted.
             cat_scored = [s for s in scored if s["category"] == category]
             if cat_scored and all(s.get("predicted") for s in cat_scored):
                 category_status[category] = STATUS_PREDICTED_ONLY
@@ -1483,6 +2033,37 @@ def compute_p2oasys_scores_with_trace(
         else:
             category_status[category] = STATUS_NO_DATA
 
+    auto6_scores: list[float] = []
+    auto6_predicted: list[bool] = []
+    count_at_8_or_above = 0
+    count_measured_at_8_or_above = 0
+
+    for cat in AUTO6_CATEGORIES:
+        cat_data = results.get(cat, {})
+        cat_max = cat_data.get("_category_max")
+        cat_pred = cat_data.get("_category_predicted", False)
+        if cat_max is not None:
+            auto6_scores.append(float(cat_max))
+            auto6_predicted.append(cat_pred)
+            if cat_max >= 8:
+                count_at_8_or_above += 1
+                if not cat_pred:
+                    count_measured_at_8_or_above += 1
+
+    overall_score: Optional[float] = None
+    overall_predicted = False
+    if auto6_scores:
+        overall_score = _round_score(max(auto6_scores))
+        overall_predicted = auto6_predicted and all(auto6_predicted)
+
+    results["_overall"] = {
+        "score": overall_score,
+        "predicted": overall_predicted,
+        "auto6_count": len(auto6_scores),
+        "categories_at_8_or_above": count_at_8_or_above,
+        "measured_categories_at_8_or_above": count_measured_at_8_or_above,
+    }
+
     trace = {
         "scorer_version": SCORER_VERSION,
         "evidence": evidence,
@@ -1490,6 +2071,8 @@ def compute_p2oasys_scores_with_trace(
         "scored": scored,
         "missing": missing,
         "category_status": category_status,
+        "overall": results["_overall"],
+        "subcats_default": subcats_default_count,
     }
     return results, trace
 
