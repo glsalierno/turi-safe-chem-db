@@ -174,7 +174,7 @@ DoSS core does **not** require RDKit.
 ## License
 
 - **Open code** (DoSS app, packages, scripts, vendor glue): **MIT** — see [LICENSE](LICENSE).
-- **HSPiP exclusion:** HSPiP software, CLI licenses, and `.sofx` data libraries are NOT covered by this MIT license. Obtain them separately from Hansen Solubility / HSPiP. See [NOTICE.md](NOTICE.md).
+- **HSPiP exclusion:** HSPiP software, CLI licenses, and `.sofx` data libraries are NOT covered by this MIT license. Obtain them separately from Hansen Solubility / HSPiP. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 - **Third-party:** PubChem (NCBI ToS), HSPiP proprietary (Hansen Solubility), Fisher / TCI websites (best-effort scraping; respect robots / ToS).
 
 ## Citation / acknowledgement
