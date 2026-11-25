@@ -1,9 +1,9 @@
 # STATUS — turi-safe-chem-db / TURI Safe Chem DB
 
-Canonical trees (host **windows-workstation**, `<MACHINE_ID>`):
-- Monorepo: `<HAZQUERY_ROOT>\turi-safe-chem-db`
-- Teams product: `...\hazquery\TURI-SafeChemDB-TeamsPack`
-- GitHub (private): https://github.com/glsalierno/turi-safe-chem-db
+Canonical project locations:
+- Monorepo: the `turi-safe-chem-db` checkout
+- Teams product: the `TURI-SafeChemDB-TeamsPack` folder
+- GitHub: https://github.com/glsalierno/turi-safe-chem-db
 
 Product rule: **Teams pack is the coworker product**; GitHub is for code updates.
 Keep Cursor posted: update this file after meaningful steps (not chat alone).
@@ -16,11 +16,10 @@ Keep Cursor posted: update this file after meaningful steps (not chat alone).
 - PASS | 2026-09-23 ET Priority-62 CSV now optional overlay (sidebar toggle), not default basis
 - PASS | 2026-09-23 ET Free-text CAS still works for out-of-universe lookups
 - PASS | 2026-09-18 ET Repo visibility set to PUBLIC; main includes P2OASys sqlite from feat merge
-- PASS | 2026-09-18 ~05:36 ET Teams pack sync @ windows-workstation from feat/p2oasys-score-lookup-db (WIP stashed; committed tree only; robocopy exit 3 = OK)
+- PASS | 2026-09-18 ~05:36 ET Teams pack sync from feat/p2oasys-score-lookup-db (WIP stashed; committed tree only; robocopy exit 3 = OK)
 - PASS | Coworker how-to DOCX on Teams pack + `docs/` + GitHub `main` (`36448c6`)
 - PASS | Keep Cursor posted STATUS.md in repo
 - HELD | P2OASys harvest compile append routine: `resource_exhausted` since ~2026-09-14 (separate workstream)
-- NOTE | simulation-host (`<MACHINE_ID>`) is connected for chat sends but hazquery tree not verified there; canonical = windows-workstation
 
 ## Builds (code)
 - 2026-09-23 ET | code | Full P2OASys universe picker in DoSS app; priority-62 CSV optional overlay | branch `cursor/full-universe-picker-e2cc` | PR
@@ -33,7 +32,7 @@ Keep Cursor posted: update this file after meaningful steps (not chat alone).
 ## Builds (database)
 - 2026-09-14 ET | db | Ship `data/p2oasys_score_lookup.sqlite` + `data/p2oasys_harvest.sqlite` in feat branch | PASS (bundled extract, not a server migration)
 - 2026-09-13 ET | db | Ship `data/cameo_nfpa.sqlite` on cameo feat branch | PASS
-- Uncommitted local growth of p2oasys sqlite files on windows-workstation feat branch | not committed | do not treat as published
+- Uncommitted local growth of p2oasys sqlite files on a feature branch | not committed | do not treat as published
 - Harvest compile routine on box: FAIL resource_exhausted | not Safe Chem DB blocker
 
 ## Next

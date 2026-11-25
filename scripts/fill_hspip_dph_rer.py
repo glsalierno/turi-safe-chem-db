@@ -50,7 +50,7 @@ def _env_hspip_roots() -> list[Path]:
                 roots.append(p)
     return roots
 HSPIP_CLI_DIRS = [
-    Path(r"C:\Program Files\Hansen-Solubility-6\HSPiP"),  # TURI CLI Enabled.license
+    Path(r"C:\Program Files\Hansen-Solubility-6\HSPiP"),
     Path(r"C:\Program Files\Hansen-Solubility\HSPiP"),
 ]
 
@@ -363,10 +363,10 @@ def main() -> int:
         "polymer_source": "DefaultPolymers.pds Breakthrough Time Correlations (1 Hr) under HSPiP Data",
         "hspip_installs": [str(p) for p in HSPIP_CLI_DIRS if p.is_dir()],
         "cli_note": (
-            "Hansen-Solubility-6 has TURI CLI Enabled.license; Y-MBSX currently "
-            "raises Clipboard ExternalException / locks Out.dat when GUI or another "
-            "agent holds the clipboard. Prefer sofx curated fill; use "
-            "cas-to-HSPiP_data/HSPiP_CLI_v7.py for Y-MB estimates when CLI is free."
+            "Y-MBSX requires a CLI-enabled HSPiP installation. It may report "
+            "clipboard errors or lock Out.dat if another process is using it. "
+            "Prefer curated .sofx data; use the HSPiP CLI for Y-MB estimates "
+            "when the CLI is available."
         ),
         "glove_ux": {
             "incompatible_flag": "Unknown; incompatible with X, Y, Z",
