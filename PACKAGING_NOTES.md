@@ -1,6 +1,6 @@
 ﻿# PACKAGING_NOTES — TURI Safe Chem DB (`turi-safe-chem-db`)
 
-Prep for first GitHub push as **turi-safe-chem-db** / TURI Safe Chem DB (Fierro22 assembly host; no hostnames in shipped code).
+Prep for first GitHub push as **turi-safe-chem-db** / TURI Safe Chem DB (assembled on a development workstation; no hostnames in shipped code).
 
 ## Included
 
@@ -22,11 +22,11 @@ Prep for first GitHub push as **turi-safe-chem-db** / TURI Safe Chem DB (Fierro2
 - `__pycache__/`, `*.pyc`, streamlit logs, `*.pid`, batch logs
 - `priority62_*.csv` run artifacts, harvest dumps, GHhaz* trees
 - HSPiP binaries / `*.sofx` / license keys
-- Live `hazquery/doss-ondemand` working app (not deleted)
+- Existing local DoSS working app (not deleted)
 
 ## Anonymize (2026-09-13)
 
-- Removed hardcoded `<USER_HOME>\OneDrive\...` HSPiP Data fallbacks from `hspip.py` and `fill_hspip_dph_rer.py` → env + Teams sibling only (`%HSPIP_DATA%`, `<YOUR_HSPIP_DATA>`).
+- Removed hardcoded user-specific HSPiP Data fallbacks from `hspip.py` and `fill_hspip_dph_rer.py` → env + Teams sibling only (`%HSPIP_DATA%`, `<YOUR_HSPIP_DATA>`).
 - SQLite lookup prefers `P2OASYS_SCORE_LOOKUP_DB`, then bundled `data/p2oasys_score_lookup.sqlite`, then a relative sibling GHaz7 example.
 - `GHAZ7_ROOT` remains a **relative** sibling path for optional TCI catalog/SDS cache only (no home-dir strings).
 - Removed personal hostname strings from fill-script help/messages.
@@ -51,6 +51,6 @@ Ran vulture (min confidence 60–100). **Removed / renamed only clearly unused:*
 ## Residual risks
 
 - `Program Files\Hansen-Solubility*\HSPiP` CLI dir candidates in fill script (machine-common, no username) — OK.
-- Relative `GHAZ7_ROOT` may resolve to a developer’s hazquery tree when present; override catalogs via `data/` or env as needed.
+- Relative `GHAZ7_ROOT` may resolve to a sibling development checkout when present; override catalogs via `data/` or env as needed.
 - TCI/Fisher live HTTP best-effort; bot protection can fail closed (empty fields, not invented).
 - Vendors/cas_to_hspip still need user to set `PATH_TO_HSPIP_INSTALLATION` before CLI batch.
