@@ -21,9 +21,12 @@ on:
       - 'tests/test_capabilities.py'
       - '.github/workflows/capabilities-ci.yml'
 
+permissions:
+  contents: read
+
 jobs:
   capability-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     
     steps:
       - name: Checkout repository
@@ -72,7 +75,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
 
   registry-integrity:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     
     steps:
       - name: Checkout repository
