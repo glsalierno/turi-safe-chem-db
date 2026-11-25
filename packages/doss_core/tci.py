@@ -23,9 +23,10 @@ import re
 import time
 from pathlib import Path
 from typing import Any, Optional
-from urllib.error import HTTPError, URLError
 from urllib.parse import quote
-from urllib.request import Request, urlopen
+
+from packages.doss_core.logging_support import cas_context, get_logger
+from packages.doss_core.vendor_http import get_vendor_response
 
 from packages.p2oasys_core.lookup import APP_DIR, GHAZ7_ROOT, normalize_cas
 
@@ -34,6 +35,8 @@ TCI_CATALOG_CANDIDATES = (
     GHAZ7_ROOT / "data" / "tci_catalog_by_cas.csv",
     APP_DIR / "tci_catalog_by_cas.csv",
 )
+
+logger = get_logger(__name__)
 
 _USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -92,26 +95,14 @@ def _throttle() -> None:
 
 
 def _http_get(url: str, *, accept: str = "*/*", timeout: float = 25.0) -> tuple[int, bytes, str]:
-    _throttle()
-    req = Request(
-        url,
+    return get_vendor_response(
+        url, vendor="tci", throttle=_throttle, timeout=(5.0, timeout),
         headers={
             "User-Agent": _USER_AGENT,
             "Accept": accept,
             "Accept-Language": "en-US,en;q=0.9",
         },
     )
-    try:
-        with urlopen(req, timeout=timeout) as resp:
-            status = getattr(resp, "status", 200) or 200
-            ctype = (resp.headers.get("Content-Type") or "").lower()
-            data = resp.read()
-            return int(status), data, ctype
-    except HTTPError as e:
-        body = e.read() if hasattr(e, "read") else b""
-        return int(e.code), body or b"", ""
-    except (URLError, TimeoutError, OSError):
-        return 0, b"", ""
 
 
 def load_tci_catalog(path: Path | None = None) -> dict[str, list[dict[str, str]]]:
@@ -174,8 +165,9 @@ def _local_sds_cache_pdf(cas: str, product: str | None = None) -> Path | None:
             try:
                 if meta.is_file() and prod in meta.read_text(encoding="utf-8", errors="ignore"):
                     return p
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("local_sds_metadata_unavailable cas=%s error_type=%s",
+                             cas_context(cas), type(exc).__name__)
     return pdfs[0] if pdfs else None
 
 
