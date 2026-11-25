@@ -88,6 +88,65 @@ docs/                   # INSTALL, HSPiP_CLI, TEAMS_DEPLOY
 
 The DoSS sidebar **HSPiP setup** section also persists exe / data paths to `config/hspip_path.txt` (gitignored) and `~/.turi-safe-chem-db/hspip_path.txt`.
 
+## IUCLID Dossier Access (Optional)
+
+The `packages/iuclid_core` package provides optional access to **ECHA REACH Study Results** dossiers (IUCLID 6 `.i6z` format) for measured toxicological and physicochemical data.
+
+### What it extracts
+
+| Endpoint Type | Data |
+|--------------|------|
+| Acute toxicity | Oral/dermal LD50, inhalation LC50 (mg/kg bw, ppm) |
+| Aquatic toxicity | Fish/daphnia/algae LC50/EC50 (mg/L) |
+| Repeated-dose | NOAEL/LOAEL oral/inhalation (mg/kg bw/day) |
+| Physicochemical | Flash point (°C), vapour pressure (mm Hg), log Kow, BCF |
+| Biodegradability | Ready biodegradation % |
+
+### Configuration
+
+| Variable | Purpose |
+|----------|---------|
+| `IUCLID_ENABLED` | `true`/`false`/`auto` (default: auto — enabled if source exists) |
+| `IUCLID_DOSSIER_SOURCE` | Path to extracted dossiers folder or bulk `.zip` |
+| `IUCLID_DOSSIER_INDEX` | Path to ECHA `dossier_info*.xlsx` or prebuilt `.sqlite` index |
+| `IUCLID_FORMAT_DIR` | Path to IUCLID format pack (for phrase labels; optional) |
+| `IUCLID_CACHE_DIR` | Cache location (default: `~/.turi-safe-chem-db/iuclid_cache/`) |
+
+Legacy aliases supported: `OFFLINE_LOCAL_ARCHIVE`, `OFFLINE_DOSSIER_INFO_XLSX`.
+
+### Obtaining ECHA data
+
+The REACH Study Results bulk download (~10 GB, ~27k dossiers) must be obtained directly from ECHA:
+https://iuclid6.echa.europa.eu/reach-study-results
+
+1. Accept the ECHA terms in a browser
+2. Download and extract (or point at the `.zip` directly)
+3. Set `IUCLID_DOSSIER_SOURCE` to the folder/zip path
+4. Optionally set `IUCLID_DOSSIER_INDEX` to the included `dossier_info*.xlsx`
+
+**This data is NOT included in the repo** — only synthetic test fixtures are committed.
+
+### Cache building
+
+```bash
+# Build cache for P2OASys universe (~1,255 CAS)
+python -m packages.iuclid_core.cache build --scope universe
+
+# Build from a custom CAS list
+python -m packages.iuclid_core.cache build --cas-list my_cas.txt
+
+# Check cache status
+python -m packages.iuclid_core.cache status
+```
+
+### When not configured
+
+A single clear log message is emitted: `"IUCLID disabled: IUCLID_DOSSIER_SOURCE not set"`. The package never fails silently.
+
+### Attribution
+
+When using ECHA REACH Study Results data, cite ECHA as the source per their legal notice. The data is **not for REACH registration purposes**.
+
 ## PubChem API and Throttle Handling
 
 The PubChem client (`packages/doss_core/pubchem.py`) implements [NCBI Dynamic Request Throttling](https://pubchem.ncbi.nlm.nih.gov/docs/dynamic-request-throttling) compliance:

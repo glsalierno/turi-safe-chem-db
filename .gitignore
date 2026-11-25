@@ -55,3 +55,14 @@ config/hspip_path.txt
 config/env.bat
 **/hspip_path.txt
 .turi-safe-chem-db/
+
+# IUCLID data (NEVER commit ECHA dossiers)
+*.i6z
+**/reach_study_results*
+**/IUCLID*_format/
+data/private/
+data/iuclid_cache/
+**/iuclid_cache/
+**/offline_snippets_cache*.db
+# Allow synthetic test fixtures
+!tests/fixtures/iuclid/
